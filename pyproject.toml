@@ -1,0 +1,31 @@
+[project]
+name = "gemma-sae-hackathon"
+version = "0.1.0"
+description = "Gemma 3 and Gemma Scope 2 contrastive steering experiments"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "accelerate>=1,<2",
+    "gradio>=6,<7",
+    "huggingface-hub>=0.34,<1",
+    "pillow>=11,<13",
+    "sae-lens>=6.30,<7",
+    "safetensors>=0.4.3,<1",
+    "sentencepiece>=0.2,<0.3",
+    "torch>=2.6,<3",
+    "torchvision>=0.21,<1",
+    "transformers>=4.51.3,<5",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.9,<1"]
+
+[tool.uv]
+package = false
+required-version = ">=0.9.15"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

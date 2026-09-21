@@ -38,8 +38,8 @@ without an image:
 
        h' = h + alpha * scaled_direction
 
-A positive alpha moves generation toward B relative to A. A negative alpha
-moves generation toward A relative to B. Alpha = 0 disables steering.
+A positive alpha adds the B - A direction; a negative alpha subtracts it.
+The behavioral effect must be measured. Alpha = 0 disables steering.
 
 What the app saves
 ==================
@@ -55,16 +55,16 @@ Quick start
 ===========
 1. Install dependencies:
 
-   pip install requirements.txt
+   uv sync --locked
 
    
 2. Authenticate with Hugging Face if required:
 
-   huggingface-cli login
+   uv run hf auth login
 
 3. Run:
 
-   python gemma3_sae_contrastive_web_ab_english.py
+   uv run python demo_gradio_hackaton.py
 
 4. Open the local Gradio URL shown in the terminal.
 
@@ -77,14 +77,22 @@ GRADIO_SERVER_PORT            default: 7860
 TOP_DIFFS_TO_SHOW             default: 20
 SAE_CHUNK_TOKENS              default: 128
 FEATURE_AGGREGATION           default: mean
+FEATURE_TOKEN_SCOPE           default: all (also: non_image, last)
 STEERING_FRACTION_PER_UNIT    default: 0.05
 STEER_LAST_TOKEN_ONLY         default: 1
+SAVE_RESIDUALS                default: 1
+GEMMA_MODEL_REVISION          optional Hugging Face commit/tag
+GEMMA_DEVICE                  default: auto (also: mps, cuda, cpu)
+GEMMA_DTYPE                   default: auto (also: bfloat16, float16, float32)
 """
 
 from __future__ import annotations
 
+import argparse
 import hashlib
+import importlib.metadata
 import json
+import math
 import os
 import threading
 import time
@@ -96,7 +104,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import gradio as gr
 import torch
 from sae_lens import SAE
-from transformers import AutoProcessor, Gemma3ForConditionalGeneration
+from transformers import AutoProcessor, Gemma3ForConditionalGeneration, set_seed
 
 
 # ============================================================
@@ -104,12 +112,12 @@ from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 # ============================================================
 
 MODEL_ID = os.getenv("GEMMA_MODEL_ID", "google/gemma-3-4b-it")
+MODEL_REVISION = os.getenv("GEMMA_MODEL_REVISION")
+MODEL_DEVICE = os.getenv("GEMMA_DEVICE", "auto").strip().lower()
+MODEL_DTYPE = os.getenv("GEMMA_DTYPE", "auto").strip().lower()
 LAYERS = [9, 17, 29]
 
-SAE_RELEASE_CANDIDATES = [
-    os.getenv("SAE_RELEASE", "gemma-scope-2-4b-it-resid_post"),
-    "gemma-scope-2-4b-it-res",
-]
+SAE_RELEASE = os.getenv("SAE_RELEASE", "gemma-scope-2-4b-it-res")
 
 SAE_IDS = {
     9: "layer_9_width_16k_l0_medium",
@@ -118,37 +126,28 @@ SAE_IDS = {
 }
 
 FEATURE_AGGREGATION = os.getenv("FEATURE_AGGREGATION", "mean").strip().lower()
+FEATURE_TOKEN_SCOPE = os.getenv("FEATURE_TOKEN_SCOPE", "all").strip().lower()
 STEERING_FRACTION_PER_UNIT = float(os.getenv("STEERING_FRACTION_PER_UNIT", "0.05"))
 STEER_LAST_TOKEN_ONLY = os.getenv("STEER_LAST_TOKEN_ONLY", "1") != "0"
 
 TOP_DIFFS_TO_SHOW = int(os.getenv("TOP_DIFFS_TO_SHOW", "20"))
 SAE_CHUNK_TOKENS = int(os.getenv("SAE_CHUNK_TOKENS", "128"))
-SAVE_RESIDUALS = True
+SAVE_RESIDUALS = os.getenv("SAVE_RESIDUALS", "1") != "0"
 
 RUNS_DIR = Path(
     os.getenv("GEMMA_SAE_RUNS_DIR", "gemma_sae_contrastive_runs_ab")
 )
-RUNS_DIR.mkdir(parents=True, exist_ok=True)
-
 MODEL_LOCK = threading.Lock()
-torch.set_grad_enabled(False)
 
 
 # ============================================================
-# MODEL LOADING
+# MODEL LOADING (deferred until the first request or --preload)
 # ============================================================
 
-print("\nLoading Gemma 3...")
-model = Gemma3ForConditionalGeneration.from_pretrained(
-    MODEL_ID,
-    device_map="auto",
-    torch_dtype="auto",
-).eval()
-
-processor = AutoProcessor.from_pretrained(MODEL_ID)
-
-print(f"Model loaded: {MODEL_ID}")
-print(f"Primary device: {model.device}")
+model: Any = None
+processor: Any = None
+saes: Dict[int, SAE] = {}
+sae_releases_used: Dict[int, str] = {}
 
 
 # ============================================================
@@ -161,41 +160,102 @@ def unwrap_sae(loaded: Any) -> SAE:
 
 
 
-def load_sae_with_fallback(sae_id: str) -> Tuple[SAE, str]:
-    candidates: List[str] = []
-    for release in SAE_RELEASE_CANDIDATES:
-        if release and release not in candidates:
-            candidates.append(release)
-
-    errors: List[str] = []
-    for release in candidates:
-        try:
-            print(f"Loading SAE {sae_id} from {release}...")
-            loaded = SAE.from_pretrained(release=release, sae_id=sae_id)
-            sae = unwrap_sae(loaded).cpu().eval()
-            return sae, release
-        except Exception as exc:
-            errors.append(f"{release}: {type(exc).__name__}: {exc}")
-
-    raise RuntimeError(
-        f"Could not load SAE {sae_id}. Attempts:\n" + "\n".join(errors)
-    )
+def validate_configuration() -> None:
+    if MODEL_DEVICE not in {"auto", "mps", "cuda", "cpu"}:
+        raise ValueError("GEMMA_DEVICE must be auto, mps, cuda or cpu.")
+    if MODEL_DTYPE not in {"auto", "bfloat16", "float16", "float32"}:
+        raise ValueError("GEMMA_DTYPE must be auto, bfloat16, float16 or float32.")
+    if FEATURE_AGGREGATION not in {"mean", "max"}:
+        raise ValueError("FEATURE_AGGREGATION must be mean or max.")
+    if FEATURE_TOKEN_SCOPE not in {"all", "non_image", "last"}:
+        raise ValueError("FEATURE_TOKEN_SCOPE must be all, non_image or last.")
+    if SAE_CHUNK_TOKENS < 1 or TOP_DIFFS_TO_SHOW < 1:
+        raise ValueError("SAE_CHUNK_TOKENS and TOP_DIFFS_TO_SHOW must be positive.")
+    if not math.isfinite(STEERING_FRACTION_PER_UNIT) or STEERING_FRACTION_PER_UNIT <= 0:
+        raise ValueError("STEERING_FRACTION_PER_UNIT must be finite and positive.")
 
 
-saes: Dict[int, SAE] = {}
-sae_releases_used: Dict[int, str] = {}
+def validate_sae_registry() -> None:
+    """Validate local SAE-Lens metadata without downloading any weights."""
+    from sae_lens.loading.pretrained_saes_directory import get_pretrained_saes_directory
 
-for layer_idx in LAYERS:
-    sae, release = load_sae_with_fallback(SAE_IDS[layer_idx])
-    if not hasattr(sae, "W_dec"):
-        raise AttributeError(f"The SAE for layer {layer_idx} does not expose W_dec.")
-    saes[layer_idx] = sae
-    sae_releases_used[layer_idx] = release
-    print(
-        f"  layer={layer_idx} | W_dec={tuple(sae.W_dec.shape)} | release={release}"
-    )
+    registry = get_pretrained_saes_directory()
+    if SAE_RELEASE not in registry:
+        raise ValueError(f"Unknown SAE_RELEASE in this SAE-Lens version: {SAE_RELEASE}")
+    release = registry[SAE_RELEASE]
+    if release.model != MODEL_ID:
+        raise ValueError(
+            f"SAE release is for {release.model}, but GEMMA_MODEL_ID is {MODEL_ID}."
+        )
+    missing = [sae_id for sae_id in SAE_IDS.values() if sae_id not in release.saes_map]
+    if missing:
+        raise ValueError(f"SAE IDs missing from {SAE_RELEASE}: {missing}")
 
-print("SAEs loaded.\n")
+
+def model_load_options() -> Dict[str, Any]:
+    device = MODEL_DEVICE
+    if device == "auto":
+        if torch.cuda.is_available():
+            device = "auto"  # Accelerate may distribute across NVIDIA devices.
+        else:
+            device = "mps" if torch.backends.mps.is_available() else "cpu"
+    if device == "mps" and not torch.backends.mps.is_available():
+        raise RuntimeError("MPS is unavailable. Check macOS/PyTorch or use GEMMA_DEVICE=cpu.")
+    if device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA is unavailable. Check the NVIDIA driver and the PyTorch build.")
+    dtype = "auto" if MODEL_DTYPE == "auto" else getattr(torch, MODEL_DTYPE)
+    return {"device_map": "auto" if device == "auto" else {"": device}, "torch_dtype": dtype}
+
+
+def ensure_models_loaded() -> None:
+    """Must be called while holding MODEL_LOCK (hooks share one model)."""
+    global model, processor
+    if model is not None and processor is not None and len(saes) == len(LAYERS):
+        return
+    validate_configuration()
+    validate_sae_registry()
+
+    print(f"Loading {MODEL_ID}...")
+    if model is None:
+        model = Gemma3ForConditionalGeneration.from_pretrained(
+            MODEL_ID, revision=MODEL_REVISION, **model_load_options()
+        ).eval()
+    if processor is None:
+        processor = AutoProcessor.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+
+    hidden_size = model.config.text_config.hidden_size
+    for layer_idx in LAYERS:
+        if layer_idx in saes:
+            continue
+        print(f"Loading SAE {SAE_IDS[layer_idx]} from {SAE_RELEASE}...")
+        sae = unwrap_sae(
+            SAE.from_pretrained(release=SAE_RELEASE, sae_id=SAE_IDS[layer_idx])
+        ).cpu().eval()
+        if not hasattr(sae, "W_dec") or sae.W_dec.shape[1] != hidden_size:
+            raise ValueError(f"Layer {layer_idx}: SAE decoder does not match model hidden size.")
+        if sae.cfg.metadata.hook_name != f"blocks.{layer_idx}.hook_resid_post":
+            raise ValueError(f"Layer {layer_idx}: SAE hook does not match resid_post.")
+        if sae.cfg.normalize_activations != "none":
+            raise ValueError("This steering implementation requires an unnormalized SAE decoder.")
+        saes[layer_idx] = sae
+        sae_releases_used[layer_idx] = SAE_RELEASE
+    print(f"Model and SAEs ready. Primary device: {model.device}")
+
+
+def runtime_metadata() -> Dict[str, Any]:
+    packages = ("torch", "torchvision", "transformers", "sae-lens", "gradio", "accelerate")
+    return {
+        "packages": {name: importlib.metadata.version(name) for name in packages},
+        "model_revision_requested": MODEL_REVISION,
+        "model_commit": getattr(getattr(model, "config", None), "_commit_hash", None),
+        "device": str(model.device) if model is not None else None,
+        "dtype": str(model.dtype) if model is not None else None,
+        "torch_cuda": torch.version.cuda,
+        "cuda_available": torch.cuda.is_available(),
+        "mps_available": torch.backends.mps.is_available(),
+        "device_requested": MODEL_DEVICE,
+        "dtype_requested": MODEL_DTYPE,
+    }
 
 
 # ============================================================
@@ -279,6 +339,15 @@ def validate_condition_inputs(
         )
 
     return prompt
+
+
+def validate_generation_settings(max_new_tokens: int, temperature: float, seed: int) -> None:
+    if not 1 <= int(max_new_tokens) <= 1024:
+        raise gr.Error("Max new tokens must be between 1 and 1024.")
+    if not math.isfinite(float(temperature)) or not 0 <= float(temperature) <= 2:
+        raise gr.Error("Temperature must be between 0 and 2.")
+    if not math.isfinite(float(seed)) or int(seed) != seed or not 0 <= int(seed) < 2**32:
+        raise gr.Error("Seed must be an integer between 0 and 4294967295.")
 
 
 
@@ -427,7 +496,9 @@ def generate_answer(
     temperature: float,
     steering_directions: Optional[Dict[int, torch.Tensor]] = None,
     strengths: Optional[Dict[int, float]] = None,
+    seed: int = 0,
 ) -> str:
+    validate_generation_settings(max_new_tokens, temperature, seed)
     handles = []
 
     if steering_directions is not None and strengths is not None:
@@ -479,6 +550,9 @@ def generate_answer(
         else:
             gen_kwargs["do_sample"] = False
 
+        # Each paired call starts from the same RNG state, even at temperature > 0.
+        # All model callbacks hold MODEL_LOCK, so requests cannot interleave here.
+        set_seed(int(seed))
         with torch.inference_mode():
             generated = model.generate(**inputs, **gen_kwargs)
 
@@ -537,8 +611,27 @@ def encode_sae_chunked(sae: SAE, residuals: torch.Tensor) -> torch.Tensor:
 
 
 
-def aggregate_feature_acts(feature_acts: torch.Tensor) -> torch.Tensor:
-    x = feature_acts.float()
+def feature_token_mask(image_mask: torch.Tensor) -> torch.Tensor:
+    if image_mask.numel() == 0:
+        raise ValueError("Cannot aggregate an empty prompt.")
+    if FEATURE_TOKEN_SCOPE == "last":
+        mask = torch.zeros_like(image_mask, dtype=torch.bool)
+        mask[-1] = True
+        return mask
+    if FEATURE_TOKEN_SCOPE == "non_image":
+        return ~image_mask.bool()
+    if FEATURE_TOKEN_SCOPE == "all":
+        return torch.ones_like(image_mask, dtype=torch.bool)
+    raise ValueError(f"Invalid FEATURE_TOKEN_SCOPE: {FEATURE_TOKEN_SCOPE}")
+
+
+def aggregate_feature_acts(
+    feature_acts: torch.Tensor, image_mask: torch.Tensor
+) -> torch.Tensor:
+    mask = feature_token_mask(image_mask)
+    if mask.numel() != feature_acts.shape[0] or not mask.any():
+        raise ValueError("Feature token selection is empty or has the wrong length.")
+    x = feature_acts[mask].float()
 
     if FEATURE_AGGREGATION == "max":
         return x.amax(dim=0)
@@ -618,7 +711,7 @@ def save_condition(
         resid = residuals[layer_idx]
         assert_finite(f"layer_{layer_idx}_resid_post_{condition_name}", resid)
         feature_acts = encode_sae_chunked(saes[layer_idx], resid)
-        feature_score = aggregate_feature_acts(feature_acts)
+        feature_score = aggregate_feature_acts(feature_acts, image_mask)
         assert_finite(f"layer_{layer_idx}_feature_score_{condition_name}", feature_score)
 
         payload: Dict[str, Any] = {
@@ -628,6 +721,7 @@ def save_condition(
             "sae_release": sae_releases_used[layer_idx],
             "sae_id": SAE_IDS[layer_idx],
             "aggregation": FEATURE_AGGREGATION,
+            "feature_token_scope": FEATURE_TOKEN_SCOPE,
             "input_ids": input_ids_cpu,
             "image_token_mask": image_mask,
             "sae_activations": feature_acts,
@@ -639,7 +733,7 @@ def save_condition(
         torch.save(payload, condition_dir / f"layer_{layer_idx}.pt")
 
         residual_reference_norm = float(
-            torch.linalg.vector_norm(resid.float(), dim=-1).mean()
+            torch.linalg.vector_norm(resid[feature_token_mask(image_mask)].float(), dim=-1).mean()
         )
 
         result[layer_idx] = {
@@ -667,6 +761,8 @@ def save_condition(
         "num_input_tokens": int(input_ids_cpu.numel()),
         "num_image_tokens": int(image_mask.sum()),
         "aggregation": FEATURE_AGGREGATION,
+        "feature_token_scope": FEATURE_TOKEN_SCOPE,
+        "num_scored_tokens": int(feature_token_mask(image_mask).sum()),
         "layers": LAYERS,
         "created_unix": time.time(),
     }
@@ -690,6 +786,7 @@ def save_profile(
         "model_id": MODEL_ID,
         "layers": LAYERS,
         "aggregation": FEATURE_AGGREGATION,
+        "feature_token_scope": FEATURE_TOKEN_SCOPE,
         "formula": "feature_delta = score(B) - score(A)",
         "raw_residual_formula": "raw_direction = feature_delta @ W_dec",
         "steering_scaling": (
@@ -722,6 +819,7 @@ def save_profile(
             direction = raw_direction * (target_norm_per_alpha / raw_norm)
         else:
             direction = torch.zeros_like(raw_direction)
+        assert_finite(f"layer_{layer_idx}_scaled_direction", direction)
 
         steering_directions[layer_idx] = direction.cpu()
         table_rows.extend(
@@ -775,9 +873,14 @@ def save_profile(
     profile_path = profile_dir / "steering_profile.pt"
     torch.save(
         {
+            "format_version": 1,
             "model_id": MODEL_ID,
+            "model_revision": MODEL_REVISION,
             "layers": LAYERS,
             "aggregation": FEATURE_AGGREGATION,
+            "feature_token_scope": FEATURE_TOKEN_SCOPE,
+            "sae_release": SAE_RELEASE,
+            "sae_ids": SAE_IDS,
             "steering_fraction_per_unit": STEERING_FRACTION_PER_UNIT,
             "steer_last_token_only": STEER_LAST_TOKEN_ONLY,
             "directions": {
@@ -810,7 +913,7 @@ def zip_directory(run_dir: Path, output_name: str) -> str:
 
 
 def load_steering_directions(profile_path: str) -> Dict[int, torch.Tensor]:
-    payload = torch.load(profile_path, map_location="cpu")
+    payload = torch.load(profile_path, map_location="cpu", weights_only=True)
 
     if payload.get("model_id") != MODEL_ID:
         raise RuntimeError(
@@ -825,6 +928,25 @@ def load_steering_directions(profile_path: str) -> Dict[int, torch.Tensor]:
     missing = [idx for idx in LAYERS if idx not in directions]
     if missing:
         raise RuntimeError(f"The steering profile is missing layers: {missing}")
+
+    for layer_idx in LAYERS:
+        direction = directions[layer_idx]
+        expected_width = saes[layer_idx].W_dec.shape[1]
+        if direction.ndim != 1 or direction.numel() != expected_width:
+            raise ValueError(f"The steering direction for layer {layer_idx} has the wrong shape.")
+        assert_finite(f"profile_layer_{layer_idx}", direction)
+    if payload.get("format_version") == 1:
+        expected = {
+            "model_revision": MODEL_REVISION,
+            "sae_release": SAE_RELEASE,
+            "sae_ids": SAE_IDS,
+            "aggregation": FEATURE_AGGREGATION,
+            "feature_token_scope": FEATURE_TOKEN_SCOPE,
+            "steer_last_token_only": STEER_LAST_TOKEN_ONLY,
+        }
+        for key, value in expected.items():
+            if payload.get(key) != value:
+                raise ValueError(f"Profile configuration mismatch: {key}. Recalibrate.")
 
     return directions
 
@@ -841,7 +963,9 @@ def calibrate_contrastive_profile_ab(
     image_b: Optional[str],
     max_new_tokens: int,
     temperature: float,
+    seed: int = 0,
 ):
+    validate_generation_settings(max_new_tokens, temperature, seed)
     prompt_a = validate_condition_inputs("A", image_a, prompt_a)
     prompt_b = validate_condition_inputs("B", image_b, prompt_b)
 
@@ -853,6 +977,7 @@ def calibrate_contrastive_profile_ab(
     run_dir.mkdir(parents=True, exist_ok=True)
 
     with MODEL_LOCK:
+        ensure_models_loaded()
         # ---------------------- Condition A ----------------------
         a_inputs, a_ids_cpu, a_input_len = prepare_inputs(
             image_path=image_a,
@@ -872,7 +997,9 @@ def calibrate_contrastive_profile_ab(
             input_len=a_input_len,
             max_new_tokens=int(max_new_tokens),
             temperature=float(temperature),
+            seed=int(seed),
         )
+        del a_inputs, a_residuals
 
         # ---------------------- Condition B ----------------------
         b_inputs, b_ids_cpu, b_input_len = prepare_inputs(
@@ -893,7 +1020,9 @@ def calibrate_contrastive_profile_ab(
             input_len=b_input_len,
             max_new_tokens=int(max_new_tokens),
             temperature=float(temperature),
+            seed=int(seed),
         )
+        del b_inputs, b_residuals
 
         # ---------------------- B - A profile ----------------------
         profile_path, delta_rows, directions = save_profile(
@@ -908,17 +1037,23 @@ def calibrate_contrastive_profile_ab(
         "layers": LAYERS,
         "sae_ids": {str(k): v for k, v in SAE_IDS.items()},
         "sae_releases_used": {str(k): v for k, v in sae_releases_used.items()},
+        "runtime": runtime_metadata(),
+        "generation": {"max_new_tokens": int(max_new_tokens), "temperature": float(temperature), "seed": int(seed)},
         "condition_A": {
             "prompt": prompt_a,
             "image": Path(image_a).name if image_a else None,
             "image_sha256": sha256_file(image_a),
+            "answer": a_answer,
         },
         "condition_B": {
             "prompt": prompt_b,
             "image": Path(image_b).name if image_b else None,
             "image_sha256": sha256_file(image_b),
+            "answer": b_answer,
         },
         "aggregation": FEATURE_AGGREGATION,
+        "feature_token_scope": FEATURE_TOKEN_SCOPE,
+        "capture_scope": "prompt_only; post-layer residuals; no generated answer tokens",
         "steering_formula": (
             "h_last' = h_last + alpha * scaled_direction; "
             "scaled_direction = normalize((score(B)-score(A)) @ W_dec) "
@@ -946,7 +1081,7 @@ def calibrate_contrastive_profile_ab(
 
     status = (
         f"**Contrastive profile created:** `{run_id}`  \n"
-        f"Contrast used: `score(B) - score(A)` with `{FEATURE_AGGREGATION}` aggregation in FP32.  \n"
+        f"Contrast: `score(B) - score(A)`; aggregation `{FEATURE_AGGREGATION}`; tokens `{FEATURE_TOKEN_SCOPE}`.  \n"
         + " · ".join(norm_lines)
         + "  \nYou can now query any new text/image below without recalibrating."
     )
@@ -974,6 +1109,7 @@ def save_query_steered_activations(
     input_ids_cpu: torch.Tensor,
     residuals: Dict[int, torch.Tensor],
     strengths: Dict[int, float],
+    generation_metadata: Dict[str, Any],
 ) -> str:
     query_dir = run_dir / "queries" / query_name
     query_dir.mkdir(parents=True, exist_ok=True)
@@ -981,7 +1117,7 @@ def save_query_steered_activations(
 
     for layer_idx in LAYERS:
         feature_acts = encode_sae_chunked(saes[layer_idx], residuals[layer_idx])
-        score = aggregate_feature_acts(feature_acts)
+        score = aggregate_feature_acts(feature_acts, image_mask)
 
         payload: Dict[str, Any] = {
             "model_id": MODEL_ID,
@@ -993,6 +1129,8 @@ def save_query_steered_activations(
             "sae_activations": feature_acts,
             "feature_score": score.float(),
             "steering_strength": float(strengths[layer_idx]),
+            "feature_token_scope": FEATURE_TOKEN_SCOPE,
+            "capture_scope": "prompt_only_after_steering",
         }
         if SAVE_RESIDUALS:
             payload["resid_post"] = residuals[layer_idx]
@@ -1006,6 +1144,11 @@ def save_query_steered_activations(
         "image_sha256": sha256_file(image_path),
         "strengths": {str(k): float(v) for k, v in strengths.items()},
         "layers": LAYERS,
+        "aggregation": FEATURE_AGGREGATION,
+        "feature_token_scope": FEATURE_TOKEN_SCOPE,
+        "capture_scope": "prompt_only_after_steering; separate forward pass; no generated answer tokens",
+        "runtime": runtime_metadata(),
+        "generation": generation_metadata,
         "created_unix": time.time(),
     }
     with open(query_dir / "metadata.json", "w", encoding="utf-8") as f:
@@ -1034,7 +1177,9 @@ def ask_steered_model(
     strength_17: float,
     strength_29: float,
     session_state: Optional[Dict[str, Any]],
+    seed: int = 0,
 ):
+    validate_generation_settings(max_new_tokens, temperature, seed)
     query_prompt = validate_condition_inputs("query", query_image, query_prompt)
     if not session_state:
         raise gr.Error("Create a profile first in '1) Build the B - A steering profile'.")
@@ -1043,17 +1188,20 @@ def ask_steered_model(
     if not profile_path or not Path(profile_path).exists():
         raise gr.Error("The steering profile could not be found. Please recalibrate the experiment.")
 
-    directions = load_steering_directions(profile_path)
     strengths = {
         9: float(strength_9),
         17: float(strength_17),
         29: float(strength_29),
     }
+    if any(not math.isfinite(v) or abs(v) > 10 for v in strengths.values()):
+        raise gr.Error("Steering strengths must be finite and between -10 and 10.")
 
     run_dir = Path(session_state["run_dir"])
     query_name = time.strftime("query_%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
 
     with MODEL_LOCK:
+        ensure_models_loaded()
+        directions = load_steering_directions(profile_path)
         base_inputs, input_ids_cpu, input_len = prepare_inputs(
             image_path=query_image,
             prompt=query_prompt,
@@ -1072,6 +1220,7 @@ def ask_steered_model(
             input_len=input_len,
             max_new_tokens=int(max_new_tokens),
             temperature=float(temperature),
+            seed=int(seed),
         )
 
         steered_answer = generate_answer(
@@ -1081,6 +1230,7 @@ def ask_steered_model(
             temperature=float(temperature),
             steering_directions=directions,
             strengths=strengths,
+            seed=int(seed),
         )
 
         steered_residuals = capture_prompt_residuals(
@@ -1097,12 +1247,21 @@ def ask_steered_model(
             input_ids_cpu=input_ids_cpu,
             residuals=steered_residuals,
             strengths=strengths,
+            generation_metadata={
+                "max_new_tokens": int(max_new_tokens),
+                "temperature": float(temperature),
+                "seed": int(seed),
+                "profile_sha256": sha256_file(profile_path),
+                "base_answer": base_answer,
+                "steered_answer": steered_answer,
+            },
         )
 
     status = (
         f"**Query `{query_name}`** · profile `{session_state['run_id']}`  \n"
         f"α9=`{strengths[9]:+.2f}` · α17=`{strengths[17]:+.2f}` · α29=`{strengths[29]:+.2f}`.  \n"
-        "This query does not recompute A/B; it only receives the previously learned steering profile."
+        f"BASE and STEERED use the same seed (`{int(seed)}`). "
+        "This query reuses the saved B−A profile without recalibration."
     )
 
     return base_answer, steered_answer, query_zip, status
@@ -1190,299 +1349,334 @@ text prompt, upload a different image, use text only, or use image + text.
 
 **5. Adjust the per-layer steering sliders.**
 - `0` = no steering
-- positive values = move toward **B relative to A**
-- negative values = move toward **A relative to B**
+- positive values = add the **B − A** activation direction
+- negative values = subtract the **B − A** activation direction
 
 Start around `±1` and increase gradually. Large values can strongly distort generation.
+The sign specifies an activation intervention, not a guaranteed behavioral effect.
+This experiment does not calculate a percentage of image/text influence or remove a modality.
 """
 
-with gr.Blocks(
-    title="Gemma 3 · Contrastive SAE Steering",
-    css=APP_CSS,
-    theme=gr.themes.Soft(),
-) as demo:
-    gr.Markdown(
-        """
-# Gemma 3 · Contrastive SAE Steering
-Build a reusable **B − A sparse-feature steering profile** from two arbitrary multimodal conditions, then apply it to completely new Gemma 3 queries.
-        """,
-        elem_id="hero",
-    )
 
-    with gr.Accordion("How to use this app", open=True):
-        gr.Markdown(TUTORIAL_MD)
-
-    with gr.Accordion("Method and steering formula", open=False):
+def build_demo() -> gr.Blocks:
+    """Build the interface without loading model weights."""
+    with gr.Blocks(
+        title="Gemma 3 · Contrastive SAE Steering",
+        analytics_enabled=False,
+    ) as demo:
         gr.Markdown(
-            f"""
-<div class="formula-box">
-
-**Configured layers:** `{LAYERS}`  
-**Feature aggregation:** `{FEATURE_AGGREGATION}`  
-**Steering fraction per alpha unit:** `{STEERING_FRACTION_PER_UNIT}`  
-**Steer last token only:** `{STEER_LAST_TOKEN_ONLY}`
-
-For each layer:
-
-`d = score_SAE(B) - score_SAE(A)`  
-`v_raw = d @ W_dec`  
-`v = normalize(v_raw) × reference_residual_norm × STEERING_FRACTION_PER_UNIT`  
-`h_last' = h_last + alpha × v`
-
-The raw, unscaled feature delta and residual direction are saved to disk for analysis.
-
-</div>
             """
+    # Gemma 3 · Contrastive SAE Steering
+    Build a reusable **B − A sparse-feature steering profile** from two arbitrary multimodal conditions, then apply it to completely new Gemma 3 queries.
+            """,
+            elem_id="hero",
         )
 
-    session_state = gr.State(value=None)
+        with gr.Accordion("How to use this app", open=True):
+            gr.Markdown(TUTORIAL_MD)
 
-    # --------------------------------------------------------
-    # STEP 1: A/B CALIBRATION
-    # --------------------------------------------------------
-    gr.Markdown("## 1. Build the B − A steering profile")
-    gr.Markdown(
-        "Define two independent conditions. Each one must contain at least text, an image, or both.",
-        elem_classes=["small-note"],
-    )
-
-    with gr.Row(equal_height=True):
-        with gr.Column(scale=1, elem_classes=["section-card", "condition-a"]):
-            gr.Markdown("### Condition A · reference / source")
-            image_a = gr.Image(
-                label="Image A · optional",
-                type="filepath",
-                height=300,
-            )
-            prompt_a = gr.Textbox(
-                label="Prompt A · optional when an image is provided",
-                placeholder="Example: Describe this scene in a neutral way.",
-                lines=5,
-            )
-            answer_a = gr.Textbox(
-                label="Gemma response for Condition A",
-                lines=8,
-                interactive=False,
-            )
-
-        with gr.Column(scale=1, elem_classes=["section-card", "condition-b"]):
-            gr.Markdown("### Condition B · target / comparison")
-            image_b = gr.Image(
-                label="Image B · optional",
-                type="filepath",
-                height=300,
-            )
-            prompt_b = gr.Textbox(
-                label="Prompt B · optional when an image is provided",
-                placeholder="Example: Describe this scene focusing on emotion and atmosphere.",
-                lines=5,
-            )
-            answer_b = gr.Textbox(
-                label="Gemma response for Condition B",
-                lines=8,
-                interactive=False,
-            )
-
-    with gr.Row():
-        calibration_max_new_tokens = gr.Slider(
-            minimum=1,
-            maximum=1024,
-            value=192,
-            step=1,
-            label="Calibration response max new tokens",
-        )
-        calibration_temperature = gr.Slider(
-            minimum=0.0,
-            maximum=2.0,
-            value=0.0,
-            step=0.05,
-            label="Calibration temperature · 0 = greedy",
-        )
-
-    calibrate_btn = gr.Button(
-        "Build B − A profile",
-        variant="primary",
-        size="lg",
-    )
-    calibration_status = gr.Markdown()
-
-    with gr.Row():
-        calibration_bundle = gr.File(
-            label="Download calibration bundle · A + B + B−A profile",
-        )
-
-    gr.Markdown("### Largest SAE feature differences")
-    gr.Markdown(
-        "`delta = score(B) - score(A)`. Positive means stronger in B; negative means stronger in A.",
-        elem_classes=["small-note"],
-    )
-
-    delta_table = gr.Dataframe(
-        headers=[
-            "layer",
-            "rank",
-            "feature_id",
-            "signed_delta",
-            "absolute_delta",
-            "interpretation",
-        ],
-        datatype=["number", "number", "number", "number", "number", "str"],
-        interactive=False,
-        wrap=True,
-    )
-
-    # --------------------------------------------------------
-    # STEP 2: ARBITRARY STEERED QUERY
-    # --------------------------------------------------------
-    gr.Markdown("## 2. Query the calibrated steered model")
-    gr.Markdown(
-        "This input is independent from Conditions A and B. The saved B−A profile is reused without recalibration.",
-        elem_classes=["small-note"],
-    )
-
-    with gr.Row(equal_height=True):
-        with gr.Column(scale=1, elem_classes=["section-card"]):
-            query_image = gr.Image(
-                label="Query image · optional",
-                type="filepath",
-                height=300,
-            )
-            query_prompt = gr.Textbox(
-                label="Query prompt",
-                placeholder="Ask Gemma anything...",
-                lines=5,
-            )
-
-            with gr.Row():
-                query_max_new_tokens = gr.Slider(
-                    minimum=1,
-                    maximum=1024,
-                    value=192,
-                    step=1,
-                    label="Max new tokens",
-                )
-                query_temperature = gr.Slider(
-                    minimum=0.0,
-                    maximum=2.0,
-                    value=0.0,
-                    step=0.05,
-                    label="Temperature · 0 = greedy",
-                )
-
-            gr.Markdown("#### Steering strength by layer")
+        with gr.Accordion("Method and steering formula", open=False):
             gr.Markdown(
-                "`0` = off · positive = toward B−A · negative = toward A−B",
-                elem_classes=["small-note"],
+                f"""
+    <div class="formula-box">
+
+    **Configured layers:** `{LAYERS}`  
+    **Feature aggregation:** `{FEATURE_AGGREGATION}`  
+    **Tokens used for feature scoring:** `{FEATURE_TOKEN_SCOPE}`  
+    **Steering fraction per alpha unit:** `{STEERING_FRACTION_PER_UNIT}`  
+    **Steer last token only:** `{STEER_LAST_TOKEN_ONLY}`
+
+    For each layer:
+
+    `d = score_SAE(B) - score_SAE(A)`  
+    `v_raw = d @ W_dec`  
+    `v = normalize(v_raw) × reference_residual_norm × STEERING_FRACTION_PER_UNIT`  
+    `h_last' = h_last + alpha × v`
+
+    The raw, unscaled feature delta and residual direction are saved to disk for analysis.
+    `all` includes image and template tokens; `non_image` excludes image placeholders;
+    `last` uses the last prompt position. None is a causal attribution percentage.
+
+    </div>
+                """
             )
 
-            strength_9 = gr.Slider(
-                -10, 10, value=0, step=0.25, label="Layer 9 · alpha"
-            )
-            strength_17 = gr.Slider(
-                -10, 10, value=0, step=0.25, label="Layer 17 · alpha"
-            )
-            strength_29 = gr.Slider(
-                -10, 10, value=0, step=0.25, label="Layer 29 · alpha"
-            )
+        session_state = gr.State(value=None)
 
-            ask_btn = gr.Button(
-                "Run BASE + STEERED",
-                variant="primary",
-                size="lg",
-            )
-            query_status = gr.Markdown()
-            query_archive = gr.File(
-                label="Download steered-query activations",
-            )
-
-        with gr.Column(scale=1, elem_classes=["section-card", "result-card"]):
-            query_base_answer = gr.Textbox(
-                label="BASE response",
-                lines=13,
-                interactive=False,
-            )
-            query_steered_answer = gr.Textbox(
-                label="STEERED response",
-                lines=13,
-                interactive=False,
-            )
-
-    with gr.Accordion("Saved artifacts and experiment structure", open=False):
+        # --------------------------------------------------------
+        # STEP 1: A/B CALIBRATION
+        # --------------------------------------------------------
+        gr.Markdown("## 1. Build the B − A steering profile")
         gr.Markdown(
-            """
-Each calibration run contains roughly:
-
-```text
-run_id/
-├── condition_A/
-│   ├── layer_9.pt
-│   ├── layer_17.pt
-│   ├── layer_29.pt
-│   └── metadata.json
-├── condition_B/
-│   ├── layer_9.pt
-│   ├── layer_17.pt
-│   ├── layer_29.pt
-│   └── metadata.json
-├── contrastive_profile_B_minus_A/
-│   ├── layer_9_contrastive_profile.pt
-│   ├── layer_17_contrastive_profile.pt
-│   ├── layer_29_contrastive_profile.pt
-│   ├── steering_profile.pt
-│   └── profile_summary.json
-├── queries/
-└── experiment.json
-```
-
-The `.pt` files retain FP32 SAE scores/deltas and residual directions so the experiment can be inspected outside the web UI.
-            """
+            "Define two independent conditions. Each one must contain at least text, an image, or both.",
+            elem_classes=["small-note"],
         )
 
-    calibrate_btn.click(
-        fn=calibrate_contrastive_profile_ab,
-        inputs=[
-            prompt_a,
-            image_a,
-            prompt_b,
-            image_b,
-            calibration_max_new_tokens,
-            calibration_temperature,
-        ],
-        outputs=[
-            answer_a,
-            answer_b,
-            delta_table,
-            calibration_bundle,
-            session_state,
-            calibration_status,
-        ],
-    )
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=1, elem_classes=["section-card", "condition-a"]):
+                gr.Markdown("### Condition A · reference / source")
+                image_a = gr.Image(
+                    label="Image A · optional",
+                    type="filepath",
+                    height=300,
+                )
+                prompt_a = gr.Textbox(
+                    label="Prompt A · optional when an image is provided",
+                    placeholder="Example: Describe this scene in a neutral way.",
+                    lines=5,
+                )
+                answer_a = gr.Textbox(
+                    label="Gemma response for Condition A",
+                    lines=8,
+                    interactive=False,
+                )
 
-    ask_btn.click(
-        fn=ask_steered_model,
-        inputs=[
-            query_image,
-            query_prompt,
-            query_max_new_tokens,
-            query_temperature,
-            strength_9,
-            strength_17,
-            strength_29,
-            session_state,
-        ],
-        outputs=[
-            query_base_answer,
-            query_steered_answer,
-            query_archive,
-            query_status,
-        ],
-    )
+            with gr.Column(scale=1, elem_classes=["section-card", "condition-b"]):
+                gr.Markdown("### Condition B · target / comparison")
+                image_b = gr.Image(
+                    label="Image B · optional",
+                    type="filepath",
+                    height=300,
+                )
+                prompt_b = gr.Textbox(
+                    label="Prompt B · optional when an image is provided",
+                    placeholder="Example: Describe this scene focusing on emotion and atmosphere.",
+                    lines=5,
+                )
+                answer_b = gr.Textbox(
+                    label="Gemma response for Condition B",
+                    lines=8,
+                    interactive=False,
+                )
+
+        with gr.Row():
+            calibration_max_new_tokens = gr.Slider(
+                minimum=1,
+                maximum=1024,
+                value=192,
+                step=1,
+                label="Calibration response max new tokens",
+            )
+            calibration_temperature = gr.Slider(
+                minimum=0.0,
+                maximum=2.0,
+                value=0.0,
+                step=0.05,
+                label="Calibration temperature · 0 = greedy",
+            )
+        calibration_seed = gr.Number(value=0, precision=0, label="Calibration seed · shared by A and B")
+
+        calibrate_btn = gr.Button(
+            "Build B − A profile",
+            variant="primary",
+            size="lg",
+        )
+        calibration_status = gr.Markdown()
+
+        with gr.Row():
+            calibration_bundle = gr.File(
+                label="Download calibration bundle · A + B + B−A profile",
+            )
+
+        gr.Markdown("### Largest SAE feature differences")
+        gr.Markdown(
+            "`delta = score(B) - score(A)`. Positive means stronger in B; negative means stronger in A.",
+            elem_classes=["small-note"],
+        )
+
+        delta_table = gr.Dataframe(
+            headers=[
+                "layer",
+                "rank",
+                "feature_id",
+                "signed_delta",
+                "absolute_delta",
+                "interpretation",
+            ],
+            datatype=["number", "number", "number", "number", "number", "str"],
+            interactive=False,
+            wrap=True,
+        )
+
+        # --------------------------------------------------------
+        # STEP 2: ARBITRARY STEERED QUERY
+        # --------------------------------------------------------
+        gr.Markdown("## 2. Query the calibrated steered model")
+        gr.Markdown(
+            "This input is independent from Conditions A and B. The saved B−A profile is reused without recalibration.",
+            elem_classes=["small-note"],
+        )
+
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=1, elem_classes=["section-card"]):
+                query_image = gr.Image(
+                    label="Query image · optional",
+                    type="filepath",
+                    height=300,
+                )
+                query_prompt = gr.Textbox(
+                    label="Query prompt",
+                    placeholder="Ask Gemma anything...",
+                    lines=5,
+                )
+
+                with gr.Row():
+                    query_max_new_tokens = gr.Slider(
+                        minimum=1,
+                        maximum=1024,
+                        value=192,
+                        step=1,
+                        label="Max new tokens",
+                    )
+                    query_temperature = gr.Slider(
+                        minimum=0.0,
+                        maximum=2.0,
+                        value=0.0,
+                        step=0.05,
+                        label="Temperature · 0 = greedy",
+                    )
+                query_seed = gr.Number(value=0, precision=0, label="Query seed · shared by BASE and STEERED")
+
+                gr.Markdown("#### Steering strength by layer")
+                gr.Markdown(
+                    "`0` = off · positive = toward B−A · negative = toward A−B",
+                    elem_classes=["small-note"],
+                )
+
+                strength_9 = gr.Slider(
+                    -10, 10, value=0, step=0.25, label="Layer 9 · alpha"
+                )
+                strength_17 = gr.Slider(
+                    -10, 10, value=0, step=0.25, label="Layer 17 · alpha"
+                )
+                strength_29 = gr.Slider(
+                    -10, 10, value=0, step=0.25, label="Layer 29 · alpha"
+                )
+
+                ask_btn = gr.Button(
+                    "Run BASE + STEERED",
+                    variant="primary",
+                    size="lg",
+                )
+                query_status = gr.Markdown()
+                query_archive = gr.File(
+                    label="Download steered prompt activations + response metadata",
+                )
+
+            with gr.Column(scale=1, elem_classes=["section-card", "result-card"]):
+                query_base_answer = gr.Textbox(
+                    label="BASE response",
+                    lines=13,
+                    interactive=False,
+                )
+                query_steered_answer = gr.Textbox(
+                    label="STEERED response",
+                    lines=13,
+                    interactive=False,
+                )
+
+        with gr.Accordion("Saved artifacts and experiment structure", open=False):
+            gr.Markdown(
+                """
+    Each calibration run contains roughly:
+
+    ```text
+    run_id/
+    ├── condition_A/
+    │   ├── layer_9.pt
+    │   ├── layer_17.pt
+    │   ├── layer_29.pt
+    │   └── metadata.json
+    ├── condition_B/
+    │   ├── layer_9.pt
+    │   ├── layer_17.pt
+    │   ├── layer_29.pt
+    │   └── metadata.json
+    ├── contrastive_profile_B_minus_A/
+    │   ├── layer_9_contrastive_profile.pt
+    │   ├── layer_17_contrastive_profile.pt
+    │   ├── layer_29_contrastive_profile.pt
+    │   ├── steering_profile.pt
+    │   └── profile_summary.json
+    ├── queries/
+    └── experiment.json
+    ```
+
+    The `.pt` files retain FP32 SAE scores/deltas and residual directions so the experiment can be inspected outside the web UI.
+    Query activations come from a separate forward pass over the prompt, after steering.
+    They do not record the generated answer tokens. Responses, seeds and generation settings are saved in JSON.
+                """
+            )
+
+        calibrate_btn.click(
+            fn=calibrate_contrastive_profile_ab,
+            inputs=[
+                prompt_a,
+                image_a,
+                prompt_b,
+                image_b,
+                calibration_max_new_tokens,
+                calibration_temperature,
+                calibration_seed,
+            ],
+            outputs=[
+                answer_a,
+                answer_b,
+                delta_table,
+                calibration_bundle,
+                session_state,
+                calibration_status,
+            ],
+        )
+
+        ask_btn.click(
+            fn=ask_steered_model,
+            inputs=[
+                query_image,
+                query_prompt,
+                query_max_new_tokens,
+                query_temperature,
+                strength_9,
+                strength_17,
+                strength_29,
+                session_state,
+                query_seed,
+            ],
+            outputs=[
+                query_base_answer,
+                query_steered_answer,
+                query_archive,
+                query_status,
+            ],
+        )
+
+    return demo
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.split("Overview")[0])
+    parser.add_argument("--check", action="store_true", help="Validate imports, SAE registry and UI without model downloads")
+    parser.add_argument("--preload", action="store_true", help="Load Gemma and the SAEs before serving the UI")
+    args = parser.parse_args()
+    validate_configuration()
+    validate_sae_registry()
+    demo = build_demo()
+    if args.check:
+        print(json.dumps({"status": "ok", "model_weights_loaded": False, "sae_release": SAE_RELEASE, "runtime": runtime_metadata()}, indent=2))
+        demo.close()
+        return
+    if args.preload:
+        with MODEL_LOCK:
+            ensure_models_loaded()
     demo.queue(default_concurrency_limit=1)
     demo.launch(
         server_name=os.getenv("GRADIO_SERVER_NAME", "0.0.0.0"),
         server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
         share=False,
+        css=APP_CSS,
+        theme=gr.themes.Soft(),
     )
+
+
+if __name__ == "__main__":
+    main()
