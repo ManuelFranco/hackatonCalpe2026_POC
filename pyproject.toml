@@ -24,6 +24,17 @@ dev = ["ruff>=0.9,<1"]
 package = false
 required-version = ">=0.9.15"
 
+# The Linux x86_64 server's driver supports CUDA 12.4. Keep both PyTorch
+# packages on that runtime; macOS continues to use the native PyPI wheels.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu124", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }]
+torchvision = [{ index = "pytorch-cu124", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
 [tool.ruff]
 target-version = "py312"
 
