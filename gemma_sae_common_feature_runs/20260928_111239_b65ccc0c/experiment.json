@@ -1,0 +1,104 @@
+{
+  "run_id": "20260928_111239_b65ccc0c",
+  "model_id": "google/gemma-3-4b-it",
+  "layers": [
+    9,
+    17,
+    29
+  ],
+  "num_pairs": 3,
+  "pairs": [
+    {
+      "pair_index": 1,
+      "condition_A": {
+        "prompt": "",
+        "image_filename": "tank_normal.jpeg",
+        "image_sha256": "01fd264895296f8741b138065868f9e092644e5f54e77989d9a64e7f0870f6a1",
+        "optional_preview_response": null,
+        "capture_scope": "prompt/image only; no generated answer tokens"
+      },
+      "condition_B": {
+        "prompt": "",
+        "image_filename": "tank_destroyed.jpeg",
+        "image_sha256": "d78fc9135739b17abf200b777063738d3d3600415750bc48d8669dbaf9687731",
+        "optional_preview_response": null,
+        "capture_scope": "prompt/image only; no generated answer tokens"
+      }
+    },
+    {
+      "pair_index": 2,
+      "condition_A": {
+        "prompt": "",
+        "image_filename": "moto_normal.jpeg",
+        "image_sha256": "38429b24de8f026b65529ab3976045ec0e729efe244a68ae16b5b5b9cd14ab60",
+        "optional_preview_response": null,
+        "capture_scope": "prompt/image only; no generated answer tokens"
+      },
+      "condition_B": {
+        "prompt": "",
+        "image_filename": "moto_destroyed.jpeg",
+        "image_sha256": "675faec7d02c2425ad0bec80985aed896ccff6d70f9ca741a47e47cc0e8e9c27",
+        "optional_preview_response": null,
+        "capture_scope": "prompt/image only; no generated answer tokens"
+      }
+    },
+    {
+      "pair_index": 3,
+      "condition_A": {
+        "prompt": "",
+        "image_filename": "car_normal.jpeg",
+        "image_sha256": "0000dfb4adfdf6a6128b10cdf5098110c501783841ee3e961621f94e8ab4921a",
+        "optional_preview_response": null,
+        "capture_scope": "prompt/image only; no generated answer tokens"
+      },
+      "condition_B": {
+        "prompt": "",
+        "image_filename": "car_destroyed.jpeg",
+        "image_sha256": "969dcbe62460a35652186dae7716d397d4cc49c6396b812a3487420f62823e3b",
+        "optional_preview_response": null,
+        "capture_scope": "prompt/image only; no generated answer tokens"
+      }
+    }
+  ],
+  "sae_ids": {
+    "9": "layer_9_width_16k_l0_medium",
+    "17": "layer_17_width_16k_l0_medium",
+    "29": "layer_29_width_16k_l0_medium"
+  },
+  "sae_releases_used": {
+    "9": "gemma-scope-2-4b-it-res",
+    "17": "gemma-scope-2-4b-it-res",
+    "29": "gemma-scope-2-4b-it-res"
+  },
+  "runtime": {
+    "packages": {
+      "torch": "2.14.0",
+      "torchvision": "0.29.0",
+      "transformers": "4.57.6",
+      "sae-lens": "6.51.1",
+      "gradio": "6.17.3",
+      "accelerate": "1.15.0"
+    },
+    "model_revision_requested": null,
+    "model_commit": "093f9f388b31de276ce2de164bdc2081324b9767",
+    "device": "cuda:0",
+    "dtype": "torch.bfloat16",
+    "torch_cuda": "13.0",
+    "cuda_available": true,
+    "mps_available": false,
+    "device_requested": "cuda",
+    "dtype_requested": "auto"
+  },
+  "aggregation": "mean",
+  "feature_token_scope": "all",
+  "presence_epsilon": 1e-06,
+  "capture_scope": "prompt_only_no_assistant_prefix; no generation during capture",
+  "optional_preview_generation": {
+    "enabled": false,
+    "max_new_tokens": 192,
+    "temperature": 0.0,
+    "seed": 0
+  },
+  "formula": "intersection(|delta_i|>epsilon) * mean_i(delta_i) @ W_dec",
+  "created_unix": 1790586763.380249
+}

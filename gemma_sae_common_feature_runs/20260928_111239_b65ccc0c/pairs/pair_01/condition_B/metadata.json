@@ -1,0 +1,19 @@
+{
+  "condition": "B",
+  "capture_scope": "prompt_only_no_generation_no_assistant_prefix",
+  "model_id": "google/gemma-3-4b-it",
+  "prompt": "",
+  "image_filename": "tank_destroyed.jpeg",
+  "image_sha256": "d78fc9135739b17abf200b777063738d3d3600415750bc48d8669dbaf9687731",
+  "num_input_tokens": 265,
+  "num_image_tokens": 256,
+  "aggregation": "mean",
+  "feature_token_scope": "all",
+  "num_scored_tokens": 265,
+  "layers": [
+    9,
+    17,
+    29
+  ],
+  "created_unix": 1790586760.9694397
+}

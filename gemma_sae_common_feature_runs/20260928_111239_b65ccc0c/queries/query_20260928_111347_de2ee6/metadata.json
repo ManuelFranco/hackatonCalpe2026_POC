@@ -1,0 +1,46 @@
+{
+  "prompt": "Este avión está destrozado?",
+  "image_filename": "avion_normal.jpeg",
+  "image_sha256": "07c8bca38a0c21cb4e7e742104517dc102f4324727b79a6e891b23785aad7e6c",
+  "strengths": {
+    "9": 0.0,
+    "17": 0.0,
+    "29": 1.0
+  },
+  "layers": [
+    9,
+    17,
+    29
+  ],
+  "aggregation": "mean",
+  "feature_token_scope": "all",
+  "capture_scope": "prompt_only_after_steering; separate forward pass; no generated answer tokens",
+  "runtime": {
+    "packages": {
+      "torch": "2.14.0",
+      "torchvision": "0.29.0",
+      "transformers": "4.57.6",
+      "sae-lens": "6.51.1",
+      "gradio": "6.17.3",
+      "accelerate": "1.15.0"
+    },
+    "model_revision_requested": null,
+    "model_commit": "093f9f388b31de276ce2de164bdc2081324b9767",
+    "device": "cuda:0",
+    "dtype": "torch.bfloat16",
+    "torch_cuda": "13.0",
+    "cuda_available": true,
+    "mps_available": false,
+    "device_requested": "cuda",
+    "dtype_requested": "auto"
+  },
+  "generation": {
+    "max_new_tokens": 192,
+    "temperature": 0.0,
+    "seed": 0,
+    "profile_sha256": "43d4ae6477ec801b38f54289dcf6da454fefbce26644fe853dc40550259bf85a",
+    "base_answer": "No, el avión en la imagen no está destrozado. Se ve intacto y en buenas condiciones. Es un avión comercial moderno, probablemente un Airbus A320 o similar, que está estacionado en una pista de aterrizaje.",
+    "steered_answer": "No, el avión en la imagen no está destrozado. Se ve intacto y en buenas condiciones. Es un avión comercial moderno, probablemente un Airbus A320 o similar, que está estacionado en una pista de aterrizaje."
+  },
+  "created_unix": 1790586829.5254922
+}
