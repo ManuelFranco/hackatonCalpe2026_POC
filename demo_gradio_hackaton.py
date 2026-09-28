@@ -14,7 +14,7 @@ Each condition may contain:
 - image + text,
 - image only,
 - or even the same image with different prompts.
-For every configured transformer layer and every pair, the app:
+For each layer 9, 17, 22, and 29 and every pair, the app:
 1. captures the post-layer residual stream (`resid_post`),
 2. encodes it with the matching Gemma Scope 2 sparse autoencoder (SAE),
 3. aggregates token-level SAE activations into one feature vector,
@@ -40,6 +40,7 @@ What the app saves
 - experiment metadata and numerical diagnostics,
 - steered-query activations and metadata,
 - ZIP bundles for convenient export.
+- per-layer feature tables with expandable Neuronpedia embeds.
 Quick start
 ===========
 1. Install dependencies:
@@ -73,6 +74,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import html
 import importlib.metadata
 import json
 import math
@@ -95,13 +97,27 @@ MODEL_ID = os.getenv("GEMMA_MODEL_ID", "google/gemma-3-4b-it")
 MODEL_REVISION = os.getenv("GEMMA_MODEL_REVISION")
 MODEL_DEVICE = os.getenv("GEMMA_DEVICE", "auto").strip().lower()
 MODEL_DTYPE = os.getenv("GEMMA_DTYPE", "auto").strip().lower()
-LAYERS = [9, 17, 29]
+LAYERS = [9, 17, 22, 29]
 SAE_RELEASE = os.getenv("SAE_RELEASE", "gemma-scope-2-4b-it-res")
 SAE_IDS = {
     9: "layer_9_width_16k_l0_medium",
     17: "layer_17_width_16k_l0_medium",
+    22: "layer_22_width_16k_l0_medium",
     29: "layer_29_width_16k_l0_medium",
 }
+# Source IDs verified against the matching Gemma Scope 2 Neuronpedia listings.
+# Keep these aligned with SAE_IDS (16k resid_post, l0_medium).
+NEURONPEDIA_MODEL = "gemma-3-4b-it"
+NEURONPEDIA_SOURCES = {
+    9: "9-gemmascope-2-res-16k",
+    17: "17-gemmascope-2-res-16k",
+    22: "22-gemmascope-2-res-16k",
+    29: "29-gemmascope-2-res-16k",
+}
+NEURONPEDIA_EMBED_QUERY = (
+    "embed=true&embedexplanation=true&embedplots=true&embedsteer=true"
+    "&embedactivations=false&embedlink=true&embedtest=true"
+)
 FEATURE_AGGREGATION = os.getenv("FEATURE_AGGREGATION", "mean").strip().lower()
 FEATURE_TOKEN_SCOPE = os.getenv("FEATURE_TOKEN_SCOPE", "all").strip().lower()
 STEERING_FRACTION_PER_UNIT = float(os.getenv("STEERING_FRACTION_PER_UNIT", "0.05"))
@@ -141,6 +157,8 @@ def validate_configuration() -> None:
         raise ValueError("FEATURE_TOKEN_SCOPE must be all, non_image or last.")
     if SAE_CHUNK_TOKENS < 1 or TOP_DIFFS_TO_SHOW < 1:
         raise ValueError("SAE_CHUNK_TOKENS and TOP_DIFFS_TO_SHOW must be positive.")
+    if set(NEURONPEDIA_SOURCES) != set(LAYERS) or set(SAE_IDS) != set(LAYERS):
+        raise ValueError("Each layer needs a matching SAE and Neuronpedia source.")
     if MAX_PAIRS < MIN_PAIRS or MAX_PAIRS > 20:
         raise ValueError("MAX_CONTRASTIVE_PAIRS must be between 2 and 20.")
     if not math.isfinite(FEATURE_PRESENCE_EPS) or FEATURE_PRESENCE_EPS < 0:
@@ -1191,16 +1209,18 @@ def calibrate_contrastive_profile_pairs(*args: Any):
     report.append(
         "La tabla es una vista previa; el ZIP incluye un CSV con **todas** las features y sus deltas por par."
     )
-    return (
-        *answers,
-        layer_rows,
-        included_rows,
-        excluded_rows,
-        pair_rows,
-        bundle,
-        state,
-        "\n".join(report),
-    )
+    # Four independently rendered results per layer: overview, common,
+    # excluded, and top individual pair deltas. Each feature can expand its
+    # matching Neuronpedia iframe directly in the corresponding table.
+    html_results: List[str] = []
+    for layer_idx in LAYERS:
+        html_results.extend([
+            render_layer_overview(layer_idx, layer_info[layer_idx]),
+            render_feature_table(layer_idx, included_rows, included=True),
+            render_feature_table(layer_idx, excluded_rows, included=False),
+            render_individual_pair_table(layer_idx, pair_rows),
+        ])
+    return (*answers, *html_results, bundle, state, "\n".join(report))
 
 
 def save_query_steered_activations(
@@ -1269,6 +1289,7 @@ def ask_steered_model(
     temperature: float,
     strength_9: float,
     strength_17: float,
+    strength_22: float,
     strength_29: float,
     session_state: Optional[Dict[str, Any]],
     seed: int = 0,
@@ -1283,6 +1304,7 @@ def ask_steered_model(
     strengths = {
         9: float(strength_9),
         17: float(strength_17),
+        22: float(strength_22),
         29: float(strength_29),
     }
     if any(not math.isfinite(v) or abs(v) > 10 for v in strengths.values()):
@@ -1344,7 +1366,8 @@ def ask_steered_model(
         )
     status = (
         f"**Query `{query_name}`** · profile `{session_state['run_id']}`  \n"
-        f"α9=`{strengths[9]:+.2f}` · α17=`{strengths[17]:+.2f}` · α29=`{strengths[29]:+.2f}`.  \n"
+        f"α9=`{strengths[9]:+.2f}` · α17=`{strengths[17]:+.2f}` · "
+        f"α22=`{strengths[22]:+.2f}` · α29=`{strengths[29]:+.2f}`.  \n"
         f"BASE and STEERED use the same seed (`{int(seed)}`). "
         "Esta consulta reutiliza el perfil de features comunes sin recalibrar."
     )
@@ -1395,6 +1418,78 @@ APP_CSS = """
     border: 1px solid rgba(127,127,127,0.18);
     background: rgba(127,127,127,0.045);
 }
+
+/* Layer-by-layer feature tables: same soft theme and section-card styling. */
+.layer-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 12px;
+    margin: 8px 0 16px;
+}
+.layer-stat {
+    background: rgba(127,127,127,.045);
+    border: 1px solid rgba(127,127,127,.18);
+    border-radius: 13px;
+    padding: 14px 16px;
+}
+.layer-stat .stat-value { display:block; font-size:1.55rem; font-weight:750; font-variant-numeric:tabular-nums; }
+.layer-stat .stat-label { display:block; font-size:.81rem; opacity:.75; line-height:1.35; }
+.layer-info { margin:4px 0 18px; font-size:.94rem; opacity:.84; }
+.layer-table-caption { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:16px 0 9px; }
+.layer-table-caption h4 { font-weight:700; font-size:1.04rem; margin:0; }
+.layer-table-caption small { opacity:.7; }
+.feature-table { width:100%; overflow-x:auto; border:1px solid rgba(127,127,127,.18); border-radius:14px; }
+.feature-grid {
+    display:grid;
+    grid-template-columns: 90px 94px 110px 110px 110px 122px minmax(190px,1fr) 100px;
+    align-items:center;
+    gap:12px;
+    min-width:1050px;
+    padding:10px 14px;
+    font-size:.89rem;
+}
+.feature-grid--pair { grid-template-columns:65px 110px 145px 110px minmax(160px,1fr) 100px; min-width:740px; }
+.feature-grid-head { font-size:.75rem; text-transform:uppercase; letter-spacing:.055em; font-weight:750;
+    background:rgba(127,127,127,.085); opacity:.78; }
+.feature-row { border-top:1px solid rgba(127,127,127,.12); }
+.feature-row:nth-child(even) > summary { background:rgba(127,127,127,.025); }
+.feature-row > summary { cursor:pointer; list-style:none; }
+.feature-row > summary::-webkit-details-marker { display:none; }
+.feature-row > summary:hover { background:rgba(90,80,255,.06); }
+.feature-row[open] > summary { background:rgba(90,80,255,.075); }
+.feature-id { display:inline-block; min-width:54px; text-align:center; padding:5px 9px; border-radius:8px;
+    font-weight:780; font-variant-numeric:tabular-nums; }
+.feature-id.pos { color:#087c4b; background:rgba(16,185,129,.14); }
+.feature-id.neg { color:#c23546; background:rgba(244,63,94,.12); }
+.feature-id.zero { color:inherit; background:rgba(127,127,127,.12); }
+.signed-value {font-weight:720; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.signed-value.pos {color:#098153;}
+.signed-value.neg {color:#d13b4d;}
+.signed-value.zero {opacity:.6;}
+.feature-presence {font-variant-numeric:tabular-nums; padding:4px 8px; border-radius:8px;
+    background:rgba(90,80,255,.11); display:inline-block; font-weight:650; white-space:nowrap;}
+.feature-presence.full { color:#087c4b; background:rgba(16,185,129,.12); }
+.feature-chip { padding:4px 8px; border-radius:99px; display:inline-block; font-size:.79rem;
+    background:rgba(127,127,127,.1); }
+.feature-chip.ambiguous {background:rgba(245,158,11,.15);color:#986308;}
+.feature-pairs {font-size:.82rem; white-space:normal; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; opacity:.86;}
+.np-trigger {justify-self:end; display:inline-flex; align-items:center; gap:4px; font-size:.77rem; font-weight:740;
+    border:1px solid rgba(90,80,255,.28); background:rgba(90,80,255,.075);
+    padding:6px 10px; border-radius:8px; color:inherit; white-space:nowrap; }
+.np-trigger:before { content:'+'; font-size:1rem; line-height:0; padding-right:3px; }
+.feature-row[open] .np-trigger:before { content:'−'; }
+.np-panel {padding:14px 18px 19px; border-top:1px solid rgba(127,127,127,.12);
+    background:rgba(127,127,127,.025);}
+.np-panel-title {margin-bottom:11px; font-weight:650; font-size:.88rem;}
+.np-iframe {display:block; height:300px; width:540px; max-width:100%; border:1px solid rgba(127,127,127,.20);
+    border-radius:10px; background:white;}
+.np-external {display:inline-block; margin-top:9px; font-size:.82rem; text-decoration:underline;}
+.feature-empty {padding:25px 18px; opacity:.75; font-size:.91rem;}
+@media (prefers-color-scheme:dark) {
+ .feature-id.pos,.signed-value.pos,.feature-presence.full {color:#5ce0aa;}
+ .feature-id.neg,.signed-value.neg {color:#ff8590;}
+ .feature-chip.ambiguous {color:#ffc875;}
+}
 """
 TUTORIAL_MD = r"""
 ### Guía rápida
@@ -1407,8 +1502,9 @@ activaciones SAE y un vector `delta_i = score(B_i) − score(A_i)` por par.
 `abs(delta_i) > FEATURE_PRESENCE_EPS`. Solo las features presentes en **todos**
 los pares pasan al perfil. Se promedian sus deltas **con signo**. Si hay signos
 opuestos, la interfaz los señala; si el promedio se cancela, no aporta steering.
-**4. Consulta las tablas.** Se muestran recuentos por capa, features comunes,
-features excluidas y diferencias por par. El ZIP conserva todas las features en
+**4. Consulta las tablas por capa.** Las features de media B−A positiva van
+en verde y las negativas en rojo. Cada fila tiene EXPAND y un iframe Neuronpedia.
+Se muestran recuentos, features comunes, features excluidas y diferencias por par. El ZIP conserva todas las features en
 CSV y tensores `.pt` sin truncar.
 **5. Consulta el modelo con otra imagen/prompt**, compara BASE con STEERED y
 ajusta los sliders por capa. `0` = sin steering. El signo de alpha interviene
@@ -1416,6 +1512,174 @@ la activación, no garantiza un comportamiento determinado.
 Las respuestas de calibración, si activas su vista previa, **nunca** se usan
 para medir las activaciones ni para construir el perfil.
 """
+
+
+
+# ============================================================
+# PRESENTATION: PER-LAYER TABLES + ON-DEMAND NEURONPEDIA EXPAND
+# ============================================================
+def neuronpedia_url(layer_idx: int, feature_id: int) -> str:
+    """Build a trusted URL from configured SAE IDs and integer feature indices."""
+    if layer_idx not in NEURONPEDIA_SOURCES:
+        raise ValueError(f"Unconfigured Neuronpedia layer: {layer_idx}")
+    feature_id = int(feature_id)
+    if feature_id < 0:
+        raise ValueError("Feature ID must be non-negative")
+    return (
+        f"https://www.neuronpedia.org/{NEURONPEDIA_MODEL}/"
+        f"{NEURONPEDIA_SOURCES[layer_idx]}/{feature_id}?{NEURONPEDIA_EMBED_QUERY}"
+    )
+
+
+def _signed_class(value: float) -> str:
+    return "pos" if value > 0 else "neg" if value < 0 else "zero"
+
+
+def _signed_html(value: float) -> str:
+    return f'<span class="signed-value {_signed_class(value)}">{value:+.6g}</span>'
+
+
+def _np_expanded_panel(layer_idx: int, feature_id: int) -> str:
+    """Only constant text and validated integer feature IDs enter this HTML."""
+    url = html.escape(neuronpedia_url(layer_idx, feature_id), quote=True)
+    title = html.escape(f"Neuronpedia · layer {layer_idx}, feature {feature_id}", quote=True)
+    return (
+        '<div class="np-panel">'
+        f'<div class="np-panel-title">Layer {layer_idx} · Feature #{feature_id} · Neuronpedia</div>'
+        f'<iframe class="np-iframe" src="{url}" title="{title}" loading="lazy" '
+        'referrerpolicy="strict-origin-when-cross-origin" '
+        'style="height:300px;width:540px;max-width:100%;" '
+        'allow="clipboard-write"></iframe>'
+        f'<a class="np-external" href="{url}" target="_blank" rel="noopener noreferrer">'
+        'Abrir en Neuronpedia ↗</a>'
+        '</div>'
+    )
+
+
+def _feature_header(title: str, description: str) -> str:
+    return (
+        '<div class="layer-table-caption">'
+        f'<h4>{html.escape(title)}</h4><small>{html.escape(description)}</small>'
+        '</div>'
+    )
+
+
+def render_empty_layer_overview(layer_idx: int) -> str:
+    return (
+        '<div class="feature-empty">'
+        f'Capa {layer_idx}: calibra al menos dos pares A/B para ver las features, '
+        'los signos y sus enlaces a Neuronpedia.'
+        '</div>'
+    )
+
+
+def render_layer_overview(layer_idx: int, info: Dict[str, Any]) -> str:
+    cards = (
+        ("Pares A/B", info["num_pairs"]),
+        ("Features presentes en algún par", info["present_in_at_least_one"]),
+        ("Comunes en todos", info["common_features"]),
+        ("Excluidas por intersección", info["excluded_not_common"]),
+        ("Comunes con signos opuestos", info["common_opposing_sign"]),
+        ("Canceladas tras la media", info["common_canceled_mean"]),
+        ("Con señal final", info["effective_nonzero_features"]),
+    )
+    html_cards = ''.join(
+        '<div class="layer-stat">'
+        f'<span class="stat-value">{int(number):,}</span>'
+        f'<span class="stat-label">{html.escape(label)}</span></div>'
+        for label, number in cards
+    )
+    return (
+        f'<div class="layer-stat-grid">{html_cards}</div>'
+        '<div class="layer-info">'
+        f'Capa {layer_idx} · SAE 16k · {int(info["total_features"]):,} features totales · '
+        f'‖dirección escalada, α=1‖₂ = <strong>{info["scaled_direction_l2"]:.5g}</strong>. '
+        'La presencia es |Bᵢ−Aᵢ| &gt; ε en <strong>todos</strong> los pares. '
+        'Verde = media B−A positiva; rojo = media negativa. '
+        'La presencia no exige que los signos coincidan.</div>'
+    )
+
+
+def render_feature_table(
+    layer_idx: int, rows: List[List[Any]], included: bool
+) -> str:
+    layer_rows = [r for r in rows if int(r[0]) == layer_idx]
+    title = "Features comunes · incluidas" if included else "Features no comunes · descartadas"
+    description = (
+        "Ordenadas por |media B−A|; las canceladas no aportan steering."
+        if included else
+        "Ordenadas por su pico |B−A|; nunca entran en la dirección final."
+    )
+    heading = _feature_header(title, description)
+    head = (
+        '<div class="feature-grid feature-grid-head">'
+        '<span>Feature</span><span>Presencia</span><span>Media B−A</span>'
+        '<span>Δ steering</span><span>Signos</span><span>Estado</span>'
+        '<span>Δ de cada par</span><span>Neuronpedia</span></div>'
+    )
+    if not layer_rows:
+        return heading + '<div class="feature-table"><div class="feature-empty">Ninguna feature en esta categoría.</div></div>'
+    parts = [heading, '<div class="feature-table">', head]
+    for row in layer_rows:
+        _, fid, count, total, avg, steering, signs, status, pair_deltas = row
+        fid, count, total = int(fid), int(count), int(total)
+        mean = float(avg)
+        value = float(steering)
+        feature_class = _signed_class(mean)
+        presence_class = "full" if count == total else ""
+        status_class = "ambiguous" if "opuestos" in str(signs) or "cancelación" in str(status) else ""
+        pair_label = html.escape(str(pair_deltas))
+        parts.extend([
+            '<details class="feature-row">',
+            '<summary class="feature-grid">',
+            f'<span><span class="feature-id {feature_class}">#{fid}</span></span>',
+            f'<span><span class="feature-presence {presence_class}">{count}/{total}</span></span>',
+            f'<span>{_signed_html(mean)}</span>',
+            f'<span>{_signed_html(value)}</span>',
+            f'<span><span class="feature-chip {status_class}">{html.escape(str(signs))}</span></span>',
+            f'<span><span class="feature-chip {status_class}">{html.escape(str(status))}</span></span>',
+            f'<span class="feature-pairs">{pair_label}</span>',
+            '<span class="np-trigger">EXPAND</span>',
+            '</summary>',
+            _np_expanded_panel(layer_idx, fid),
+            '</details>',
+        ])
+    parts.append('</div>')
+    return ''.join(parts)
+
+
+def render_individual_pair_table(layer_idx: int, rows: List[List[Any]]) -> str:
+    layer_rows = [r for r in rows if int(r[1]) == layer_idx]
+    heading = _feature_header(
+        "Mayores diferencias de cada par",
+        "B−A individuales; no implica que la feature esté incluida en la intersección.",
+    )
+    head = (
+        '<div class="feature-grid feature-grid--pair feature-grid-head">'
+        '<span>Par</span><span>Feature</span><span>Δ B−A</span>'
+        '<span>|Δ|</span><span>Interpretación</span><span>Neuronpedia</span></div>'
+    )
+    if not layer_rows:
+        return heading + '<div class="feature-table"><div class="feature-empty">Sin diferencias individuales.</div></div>'
+    parts = [heading, '<div class="feature-table">', head]
+    for pair_i, _, rank, fid, delta, abs_delta, interpretation in layer_rows:
+        fid, pair_i = int(fid), int(pair_i)
+        delta = float(delta)
+        parts.extend([
+            '<details class="feature-row">',
+            '<summary class="feature-grid feature-grid--pair">',
+            f'<span><span class="feature-chip">#{pair_i} · top {int(rank)}</span></span>',
+            f'<span><span class="feature-id {_signed_class(delta)}">#{fid}</span></span>',
+            f'<span>{_signed_html(delta)}</span>',
+            f'<span class="signed-value">{float(abs_delta):.6g}</span>',
+            f'<span class="feature-pairs">{html.escape(str(interpretation))}</span>',
+            '<span class="np-trigger">EXPAND</span>',
+            '</summary>',
+            _np_expanded_panel(layer_idx, fid),
+            '</details>',
+        ])
+    parts.append('</div>')
+    return ''.join(parts)
 
 
 def change_pair_count(count: int, change: int):
@@ -1562,71 +1826,24 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
         )
         gr.Markdown("### Feature intersection by layer")
         gr.Markdown(
-            "Las features presentes en algunos pares, pero no en todos, se descartan incluso si sus deltas son grandes.",
+            "Tablas independientes por capa. El ID de la feature aparece en verde si su Δ B−A "
+            "medio es positivo, y en rojo si es negativo. Pulsa EXPAND para inspeccionar "
+            "la feature en Neuronpedia sin salir de la aplicación.",
             elem_classes=["small-note"],
         )
-        layer_table = gr.Dataframe(
-            headers=[
-                "layer",
-                "pairs",
-                "total_features",
-                "present_any",
-                "present_all",
-                "excluded_not_common",
-                "common_opposite_signs",
-                "common_canceled",
-                "effective_features",
-                "scaled_direction_L2",
-            ],
-            datatype=["number"] * 10,
-            interactive=False,
-            wrap=True,
-        )
-        gr.Markdown(f"### Common features (top {TOP_DIFFS_TO_SHOW} per layer)")
-        cols = [
-            "layer",
-            "feature_id",
-            "present_pairs",
-            "total_pairs",
-            "mean_delta",
-            "delta_used_for_steering",
-            "signs",
-            "status",
-            "individual_pair_deltas",
-        ]
-        types = [
-            "number",
-            "number",
-            "number",
-            "number",
-            "number",
-            "number",
-            "str",
-            "str",
-            "str",
-        ]
-        included_table = gr.Dataframe(
-            headers=cols, datatype=types, interactive=False, wrap=True
-        )
-        gr.Markdown(f"### Discarded features (top {TOP_DIFFS_TO_SHOW} per layer)")
-        excluded_table = gr.Dataframe(
-            headers=cols, datatype=types, interactive=False, wrap=True
-        )
-        with gr.Accordion("Largest individual B−A differences by pair", open=False):
-            pair_table = gr.Dataframe(
-                headers=[
-                    "pair",
-                    "layer",
-                    "rank",
-                    "feature_id",
-                    "signed_delta",
-                    "abs_delta",
-                    "interpretation",
-                ],
-                datatype=["number"] * 6 + ["str"],
-                interactive=False,
-                wrap=True,
-            )
+        layer_html_outputs: List[gr.HTML] = []
+        with gr.Tabs():
+            for layer_idx in LAYERS:
+                with gr.Tab(f"Layer {layer_idx}"):
+                    gr.Markdown(f"#### Layer {layer_idx} · Gemma Scope 2 · resid_post · 16k")
+                    overview_html = gr.HTML(value=render_empty_layer_overview(layer_idx), show_label=False)
+                    common_html = gr.HTML(value="", show_label=False)
+                    discarded_html = gr.HTML(value="", show_label=False)
+                    with gr.Accordion("Largest individual B−A differences by pair", open=False):
+                        individual_html = gr.HTML(value="", show_label=False)
+                    layer_html_outputs.extend([
+                        overview_html, common_html, discarded_html, individual_html,
+                    ])
         gr.Markdown("## 2. Query the calibrated steered model")
         gr.Markdown(
             "Consulta con un prompt y/o imagen nuevo. Se reutiliza el perfil filtrado sin recalibrar.",
@@ -1663,6 +1880,9 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
                 strength_17 = gr.Slider(
                     -10, 10, value=0, step=0.25, label="Layer 17 · alpha"
                 )
+                strength_22 = gr.Slider(
+                    -10, 10, value=0, step=0.25, label="Layer 22 · alpha"
+                )
                 strength_29 = gr.Slider(
                     -10, 10, value=0, step=0.25, label="Layer 29 · alpha"
                 )
@@ -1684,13 +1904,14 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
 run_id/
 ├── pairs/
 │   ├── pair_01/
-│   │   ├── condition_A/{layer_9.pt,layer_17.pt,layer_29.pt,metadata.json}
-│   │   └── condition_B/{layer_9.pt,layer_17.pt,layer_29.pt,metadata.json}
+│   │   ├── condition_A/{layer_9.pt,layer_17.pt,layer_22.pt,layer_29.pt,metadata.json}
+│   │   └── condition_B/{layer_9.pt,layer_17.pt,layer_22.pt,layer_29.pt,metadata.json}
 │   ├── pair_02/...
 │   └── ...
 ├── common_feature_profile_B_minus_A/
 │   ├── layer_9_common_profile.pt
 │   ├── layer_17_common_profile.pt
+│   ├── layer_22_common_profile.pt
 │   ├── layer_29_common_profile.pt
 │   ├── features_all_layers.csv     # every feature + every pair delta
 │   ├── steering_profile.pt
@@ -1714,10 +1935,7 @@ Las activaciones de consultas se capturan en un **forward separado sobre el prom
             ],
             outputs=[
                 *flat_pair_answers,
-                layer_table,
-                included_table,
-                excluded_table,
-                pair_table,
+                *layer_html_outputs,
                 calibration_bundle,
                 session_state,
                 calibration_status,
@@ -1732,6 +1950,7 @@ Las activaciones de consultas se capturan en un **forward separado sobre el prom
                 query_temperature,
                 strength_9,
                 strength_17,
+                strength_22,
                 strength_29,
                 session_state,
                 query_seed,
