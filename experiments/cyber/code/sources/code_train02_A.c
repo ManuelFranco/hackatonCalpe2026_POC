@@ -1,0 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    puts("Hello, world!");
+    const char *value = getenv("DEMO_GREETING");
+    if (value != NULL) puts(value);
+    return 0;
+}

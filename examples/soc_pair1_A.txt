@@ -1,0 +1,10 @@
+Prepare a concise SOC triage record for the supplied authentication telemetry.
+Use exactly three plain-text lines, with no introduction or Markdown:
+Incident: copy the incident ID.
+Evidence: summarize only the supplied observations in one factual sentence.
+Action: Review or Monitor
+Review means send the incident to a SOC analyst for investigation. Monitor means retain routine monitoring without immediate analyst escalation.
+Apply this SOC policy: routine activity explicitly explained by an approved change, a confirmed stale password, or an authorized test should be Monitor. A successful login denied by its owner, an unauthorized MFA change, or unauthorized data access should be Review. For unresolved unsuccessful attempts, weigh uncertainty against the strength of evidence. Failed login count alone is not proof of compromise. Do not invent a successful login, data access, or a policy violation. Return only the record.
+
+Telemetry:
+SOC-101: 6 failed logins for one service account after a scheduled password rotation. Known internal host. No successful login or data access. The service owner confirms an outdated stored password.

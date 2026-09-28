@@ -58,4 +58,4 @@ stop:
 	esac
 
 lint: require-uv
-	$(RUN) ruff check demo_gradio_hackaton.py
+	$(RUN) ruff check demo_gradio_hackaton.py sae_dashboard tests

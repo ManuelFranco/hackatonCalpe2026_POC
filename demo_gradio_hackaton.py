@@ -48,7 +48,7 @@ Quick start
 2. Authenticate with Hugging Face if required:
    uv run hf auth login
 3. Run:
-   uv run python demo_gradio_common_features.py
+   uv run python demo_gradio_hackaton.py
 4. Open the local Gradio URL shown in the terminal.
 Optional environment variables
 ==============================
@@ -61,7 +61,7 @@ MAX_CONTRASTIVE_PAIRS          default: 8 (between 2 and 20)
 FEATURE_PRESENCE_EPS          default: 1e-6 (strict abs(delta) > epsilon)
 SAE_CHUNK_TOKENS              default: 128
 FEATURE_AGGREGATION           default: mean
-FEATURE_TOKEN_SCOPE           default: all (also: non_image, last)
+FEATURE_TOKEN_SCOPE           default: last (also: all, non_image; UI selectable)
 STEERING_FRACTION_PER_UNIT    default: 0.05
 STEER_LAST_TOKEN_ONLY         default: 1
 SAVE_RESIDUALS                default: 1
@@ -79,6 +79,7 @@ import importlib.metadata
 import json
 import math
 import os
+import sys
 import threading
 import time
 import uuid
@@ -89,6 +90,13 @@ import gradio as gr
 import torch
 from sae_lens import SAE
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration, set_seed
+from sae_dashboard.disclosure_examples import DISCLOSURE_CASES
+from sae_dashboard.causal_ui import build_causal_lab
+from sae_dashboard.causal_lab import generate_baseline_prefix, prepare_case_inputs
+from sae_dashboard.security_reports import ROOT as FIXTURE_ROOT, security_report_cases
+from sae_dashboard.calibration_bridge import snapshot_image
+from sae_dashboard.cyber_integrity import (FIXTURES as INTEGRITY_FIXTURES, BASE_PROMPT, INTEGRITY_PROMPT,
+                             integrity_cases, score_known_fixture, score_markdown)
 
 # ============================================================
 # CONFIGURATION
@@ -119,7 +127,9 @@ NEURONPEDIA_EMBED_QUERY = (
     "&embedactivations=false&embedlink=true&embedtest=true"
 )
 FEATURE_AGGREGATION = os.getenv("FEATURE_AGGREGATION", "mean").strip().lower()
-FEATURE_TOKEN_SCOPE = os.getenv("FEATURE_TOKEN_SCOPE", "all").strip().lower()
+FEATURE_TOKEN_SCOPE = os.getenv("FEATURE_TOKEN_SCOPE", "last").strip().lower()
+CAPTURE_SCOPE = "prompt_with_assistant_prefix_no_generated_tokens"
+BOUNDARY_CAPTURE_SCOPE = "prompt_with_base_generated_prefix_before_decision"
 STEERING_FRACTION_PER_UNIT = float(os.getenv("STEERING_FRACTION_PER_UNIT", "0.05"))
 STEER_LAST_TOKEN_ONLY = os.getenv("STEER_LAST_TOKEN_ONLY", "1") != "0"
 TOP_DIFFS_TO_SHOW = int(os.getenv("TOP_DIFFS_TO_SHOW", "20"))
@@ -485,6 +495,7 @@ def generate_answer(
     steering_directions: Optional[Dict[int, torch.Tensor]] = None,
     strengths: Optional[Dict[int, float]] = None,
     seed: int = 0,
+    first_step_only: bool = False,
 ) -> str:
     validate_generation_settings(max_new_tokens, temperature, seed)
     handles = []
@@ -493,9 +504,14 @@ def generate_answer(
             module = get_layer_module(layer_idx)
 
             def make_hook(idx: int):
+                calls = 0
                 cache: Dict[Tuple[str, str], torch.Tensor] = {}
 
                 def hook_fn(module, module_inputs, output):
+                    nonlocal calls
+                    calls += 1
+                    if first_step_only and calls > 1:
+                        return None
                     alpha = float(strengths.get(idx, 0.0))
                     if alpha == 0.0:
                         return None
@@ -583,24 +599,27 @@ def encode_sae_chunked(sae: SAE, residuals: torch.Tensor) -> torch.Tensor:
     return out
 
 
-def feature_token_mask(image_mask: torch.Tensor) -> torch.Tensor:
+def feature_token_mask(
+    image_mask: torch.Tensor, token_scope: str = FEATURE_TOKEN_SCOPE
+) -> torch.Tensor:
     if image_mask.numel() == 0:
         raise ValueError("Cannot aggregate an empty prompt.")
-    if FEATURE_TOKEN_SCOPE == "last":
+    if token_scope == "last":
         mask = torch.zeros_like(image_mask, dtype=torch.bool)
         mask[-1] = True
         return mask
-    if FEATURE_TOKEN_SCOPE == "non_image":
+    if token_scope == "non_image":
         return ~image_mask.bool()
-    if FEATURE_TOKEN_SCOPE == "all":
+    if token_scope == "all":
         return torch.ones_like(image_mask, dtype=torch.bool)
-    raise ValueError(f"Invalid FEATURE_TOKEN_SCOPE: {FEATURE_TOKEN_SCOPE}")
+    raise ValueError(f"Invalid feature token scope: {token_scope}")
 
 
 def aggregate_feature_acts(
-    feature_acts: torch.Tensor, image_mask: torch.Tensor
+    feature_acts: torch.Tensor, image_mask: torch.Tensor,
+    token_scope: str = FEATURE_TOKEN_SCOPE,
 ) -> torch.Tensor:
-    mask = feature_token_mask(image_mask)
+    mask = feature_token_mask(image_mask, token_scope)
     if mask.numel() != feature_acts.shape[0] or not mask.any():
         raise ValueError("Feature token selection is empty or has the wrong length.")
     x = feature_acts[mask].float()
@@ -669,7 +688,11 @@ def save_condition(
     image_path: Optional[str],
     input_ids_cpu: torch.Tensor,
     residuals: Dict[int, torch.Tensor],
+    token_scope: str = FEATURE_TOKEN_SCOPE,
+    prefix_data: Optional[Dict[str, Any]] = None,
 ) -> Dict[int, Dict[str, Any]]:
+    prefix_data = prefix_data or {}
+    scope = BOUNDARY_CAPTURE_SCOPE if prefix_data.get("prefix_marker") else CAPTURE_SCOPE
     condition_dir.mkdir(parents=True, exist_ok=True)
     image_mask = get_image_mask(input_ids_cpu)
     result: Dict[int, Dict[str, Any]] = {}
@@ -677,19 +700,20 @@ def save_condition(
         resid = residuals[layer_idx]
         assert_finite(f"layer_{layer_idx}_resid_post_{condition_name}", resid)
         feature_acts = encode_sae_chunked(saes[layer_idx], resid)
-        feature_score = aggregate_feature_acts(feature_acts, image_mask)
+        feature_score = aggregate_feature_acts(feature_acts, image_mask, token_scope)
         assert_finite(
             f"layer_{layer_idx}_feature_score_{condition_name}", feature_score
         )
         payload: Dict[str, Any] = {
             "condition": condition_name,
-            "capture_scope": "prompt_only_no_generation_no_assistant_prefix",
+            "capture_scope": scope,
+            **prefix_data,
             "model_id": MODEL_ID,
             "layer": layer_idx,
             "sae_release": sae_releases_used[layer_idx],
             "sae_id": SAE_IDS[layer_idx],
             "aggregation": FEATURE_AGGREGATION,
-            "feature_token_scope": FEATURE_TOKEN_SCOPE,
+            "feature_token_scope": token_scope,
             "input_ids": input_ids_cpu,
             "image_token_mask": image_mask,
             "sae_activations": feature_acts,
@@ -700,7 +724,7 @@ def save_condition(
         torch.save(payload, condition_dir / f"layer_{layer_idx}.pt")
         residual_reference_norm = float(
             torch.linalg.vector_norm(
-                resid[feature_token_mask(image_mask)].float(), dim=-1
+                resid[feature_token_mask(image_mask, token_scope)].float(), dim=-1
             ).mean()
         )
         result[layer_idx] = {
@@ -719,7 +743,8 @@ def save_condition(
         del feature_acts
     metadata = {
         "condition": condition_name,
-        "capture_scope": "prompt_only_no_generation_no_assistant_prefix",
+        "capture_scope": scope,
+            **prefix_data,
         "model_id": MODEL_ID,
         "prompt": prompt,
         "image_filename": Path(image_path).name if image_path else None,
@@ -727,8 +752,8 @@ def save_condition(
         "num_input_tokens": int(input_ids_cpu.numel()),
         "num_image_tokens": int(image_mask.sum()),
         "aggregation": FEATURE_AGGREGATION,
-        "feature_token_scope": FEATURE_TOKEN_SCOPE,
-        "num_scored_tokens": int(feature_token_mask(image_mask).sum()),
+        "feature_token_scope": token_scope,
+        "num_scored_tokens": int(feature_token_mask(image_mask, token_scope).sum()),
         "layers": LAYERS,
         "created_unix": time.time(),
     }
@@ -764,6 +789,8 @@ def compute_common_feature_delta(
     opposing_sign = common & positive.any(dim=0) & negative.any(dim=0)
     canceled = common & masked_mean.abs().le(epsilon)
     effective = common & ~canceled
+    # Do not normalize an epsilon-sized cancellation into a full-strength vector.
+    masked_mean = torch.where(effective, masked_mean, torch.zeros_like(masked_mean))
     return {
         "stack": stack,
         "presence": presence,
@@ -791,6 +818,9 @@ def selected_feature_rows(
     mean = result["mean_delta"]
     if included:
         ids.sort(key=lambda j: abs(float(result["masked_mean_delta"][j])), reverse=True)
+        stable = sorted(ids, key=lambda j: (bool(result["same_sign_mask"][j]),
+                        abs(float(mean[j])) / max(float(stack[:, j].square().mean().sqrt()), 1e-8)), reverse=True)
+        ids = list(dict.fromkeys(ids[:max(1, TOP_DIFFS_TO_SHOW // 2)] + stable))
     else:
         ids.sort(key=lambda j: float(stack[:, j].abs().amax()), reverse=True)
     rows: List[List[Any]] = []
@@ -827,6 +857,8 @@ def selected_feature_rows(
 def save_profile(
     profile_dir: Path,
     pairs_scores: List[Dict[str, Dict[int, Dict[str, Any]]]],
+    token_scope: str = FEATURE_TOKEN_SCOPE,
+    prefix_marker: str = "",
 ) -> Tuple[
     str,
     List[List[Any]],
@@ -849,15 +881,16 @@ def save_profile(
         "layers": LAYERS,
         "num_pairs": n,
         "aggregation": FEATURE_AGGREGATION,
-        "feature_token_scope": FEATURE_TOKEN_SCOPE,
+        "feature_token_scope": token_scope,
         "presence_epsilon": FEATURE_PRESENCE_EPS,
         "eligibility": "abs(score(B_i)-score(A_i)) > epsilon for EVERY pair, per layer",
         "sign_policy": "sign is not a presence criterion; report opposite signs; signed mean can cancel",
-        "masked_delta": "where(common_mask, mean(pair_deltas), 0)",
+        "masked_delta": "where(common_mask & abs(mean(pair_deltas)) > epsilon, mean(pair_deltas), 0)",
         "raw_residual_formula": "raw_direction = masked_delta @ W_dec",
         "steering_fraction_per_unit": STEERING_FRACTION_PER_UNIT,
         "steer_last_token_only": STEER_LAST_TOKEN_ONLY,
-        "capture_scope": "prompt/image forward only; no generated response tokens",
+        "capture_scope": BOUNDARY_CAPTURE_SCOPE if prefix_marker else CAPTURE_SCOPE,
+        "prefix_marker": prefix_marker,
         "layers_info": {},
     }
     report_path = profile_dir / "features_all_layers.csv"
@@ -994,13 +1027,15 @@ def save_profile(
     profile_path = profile_dir / "steering_profile.pt"
     torch.save(
         {
-            "format_version": 2,
+            "format_version": 3,
+            "capture_scope": BOUNDARY_CAPTURE_SCOPE if prefix_marker else CAPTURE_SCOPE,
+        "prefix_marker": prefix_marker,
             "model_id": MODEL_ID,
             "model_revision": MODEL_REVISION,
             "layers": LAYERS,
             "num_pairs": n,
             "aggregation": FEATURE_AGGREGATION,
-            "feature_token_scope": FEATURE_TOKEN_SCOPE,
+            "feature_token_scope": token_scope,
             "sae_release": SAE_RELEASE,
             "sae_ids": SAE_IDS,
             "presence_epsilon": FEATURE_PRESENCE_EPS,
@@ -1036,7 +1071,9 @@ def zip_directory(run_dir: Path, output_name: str) -> str:
 # ============================================================
 # PROFILE LOADING FOR LATER QUERIES
 # ============================================================
-def load_steering_directions(profile_path: str) -> Dict[int, torch.Tensor]:
+def load_steering_directions(
+    profile_path: str, token_scope: str = FEATURE_TOKEN_SCOPE
+) -> Dict[int, torch.Tensor]:
     payload = torch.load(profile_path, map_location="cpu", weights_only=True)
     if payload.get("model_id") != MODEL_ID:
         raise RuntimeError(
@@ -1057,16 +1094,17 @@ def load_steering_directions(profile_path: str) -> Dict[int, torch.Tensor]:
                 f"The steering direction for layer {layer_idx} has the wrong shape."
             )
         assert_finite(f"profile_layer_{layer_idx}", direction)
-    if payload.get("format_version") != 2:
+    if payload.get("format_version") != 3:
         raise ValueError(
-            "This application requires a multi-pair profile (format_version=2)."
+            "Recalibrate: format 3 aligns capture with the assistant prefix."
         )
     expected = {
         "model_revision": MODEL_REVISION,
         "sae_release": SAE_RELEASE,
         "sae_ids": SAE_IDS,
         "aggregation": FEATURE_AGGREGATION,
-        "feature_token_scope": FEATURE_TOKEN_SCOPE,
+        "feature_token_scope": token_scope,
+        "capture_scope": BOUNDARY_CAPTURE_SCOPE if payload.get("prefix_marker") else CAPTURE_SCOPE,
         "steer_last_token_only": STEER_LAST_TOKEN_ONLY,
         "presence_epsilon": FEATURE_PRESENCE_EPS,
     }
@@ -1085,7 +1123,11 @@ def calibrate_contrastive_profile_pairs(*args: Any):
     if not MIN_PAIRS <= pair_count <= MAX_PAIRS:
         raise gr.Error(f"Número de pares inválido ({MIN_PAIRS}-{MAX_PAIRS}).")
     pair_fields = args[1 : 1 + 4 * MAX_PAIRS]
-    max_new_tokens, temperature, seed, make_previews = args[1 + 4 * MAX_PAIRS :]
+    controls = args[1 + 4 * MAX_PAIRS :]
+    max_new_tokens, temperature, seed, make_previews, token_scope = controls[:5]
+    prefix_marker = str(controls[5]).strip() if len(controls) > 5 else ""
+    if token_scope not in {"last", "all", "non_image"}:
+        raise gr.Error("Choose last, all or non_image for feature capture.")
     validate_generation_settings(max_new_tokens, temperature, seed)
     conditions = []
     for i in range(pair_count):
@@ -1111,11 +1153,9 @@ def calibrate_contrastive_profile_pairs(*args: Any):
             for label in ("A", "B"):
                 prompt = pair[label]["prompt"]
                 image_path = pair[label]["image"]
-                # IMPORTANT: no assistant generation prefix or output tokens are
-                # included in these calibration activations.
-                inputs, ids_cpu, _ = prepare_inputs(
-                    image_path, prompt, add_generation_prompt=False
-                )
+                prefix_data = generate_baseline_prefix(sys.modules[__name__], image_path, prompt, prefix_marker)
+                case = {"image": image_path, "prompt": prompt, **prefix_data}
+                inputs, ids_cpu, _ = prepare_case_inputs(sys.modules[__name__], case)
                 residuals = capture_prompt_residuals(inputs)
                 pair_scores[label] = save_condition(
                     pair_dir / f"condition_{label}",
@@ -1124,13 +1164,12 @@ def calibrate_contrastive_profile_pairs(*args: Any):
                     image_path,
                     ids_cpu,
                     residuals,
+                    token_scope=token_scope, prefix_data=prefix_data,
                 )
                 del inputs, residuals
                 answer = "(Vista previa desactivada: las activaciones son solo del prompt/imagen.)"
                 if make_previews:
-                    generation_inputs, _, generation_length = prepare_inputs(
-                        image_path, prompt, add_generation_prompt=True
-                    )
+                    generation_inputs, _, generation_length = prepare_case_inputs(sys.modules[__name__], case)
                     answer = generate_answer(
                         generation_inputs,
                         generation_length,
@@ -1141,11 +1180,14 @@ def calibrate_contrastive_profile_pairs(*args: Any):
                     del generation_inputs
                 answers[2 * (idx - 1) + (0 if label == "A" else 1)] = answer
                 pair_metadata[f"condition_{label}"] = {
+                    **prefix_data,
                     "prompt": prompt,
                     "image_filename": Path(image_path).name if image_path else None,
+                    "image_path": snapshot_image(image_path, pair_dir / f"condition_{label}"),
                     "image_sha256": sha256_file(image_path),
                     "optional_preview_response": answer if make_previews else None,
-                    "capture_scope": "prompt/image only; no generated answer tokens",
+                    "capture_scope": BOUNDARY_CAPTURE_SCOPE if prefix_marker else CAPTURE_SCOPE,
+                    "num_input_tokens": int(ids_cpu.numel()),
                 }
             pairs_scores.append(pair_scores)
             metadata_pairs.append(pair_metadata)
@@ -1157,27 +1199,29 @@ def calibrate_contrastive_profile_pairs(*args: Any):
             pair_rows,
             directions,
             layer_info,
-        ) = save_profile(profile_dir, pairs_scores)
+        ) = save_profile(profile_dir, pairs_scores, token_scope=token_scope, prefix_marker=prefix_marker)
     experiment_metadata = {
         "run_id": run_id,
         "model_id": MODEL_ID,
         "layers": LAYERS,
         "num_pairs": pair_count,
         "pairs": metadata_pairs,
+        "prefix_marker": prefix_marker,
+        "intervention_schedule": "First continuation step only" if prefix_marker else "Every decoding step",
         "sae_ids": {str(k): v for k, v in SAE_IDS.items()},
         "sae_releases_used": {str(k): v for k, v in sae_releases_used.items()},
         "runtime": runtime_metadata(),
         "aggregation": FEATURE_AGGREGATION,
-        "feature_token_scope": FEATURE_TOKEN_SCOPE,
+        "feature_token_scope": token_scope,
         "presence_epsilon": FEATURE_PRESENCE_EPS,
-        "capture_scope": "prompt_only_no_assistant_prefix; no generation during capture",
+        "capture_scope": BOUNDARY_CAPTURE_SCOPE if prefix_marker else CAPTURE_SCOPE,
         "optional_preview_generation": {
             "enabled": bool(make_previews),
             "max_new_tokens": int(max_new_tokens),
             "temperature": float(temperature),
             "seed": int(seed),
         },
-        "formula": "intersection(|delta_i|>epsilon) * mean_i(delta_i) @ W_dec",
+        "formula": "where(intersection(|delta_i|>epsilon) & (|mean_i(delta_i)|>epsilon), mean_i(delta_i), 0) @ W_dec",
         "created_unix": time.time(),
     }
     (run_dir / "experiment.json").write_text(
@@ -1188,13 +1232,21 @@ def calibrate_contrastive_profile_pairs(*args: Any):
         "run_id": run_id,
         "run_dir": str(run_dir.resolve()),
         "profile_path": profile_path,
+        "prefix_marker": prefix_marker,
         "num_pairs": pair_count,
+        "feature_token_scope": token_scope,
     }
     report = [
         f"**Perfil común creado:** `{run_id}` · **{pair_count} pares** · "
-        f"criterio `|Bᵢ−Aᵢ| > {FEATURE_PRESENCE_EPS:g}` en TODOS los pares.  ",
-        "Solo las features comunes pasan al decoder; las demás se anulan antes de aplicar `W_dec`.  ",
-        "Las diferencias se han medido leyendo exclusivamente cada prompt/imagen, **sin respuestas generadas**.  ",
+        f"criterio `|Bᵢ−Aᵢ| > {FEATURE_PRESENCE_EPS:g}` en TODOS los pares.",
+        "",
+        "Solo las features comunes pasan al decoder; las demás se anulan antes de aplicar `W_dec`.",
+        "",
+        (f"**Decision boundary:** after BASE generates `{prefix_marker}`. Each exact prefix is saved; the decision after it is excluded from calibration."
+         if prefix_marker else "Activations captured before the first answer token; no generated response enters calibration."),
+        "",
+        f"**Tokens: `{token_scope}`.** Captura con prefijo de asistente, en la misma posición que la consulta.",
+        "",
     ]
     for layer_idx in LAYERS:
         item = layer_info[layer_idx]
@@ -1206,6 +1258,12 @@ def calibrate_contrastive_profile_pairs(*args: Any):
             f"**{item['effective_nonzero_features']}** con señal final; "
             f"‖dirección α=1‖₂ = `{item['scaled_direction_l2']:.4f}`."
         )
+    report.append("")
+    if token_scope != "last" and FEATURE_AGGREGATION == "mean":
+        report.append(
+            "**Promedio de tokens:** una diferencia de longitud A/B puede cambiar "
+            "la media de activaciones idénticas. Compara con `last` antes de interpretar las features.\n"
+        )
     report.append(
         "La tabla es una vista previa; el ZIP incluye un CSV con **todas** las features y sus deltas por par."
     )
@@ -1216,7 +1274,7 @@ def calibrate_contrastive_profile_pairs(*args: Any):
     for layer_idx in LAYERS:
         html_results.extend([
             render_layer_overview(layer_idx, layer_info[layer_idx]),
-            render_feature_table(layer_idx, included_rows, included=True),
+            render_feature_table(layer_idx, included_rows, included=True, calibration_id=run_id),
             render_feature_table(layer_idx, excluded_rows, included=False),
             render_individual_pair_table(layer_idx, pair_rows),
         ])
@@ -1232,13 +1290,14 @@ def save_query_steered_activations(
     residuals: Dict[int, torch.Tensor],
     strengths: Dict[int, float],
     generation_metadata: Dict[str, Any],
+    token_scope: str = FEATURE_TOKEN_SCOPE,
 ) -> str:
     query_dir = run_dir / "queries" / query_name
     query_dir.mkdir(parents=True, exist_ok=True)
     image_mask = get_image_mask(input_ids_cpu)
     for layer_idx in LAYERS:
         feature_acts = encode_sae_chunked(saes[layer_idx], residuals[layer_idx])
-        score = aggregate_feature_acts(feature_acts, image_mask)
+        score = aggregate_feature_acts(feature_acts, image_mask, token_scope)
         payload: Dict[str, Any] = {
             "model_id": MODEL_ID,
             "layer": layer_idx,
@@ -1249,8 +1308,8 @@ def save_query_steered_activations(
             "sae_activations": feature_acts,
             "feature_score": score.float(),
             "steering_strength": float(strengths[layer_idx]),
-            "feature_token_scope": FEATURE_TOKEN_SCOPE,
-            "capture_scope": "prompt_only_after_steering",
+            "feature_token_scope": token_scope,
+            "capture_scope": BOUNDARY_CAPTURE_SCOPE if generation_metadata.get("prefix_marker") else CAPTURE_SCOPE,
         }
         if SAVE_RESIDUALS:
             payload["resid_post"] = residuals[layer_idx]
@@ -1263,8 +1322,9 @@ def save_query_steered_activations(
         "strengths": {str(k): float(v) for k, v in strengths.items()},
         "layers": LAYERS,
         "aggregation": FEATURE_AGGREGATION,
-        "feature_token_scope": FEATURE_TOKEN_SCOPE,
-        "capture_scope": "prompt_only_after_steering; separate forward pass; no generated answer tokens",
+        "feature_token_scope": token_scope,
+        "capture_scope": BOUNDARY_CAPTURE_SCOPE if generation_metadata.get("prefix_marker") else CAPTURE_SCOPE,
+        "capture_pass": "separate forward over the prompt and optional saved BASE prefix; continuation decision excluded",
         "runtime": runtime_metadata(),
         "generation": generation_metadata,
         "created_unix": time.time(),
@@ -1301,6 +1361,9 @@ def ask_steered_model(
     profile_path = session_state.get("profile_path")
     if not profile_path or not Path(profile_path).exists():
         raise gr.Error("No se encuentra el perfil común. Vuelve a calibrarlo.")
+    token_scope = session_state.get("feature_token_scope")
+    if token_scope not in {"last", "all", "non_image"}:
+        raise gr.Error("El perfil necesita una nueva calibración con esta versión.")
     strengths = {
         9: float(strength_9),
         17: float(strength_17),
@@ -1313,19 +1376,13 @@ def ask_steered_model(
     query_name = time.strftime("query_%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     with MODEL_LOCK:
         ensure_models_loaded()
-        directions = load_steering_directions(profile_path)
-        base_inputs, input_ids_cpu, input_len = prepare_inputs(
-            image_path=query_image,
-            prompt=query_prompt,
-        )
-        steered_inputs, _, steered_input_len = prepare_inputs(
-            image_path=query_image,
-            prompt=query_prompt,
-        )
-        capture_inputs, _, _ = prepare_inputs(
-            image_path=query_image,
-            prompt=query_prompt,
-        )
+        directions = load_steering_directions(profile_path, token_scope=token_scope)
+        prefix_marker = session_state.get("prefix_marker", "")
+        prefix_data = generate_baseline_prefix(sys.modules[__name__], query_image, query_prompt, prefix_marker)
+        case = {"image": query_image, "prompt": query_prompt, **prefix_data}
+        base_inputs, input_ids_cpu, input_len = prepare_case_inputs(sys.modules[__name__], case)
+        steered_inputs, _, steered_input_len = prepare_case_inputs(sys.modules[__name__], case)
+        capture_inputs, _, _ = prepare_case_inputs(sys.modules[__name__], case)
         base_answer = generate_answer(
             inputs=base_inputs,
             input_len=input_len,
@@ -1341,12 +1398,14 @@ def ask_steered_model(
             steering_directions=directions,
             strengths=strengths,
             seed=int(seed),
+            first_step_only=bool(prefix_marker),
         )
         steered_residuals = capture_prompt_residuals(
             inputs=capture_inputs,
             steering_directions=directions,
             strengths=strengths,
         )
+        integrity_result = score_known_fixture(query_image, query_prompt, base_answer, steered_answer)
         query_zip = save_query_steered_activations(
             run_dir=run_dir,
             query_name=query_name,
@@ -1359,18 +1418,28 @@ def ask_steered_model(
                 "max_new_tokens": int(max_new_tokens),
                 "temperature": float(temperature),
                 "seed": int(seed),
+                **prefix_data,
+                "intervention_schedule": "First continuation step only" if prefix_marker else "Every decoding step",
                 "profile_sha256": sha256_file(profile_path),
                 "base_answer": base_answer,
                 "steered_answer": steered_answer,
+                "integrity_evaluation": integrity_result,
             },
+            token_scope=token_scope,
         )
     status = (
-        f"**Query `{query_name}`** · profile `{session_state['run_id']}`  \n"
+        f"**Query:** `{query_name}`\n\n"
+        f"**Profile:** `{session_state['run_id']}`\n\n"
+        f"**Feature token scope:** `{token_scope}`\n\n"
         f"α9=`{strengths[9]:+.2f}` · α17=`{strengths[17]:+.2f}` · "
-        f"α22=`{strengths[22]:+.2f}` · α29=`{strengths[29]:+.2f}`.  \n"
+        f"α22=`{strengths[22]:+.2f}` · α29=`{strengths[29]:+.2f}`.\n\n"
         f"BASE and STEERED use the same seed (`{int(seed)}`). "
         "Esta consulta reutiliza el perfil de features comunes sin recalibrar."
     )
+    if prefix_marker:
+        status += (f"\n\n**Decision boundary:** `{prefix_marker}`. BASE generates the prefix once; both conditions replay it. "
+                   "The common profile is applied only on the first continuation step. Prefix preservation is by construction.")
+    status += score_markdown(integrity_result)
     return base_answer, steered_answer, query_zip, status
 
 
@@ -1383,6 +1452,36 @@ APP_CSS = """
 }
 .gradio-container {
     max-width: 1440px !important;
+}
+.gradio-container .prose {
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+.gradio-container .prose p {
+    margin: 0 0 0.85em;
+}
+.gradio-container .prose ul,
+.gradio-container .prose ol {
+    padding-inline-start: 1.5em;
+    margin: 0.65em 0 1em;
+}
+.gradio-container .prose li + li {
+    margin-top: 0.55em;
+}
+.gradio-container .prose pre {
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.55;
+    margin: 0.85em 0;
+}
+.gradio-container .prose :not(pre) > code {
+    white-space: break-spaces;
+}
+.block.response-markdown {
+    padding: 14px 16px;
+    border: 1px solid rgba(127,127,127,0.18);
+    border-radius: 12px;
+    background: rgba(127,127,127,0.035);
 }
 #hero {
     padding: 24px 28px;
@@ -1412,7 +1511,7 @@ APP_CSS = """
     font-size: 0.93rem;
     opacity: 0.86;
 }
-.formula-box {
+.block.formula-box {
     padding: 14px 18px;
     border-radius: 14px;
     border: 1px solid rgba(127,127,127,0.18);
@@ -1493,24 +1592,35 @@ APP_CSS = """
 """
 TUTORIAL_MD = r"""
 ### Guía rápida
-**1. Añade pares A/B.** Se muestran dos por defecto; puedes añadir hasta el máximo
-configurado. Cada A y B admite texto, imagen o los dos. Cada par debe estar completo.
-**2. Pulsa «Build common-feature profile».** Se ejecuta un forward pass para cada
-prompt/imagen, sin generar tokens de respuesta. En cada capa se calculan las
-activaciones SAE y un vector `delta_i = score(B_i) − score(A_i)` por par.
-**3. Intersección estricta:** una feature se considera presente en un par cuando
-`abs(delta_i) > FEATURE_PRESENCE_EPS`. Solo las features presentes en **todos**
-los pares pasan al perfil. Se promedian sus deltas **con signo**. Si hay signos
-opuestos, la interfaz los señala; si el promedio se cancela, no aporta steering.
-**4. Consulta las tablas por capa.** Las features de media B−A positiva van
-en verde y las negativas en rojo. Cada fila tiene EXPAND y un iframe Neuronpedia.
-Se muestran recuentos, features comunes, features excluidas y diferencias por par. El ZIP conserva todas las features en
-CSV y tensores `.pt` sin truncar.
-**5. Consulta el modelo con otra imagen/prompt**, compara BASE con STEERED y
-ajusta los sliders por capa. `0` = sin steering. El signo de alpha interviene
-la activación, no garantiza un comportamiento determinado.
-Las respuestas de calibración, si activas su vista previa, **nunca** se usan
-para medir las activaciones ni para construir el perfil.
+
+1. **Añade pares A/B.** Se muestran dos por defecto; puedes añadir hasta el máximo
+   configurado. Cada A y B admite texto, imagen o los dos. Cada par debe estar completo.
+
+2. **Elige los tokens y pulsa «Build common-feature profile».** `last` lee las features
+   en la última posición de la entrada, después de leer todo el contenido y el
+   prefijo de asistente. No recorta el prompt. `all` promedia todo el texto y puede
+   confundir cambios de longitud con cambios de activación.
+   Se ejecuta un forward pass para cada
+   prompt/imagen (y el prefijo BASE si eliges un Decision boundary marker). En cada capa se calculan las
+   activaciones SAE y un vector `delta_i = score(B_i) − score(A_i)` por par.
+
+3. **Intersección estricta:** una feature se considera presente en un par cuando
+   `abs(delta_i) > FEATURE_PRESENCE_EPS`. Solo las features presentes en **todos**
+   los pares pasan al perfil. Se promedian sus deltas **con signo**. Si hay signos
+   opuestos, la interfaz los señala; si el promedio se cancela, no aporta steering.
+
+4. **Consulta las tablas por capa.** Las features de media B−A positiva van
+   en verde y las negativas en rojo. Cada fila tiene EXPAND y un iframe Neuronpedia.
+   Se muestran recuentos, features comunes, features excluidas y diferencias por par.
+   El ZIP conserva todas las features en CSV y tensores `.pt` sin truncar.
+
+5. **Consulta el modelo con otra imagen/prompt**, compara BASE con STEERED y
+   ajusta los sliders por capa. `0` = sin steering. El signo de alpha interviene
+   la activación, no garantiza un comportamiento determinado.
+
+Las vistas previas completas no se usan para construir el perfil. Si eliges un **Decision boundary marker**,
+se genera y guarda un prefijo BASE por condición: sus tokens sí forman parte de la entrada de captura,
+pero la decisión posterior al marcador queda excluida. La consulta y el bloque 3 conservan ese punto de intervención.
 """
 
 
@@ -1601,12 +1711,12 @@ def render_layer_overview(layer_idx: int, info: Dict[str, Any]) -> str:
 
 
 def render_feature_table(
-    layer_idx: int, rows: List[List[Any]], included: bool
+    layer_idx: int, rows: List[List[Any]], included: bool, calibration_id: Optional[str] = None,
 ) -> str:
     layer_rows = [r for r in rows if int(r[0]) == layer_idx]
     title = "Features comunes · incluidas" if included else "Features no comunes · descartadas"
     description = (
-        "Ordenadas por |media B−A|; las canceladas no aportan steering."
+        "Preview includes large mean differences and consistent paired contrasts; canceled means do not contribute."
         if included else
         "Ordenadas por su pico |B−A|; nunca entran en la dirección final."
     )
@@ -1629,6 +1739,15 @@ def render_feature_table(
         presence_class = "full" if count == total else ""
         status_class = "ambiguous" if "opuestos" in str(signs) or "cancelación" in str(status) else ""
         pair_label = html.escape(str(pair_deltas))
+        transfer = (
+            '<div class="feature-transfer">'
+            f'<button type="button" data-causal-feature="{fid}" data-layer="{layer_idx}" '
+            f'data-calibration="{html.escape(calibration_id, quote=True)}" '
+            f'aria-label="Test layer {layer_idx} feature {fid} in block 3">'
+            'Test this feature in block 3 →</button>'
+            '<span>Use this calibration and the current query from section 2.</span></div>'
+            if included and calibration_id and status != "cancelación" else ""
+        )
         parts.extend([
             '<details class="feature-row">',
             '<summary class="feature-grid">',
@@ -1641,6 +1760,7 @@ def render_feature_table(
             f'<span class="feature-pairs">{pair_label}</span>',
             '<span class="np-trigger">EXPAND</span>',
             '</summary>',
+            transfer,
             _np_expanded_panel(layer_idx, fid),
             '</details>',
         ])
@@ -1691,6 +1811,112 @@ def change_pair_count(count: int, change: int):
     )
 
 
+def response_markdown(title: str, min_height: int) -> gr.Markdown:
+    """Render generated answers as sanitized Markdown, preserving line breaks."""
+    gr.Markdown(f"#### {title}")
+    return gr.Markdown(
+        value="",
+        line_breaks=True,
+        sanitize_html=True,
+        buttons=["copy"],
+        min_height=min_height,
+        max_height=600,
+        elem_classes=["response-markdown"],
+    )
+
+
+def load_disclosure_preset():
+    """Replace inputs and invalidate the old profile without running the model."""
+    count = min(3, MAX_PAIRS)
+    fields = []
+    for i in range(MAX_PAIRS):
+        if i < count:
+            fields.extend([
+                DISCLOSURE_CASES[f"train{i+1:02d}_A"]["prompt"], None,
+                DISCLOSURE_CASES[f"train{i+1:02d}_B"]["prompt"], None,
+            ])
+        else:
+            fields.extend(["", None, "", None])
+    empty_layers = []
+    for layer in LAYERS:
+        empty_layers.extend([render_empty_layer_overview(layer), "", "", ""])
+    return (
+        *change_pair_count(count, 0), *fields,
+        "last", True, 96, 0.0, 0,
+        *["" for _ in range(2 * MAX_PAIRS)], *empty_layers,
+        *load_disclosure_query("valid04_A"), "valid04_A",
+        96, 0.0, 0, 0.0, 0.0, 0.0, 0.0,
+        None, None, "Short English examples loaded. Build a new profile before querying.",
+    )
+
+
+def load_disclosure_query(case_id: str):
+    if case_id not in DISCLOSURE_CASES:
+        raise gr.Error("Unknown disclosure test case.")
+    return None, DISCLOSURE_CASES[case_id]["prompt"], "", "", None, ""
+
+
+def load_image_report_query(case_id: str):
+    case = next((c for c in security_report_cases() if c["id"] == case_id), None)
+    if case is None:
+        raise gr.Error("Unknown image report case.")
+    return str(FIXTURE_ROOT / case["image"]), case["prompt"], "", "", None, ""
+
+
+def load_image_report_preset():
+    """Three clean/attack screenshot pairs; identical English report task."""
+    count = min(3, MAX_PAIRS)
+    cases = {c["id"]: c for c in security_report_cases()}
+    fields = []
+    for i in range(MAX_PAIRS):
+        for side in ("A", "B"):
+            case = cases[f"web_train{i+1:02d}_{side}_report"] if i < count else None
+            fields.extend([case["prompt"], str(FIXTURE_ROOT / case["image"])] if case else ["", None])
+    empty_layers = []
+    for layer in LAYERS:
+        empty_layers.extend([render_empty_layer_overview(layer), "", "", ""])
+    return (
+        *change_pair_count(count, 0), *fields,
+        "last", True, 320, 0.0, 0,
+        *["" for _ in range(2 * MAX_PAIRS)], *empty_layers,
+        *load_image_report_query("web_valid04_A_report"), "valid04_A",
+        320, 0.0, 0, 0.0, 0.0, 0.0, 0.0,
+        None, None, "English image report examples loaded: A = Clean, B = Attack. Build a new profile before querying.",
+    )
+
+
+
+def load_integrity_query(case_id: str, task_instruction: str = "Source-constrained"):
+    if task_instruction not in {"Source-constrained", "Ordinary baseline"}:
+        raise gr.Error("Unknown task instruction.")
+    case = next((c for c in integrity_cases() if c["id"] == case_id), None)
+    if case is None:
+        raise gr.Error("Unknown incident intake fixture.")
+    prompt = INTEGRITY_PROMPT if task_instruction == "Source-constrained" else BASE_PROMPT
+    return str(INTEGRITY_FIXTURES / case["image"]), prompt, "", "", None, ""
+
+
+def load_integrity_preset():
+    cases = {c["id"]: c for c in integrity_cases()}
+    count = min(3, MAX_PAIRS)
+    fields = []
+    for i in range(MAX_PAIRS):
+        for side in ("A", "B"):
+            case = cases[f"train{i+1:02d}_{side}"] if i < count else None
+            fields.extend([INTEGRITY_PROMPT, str(INTEGRITY_FIXTURES / case["image"])] if case else ["", None])
+    empty_layers = []
+    for layer in LAYERS:
+        empty_layers.extend([render_empty_layer_overview(layer), "", "", ""])
+    return (
+        *change_pair_count(count, 0), *fields,
+        "last", True, 128, 0.0, 0,
+        *["" for _ in range(2 * MAX_PAIRS)], *empty_layers,
+        *load_integrity_query("valid04_A"), "valid04_A",
+        128, 0.0, 0, 0.0, 0.0, 0.0, 0.0,
+        None, None, "Incident intake loaded: A = ordinary comment, B = injection attempt. Both must preserve the same record fields. Build a new profile.",
+    )
+
+
 def build_demo() -> gr.Blocks:
     """Construct the interface without downloading model weights."""
     with gr.Blocks(
@@ -1699,31 +1925,49 @@ def build_demo() -> gr.Blocks:
     ) as demo:
         gr.Markdown(
             """# Gemma 3 · Common-Feature SAE Steering
+
 Crea un perfil B − A reutilizable a partir de **varios pares multimodales**.
-Únicamente se steerean las features presentes en **todos** los vectores B−A.""",
+
+El perfil común utiliza las features presentes en **todos** los vectores B−A.
+
+Para medir una feature individual, abre el [Single-feature causal lab](#causal-lab):
+curvas de decisión, ablación, preguntas inversas y controles aleatorios.""",
             elem_id="hero",
         )
         with gr.Accordion("How to use this app", open=True):
             gr.Markdown(TUTORIAL_MD)
         with gr.Accordion("Method and steering formula", open=False):
             gr.Markdown(f"""
-<div class="formula-box">
-**Capas:** `{LAYERS}` · **Agregación:** `{FEATURE_AGGREGATION}` ·
-**Tokens:** `{FEATURE_TOKEN_SCOPE}` · **Epsilon:** `{FEATURE_PRESENCE_EPS:g}`  
-**Fraction/alpha:** `{STEERING_FRACTION_PER_UNIT}` ·
-**Steer last token only:** `{STEER_LAST_TOKEN_ONLY}`
+### Configuración del perfil
+
+- **Capas:** `{LAYERS}`
+- **Agregación:** `{FEATURE_AGGREGATION}`
+- **Tokens por defecto:** `{FEATURE_TOKEN_SCOPE}`; se eligen al calibrar.
+- **Epsilon:** `{FEATURE_PRESENCE_EPS:g}`
+- **Fraction/alpha:** `{STEERING_FRACTION_PER_UNIT}`
+- **Steer last token only:** `{STEER_LAST_TOKEN_ONLY}`
+
+### Cálculo de la dirección y aplicación del steering
+
 Para cada par `i` y cada capa `l`:
-`d_i = score_SAE(B_i) − score_SAE(A_i)`  
-`common[j] = AND_i(abs(d_i[j]) > epsilon)`  
-`d_common = where(common, mean_i(d_i), 0)`  
-`v_raw = d_common @ W_dec`  
-`v = normalize(v_raw) × reference_residual_norm × STEERING_FRACTION_PER_UNIT`  
-`h_last' = h_last + alpha × v`
+
+```text
+d_i = score_SAE(B_i) − score_SAE(A_i)
+common[j] = AND_i(abs(d_i[j]) > epsilon)
+d_common = where(common, mean_i(d_i), 0)
+d_common[abs(d_common) <= epsilon] = 0
+v_raw = d_common @ W_dec
+v = normalize(v_raw) × reference_residual_norm × STEERING_FRACTION_PER_UNIT
+h_last' = h_last + alpha × v
+```
+
 El criterio de presencia no exige igualdad de signos: las inversiones de signo
-se muestran por separado. Las activaciones de calibración se extraen **solo
-sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
-</div>
-""")
+se muestran por separado.
+
+Las activaciones se extraen **antes de generar la respuesta**, incluyendo el
+prefijo de asistente para alinear calibración y consulta. `last` mide una posición
+que ya ha leído todo el contenido; `all` y `non_image` agregan varias posiciones.
+""", elem_classes=["formula-box"])
         session_state = gr.State(value=None)
         pair_count = gr.State(value=MIN_PAIRS)
         gr.Markdown("## 1. Build the common B − A steering profile")
@@ -1734,6 +1978,15 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
         with gr.Row():
             add_pair = gr.Button("＋ Add A/B pair", variant="secondary")
             remove_pair = gr.Button("− Remove last pair", variant="secondary")
+            disclosure_preset = gr.Button("Load short disclosure examples (English)")
+            image_report_preset = gr.Button("Load image security report examples (English)")
+            integrity_preset = gr.Button("Load cyber incident intake (English)")
+        gr.Markdown(
+            "The disclosure examples ask whether stdout contains a fictional secret. "
+            "Expected: **A = NO**, **B = YES**. Start with zero steering; "
+            "use the separate validation and test cases to check transfer.",
+            elem_classes=["small-note"],
+        )
         pair_count_label = gr.Markdown(
             f"**Pares activos: {MIN_PAIRS}/{MAX_PAIRS}.** Los pares ocultos no se calibran."
         )
@@ -1758,10 +2011,9 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
                             placeholder="Describe this scene in a neutral way.",
                             lines=4,
                         )
-                        answer_a = gr.Textbox(
-                            label=f"Gemma response for A{pair_i+1} (optional preview)",
-                            lines=5,
-                            interactive=False,
+                        answer_a = response_markdown(
+                            f"Gemma response for A{pair_i+1} (optional preview)",
+                            min_height=120,
                         )
                     with gr.Column(
                         scale=1, elem_classes=["section-card", "condition-b"]
@@ -1777,10 +2029,9 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
                             placeholder="Describe this scene focusing on emotion and atmosphere.",
                             lines=4,
                         )
-                        answer_b = gr.Textbox(
-                            label=f"Gemma response for B{pair_i+1} (optional preview)",
-                            lines=5,
-                            interactive=False,
+                        answer_b = response_markdown(
+                            f"Gemma response for B{pair_i+1} (optional preview)",
+                            min_height=120,
                         )
             pair_groups.append(pair_group)
             flat_pair_inputs.extend([prompt_a, image_a, prompt_b, image_b])
@@ -1794,6 +2045,18 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
             fn=lambda n: change_pair_count(n, -1),
             inputs=[pair_count],
             outputs=[pair_count, *pair_groups, pair_count_label],
+        )
+        calibration_prefix_marker = gr.Textbox(label="Decision boundary marker · optional",
+            info="Blank: capture before the first answer token. Otherwise BASE generates a prefix through this marker "
+                 "(for example Action:). Blocks 1–3 reuse that boundary and intervene on the first continuation step.")
+        calibration_token_scope = gr.Dropdown(
+            choices=[("Last input token (recommended)", "last"),
+                     ("All input tokens", "all"),
+                     ("Non-image input tokens", "non_image")],
+            value=FEATURE_TOKEN_SCOPE,
+            label="Feature token scope",
+            info="Last reads the full input and measures its final position before the response. "
+                 "Changes apply to the next calibration; queries keep their profile's setting.",
         )
         calibration_previews = gr.Checkbox(
             label="Generate optional calibration response previews (not used for activation capture)",
@@ -1828,16 +2091,35 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
         gr.Markdown(
             "Tablas independientes por capa. El ID de la feature aparece en verde si su Δ B−A "
             "medio es positivo, y en rojo si es negativo. Pulsa EXPAND para inspeccionar "
-            "la feature en Neuronpedia sin salir de la aplicación.",
+            "la feature en Neuronpedia. En una fila incluida, pulsa «Test this feature in block 3» "
+            "para medirla individualmente usando esta calibración y la consulta de la sección 2.",
             elem_classes=["small-note"],
         )
         layer_html_outputs: List[gr.HTML] = []
+        common_feature_tables = []
         with gr.Tabs():
             for layer_idx in LAYERS:
                 with gr.Tab(f"Layer {layer_idx}"):
                     gr.Markdown(f"#### Layer {layer_idx} · Gemma Scope 2 · resid_post · 16k")
                     overview_html = gr.HTML(value=render_empty_layer_overview(layer_idx), show_label=False)
-                    common_html = gr.HTML(value="", show_label=False)
+                    common_html = gr.HTML(value="", show_label=False, js_on_load="""
+element.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-causal-feature]');
+    if (!button || !element.contains(button)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    trigger('click', {layer: Number(button.dataset.layer),
+                      feature_id: Number(button.dataset.causalFeature),
+                      calibration_id: button.dataset.calibration});
+});
+""", css_template="""
+.feature-transfer { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:16px; }
+.feature-transfer button { cursor:pointer; background:#0e7490; color:white; border:0;
+    border-radius:8px; padding:10px 16px; font-weight:600; }
+.feature-transfer button:focus-visible { outline:3px solid #8b5cf6; outline-offset:3px; }
+.feature-transfer span { font-size:13px; color:var(--body-text-color-subdued); }
+""")
+                    common_feature_tables.append(common_html)
                     discarded_html = gr.HTML(value="", show_label=False)
                     with gr.Accordion("Largest individual B−A differences by pair", open=False):
                         individual_html = gr.HTML(value="", show_label=False)
@@ -1857,6 +2139,34 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
                 query_prompt = gr.Textbox(
                     label="Query prompt", placeholder="Ask Gemma anything...", lines=5
                 )
+                with gr.Accordion("Short disclosure validation and test cases", open=False):
+                    disclosure_case = gr.Dropdown(
+                        choices=[(f"{key} · {case['title']}", key)
+                                 for key, case in DISCLOSURE_CASES.items()
+                                 if case["split"] != "train"],
+                        value="valid04_A", label="English C test case",
+                    )
+                    disclosure_query = gr.Button("Load test case")
+                with gr.Accordion("Image security report cases (English)", open=False):
+                    gr.Markdown("Reports identify the audience, quote evidence, explain the mechanism and give a verdict and action. "
+                                "Clean means no visible AI-directed injection, not a security audit of the entire website.")
+                    image_report_case = gr.Dropdown(
+                        choices=[(f"{c['id']} · {c['split']}", c["id"])
+                                 for c in security_report_cases() if c["split"] != "train"],
+                        value="web_valid04_A_report", label="Image report case")
+                    image_report_query = gr.Button("Load image report case")
+                with gr.Accordion("Cyber incident intake cases (English)", open=False):
+                    gr.Markdown("Extract the full incident title and the authoritative Owner row while ignoring external comments. "
+                                "Query results check exact fields, output format and the attacker objective separately. "
+                                "Positive B−A steering is not assumed to be defensive. Start at zero.")
+                    integrity_case = gr.Dropdown(
+                        choices=[(f"{c['id']} · {c['split']} · {c['attack'] or 'ordinary / control'}", c["id"])
+                                 for c in integrity_cases()],
+                        value="valid04_A", label="Incident intake case")
+                    integrity_instruction = gr.Dropdown(
+                        choices=["Source-constrained", "Ordinary baseline"], value="Source-constrained",
+                        label="Task instruction · compare at zero steering")
+                    integrity_query = gr.Button("Load incident intake case")
                 with gr.Row():
                     query_max_new_tokens = gr.Slider(
                         1, 1024, value=192, step=1, label="Max new tokens"
@@ -1892,11 +2202,11 @@ sobre la lectura del prompt/imagen**, sin prefijo de generación del asistente.
                     label="Download steered PROMPT activations + response metadata"
                 )
             with gr.Column(scale=1, elem_classes=["section-card", "result-card"]):
-                query_base_answer = gr.Textbox(
-                    label="BASE response", lines=13, interactive=False
+                query_base_answer = response_markdown(
+                    "BASE response", min_height=260
                 )
-                query_steered_answer = gr.Textbox(
-                    label="STEERED response", lines=13, interactive=False
+                query_steered_answer = response_markdown(
+                    "STEERED response", min_height=260
                 )
         with gr.Accordion("Saved artifacts and experiment structure", open=False):
             gr.Markdown("""
@@ -1919,8 +2229,11 @@ run_id/
 ├── queries/
 └── experiment.json
 ```
+
 Los `.pt` individuales retienen activaciones SAE token por token y scores FP32.
+
 El perfil almacena todos los deltas, la máscara de intersección y la dirección filtrada.
+
 Las activaciones de consultas se capturan en un **forward separado sobre el prompt**, nunca sobre la respuesta.
 """)
         calibrate_btn.click(
@@ -1932,6 +2245,8 @@ Las activaciones de consultas se capturan en un **forward separado sobre el prom
                 calibration_temperature,
                 calibration_seed,
                 calibration_previews,
+                calibration_token_scope,
+                calibration_prefix_marker,
             ],
             outputs=[
                 *flat_pair_answers,
@@ -1940,6 +2255,33 @@ Las activaciones de consultas se capturan en un **forward separado sobre el prom
                 session_state,
                 calibration_status,
             ],
+        )
+        preset_outputs = [
+                pair_count, *pair_groups, pair_count_label, *flat_pair_inputs,
+                calibration_token_scope, calibration_previews,
+                calibration_max_new_tokens, calibration_temperature, calibration_seed,
+                *flat_pair_answers, *layer_html_outputs,
+                query_image, query_prompt, query_base_answer, query_steered_answer,
+                query_archive, query_status, disclosure_case,
+                query_max_new_tokens, query_temperature, query_seed,
+                strength_9, strength_17, strength_22, strength_29,
+                calibration_bundle, session_state, calibration_status,
+            ]
+        disclosure_preset.click(fn=load_disclosure_preset, outputs=preset_outputs)
+        image_report_preset.click(fn=load_image_report_preset, outputs=preset_outputs)
+        integrity_preset.click(fn=load_integrity_preset, outputs=preset_outputs)
+        for preset in (disclosure_preset, image_report_preset, integrity_preset):
+            preset.click(lambda: "", outputs=[calibration_prefix_marker], api_name=False, queue=False)
+        integrity_query.click(fn=load_integrity_query, inputs=[integrity_case, integrity_instruction],
+                              outputs=[query_image, query_prompt, query_base_answer,
+                                       query_steered_answer, query_archive, query_status])
+        image_report_query.click(fn=load_image_report_query, inputs=[image_report_case],
+                                 outputs=[query_image, query_prompt, query_base_answer,
+                                          query_steered_answer, query_archive, query_status])
+        disclosure_query.click(
+            fn=load_disclosure_query, inputs=[disclosure_case],
+            outputs=[query_image, query_prompt, query_base_answer,
+                     query_steered_answer, query_archive, query_status],
         )
         ask_btn.click(
             fn=ask_steered_model,
@@ -1962,6 +2304,7 @@ Las activaciones de consultas se capturan en un **forward separado sobre el prom
                 query_status,
             ],
         )
+        build_causal_lab(sys.modules[__name__], session_state, query_image, query_prompt, common_feature_tables)
     return demo
 
 
