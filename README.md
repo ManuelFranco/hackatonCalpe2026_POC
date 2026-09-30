@@ -38,6 +38,7 @@ make server PRELOAD=1
 ### Windows
 
 ```bash
+set GRADIO_SERVER_NAME=127.0.0.1
 uv run python demo_gradio_hackaton.py
 ```
 

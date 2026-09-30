@@ -134,7 +134,7 @@ STEERING_FRACTION_PER_UNIT = float(os.getenv("STEERING_FRACTION_PER_UNIT", "0.05
 STEER_LAST_TOKEN_ONLY = os.getenv("STEER_LAST_TOKEN_ONLY", "1") != "0"
 TOP_DIFFS_TO_SHOW = int(os.getenv("TOP_DIFFS_TO_SHOW", "20"))
 MAX_PAIRS = int(os.getenv("MAX_CONTRASTIVE_PAIRS", "8"))
-MIN_PAIRS = 2
+MIN_PAIRS = 1
 FEATURE_PRESENCE_EPS = float(os.getenv("FEATURE_PRESENCE_EPS", "1e-6"))
 SAE_CHUNK_TOKENS = int(os.getenv("SAE_CHUNK_TOKENS", "128"))
 SAVE_RESIDUALS = os.getenv("SAVE_RESIDUALS", "1") != "0"
@@ -835,18 +835,18 @@ def selected_feature_rows(
                 round(float(mean[j]), 7),
                 round(float(result["masked_mean_delta"][j]), 7),
                 (
-                    "sí"
+                    "yes"
                     if bool(result["same_sign_mask"][j])
                     else (
-                        "signos opuestos"
+                        "opposite signs"
                         if bool(result["opposing_sign_mask"][j])
-                        else "no aplica"
+                        else "not applicable"
                     )
                 ),
                 (
-                    "cancelación"
+                    "canceled"
                     if bool(result["canceled_mask"][j])
-                    else ("incluida" if included else "EXCLUIDA")
+                    else ("included" if included else "EXCLUDED")
                 ),
                 ", ".join(f"{v:+.5g}" for v in pair_vals),
             ]
@@ -1121,7 +1121,7 @@ def calibrate_contrastive_profile_pairs(*args: Any):
     """Gradio inputs: count, 4*MAX_PAIRS conditions, generation controls."""
     pair_count = int(args[0])
     if not MIN_PAIRS <= pair_count <= MAX_PAIRS:
-        raise gr.Error(f"Número de pares inválido ({MIN_PAIRS}-{MAX_PAIRS}).")
+        raise gr.Error(f"Invalid number of pairs ({MIN_PAIRS}-{MAX_PAIRS}).")
     pair_fields = args[1 : 1 + 4 * MAX_PAIRS]
     controls = args[1 + 4 * MAX_PAIRS :]
     max_new_tokens, temperature, seed, make_previews, token_scope = controls[:5]
@@ -1167,7 +1167,7 @@ def calibrate_contrastive_profile_pairs(*args: Any):
                     token_scope=token_scope, prefix_data=prefix_data,
                 )
                 del inputs, residuals
-                answer = "(Vista previa desactivada: las activaciones son solo del prompt/imagen.)"
+                answer = "(Preview disabled: activations are captured from the prompt/image only.)"
                 if make_previews:
                     generation_inputs, _, generation_length = prepare_case_inputs(sys.modules[__name__], case)
                     answer = generate_answer(
@@ -1237,35 +1237,35 @@ def calibrate_contrastive_profile_pairs(*args: Any):
         "feature_token_scope": token_scope,
     }
     report = [
-        f"**Perfil común creado:** `{run_id}` · **{pair_count} pares** · "
-        f"criterio `|Bᵢ−Aᵢ| > {FEATURE_PRESENCE_EPS:g}` en TODOS los pares.",
+        f"**Common profile created:** `{run_id}` · **{pair_count} pair(s)** · "
+        f"criterion `|Bᵢ−Aᵢ| > {FEATURE_PRESENCE_EPS:g}` in EVERY pair.",
         "",
-        "Solo las features comunes pasan al decoder; las demás se anulan antes de aplicar `W_dec`.",
+        "Only common features reach the decoder; all others are zeroed before applying `W_dec`.",
         "",
         (f"**Decision boundary:** after BASE generates `{prefix_marker}`. Each exact prefix is saved; the decision after it is excluded from calibration."
          if prefix_marker else "Activations captured before the first answer token; no generated response enters calibration."),
         "",
-        f"**Tokens: `{token_scope}`.** Captura con prefijo de asistente, en la misma posición que la consulta.",
+        f"**Tokens: `{token_scope}`.** Captured with the assistant prefix at the same position as the query.",
         "",
     ]
     for layer_idx in LAYERS:
         item = layer_info[layer_idx]
         report.append(
-            f"- Capa **{layer_idx}**: **{item['common_features']}** comunes; "
-            f"**{item['excluded_not_common']}** exclusivas de algunos pares (descartadas); "
-            f"{item['common_opposing_sign']} comunes con signos opuestos; "
-            f"{item['common_canceled_mean']} con media cancelada; "
-            f"**{item['effective_nonzero_features']}** con señal final; "
-            f"‖dirección α=1‖₂ = `{item['scaled_direction_l2']:.4f}`."
+            f"- Layer **{layer_idx}**: **{item['common_features']}** common; "
+            f"**{item['excluded_not_common']}** exclusive to some pairs (discarded); "
+            f"{item['common_opposing_sign']} common with opposite signs; "
+            f"{item['common_canceled_mean']} canceled by averaging; "
+            f"**{item['effective_nonzero_features']}** with a final signal; "
+            f"‖direction α=1‖₂ = `{item['scaled_direction_l2']:.4f}`."
         )
     report.append("")
     if token_scope != "last" and FEATURE_AGGREGATION == "mean":
         report.append(
-            "**Promedio de tokens:** una diferencia de longitud A/B puede cambiar "
-            "la media de activaciones idénticas. Compara con `last` antes de interpretar las features.\n"
+            "**Token averaging:** an A/B length difference can change the mean "
+            "of otherwise identical activations. Compare with `last` before interpreting features.\n"
         )
     report.append(
-        "La tabla es una vista previa; el ZIP incluye un CSV con **todas** las features y sus deltas por par."
+        "The table is a preview; the ZIP includes a CSV with **all** features and their deltas for each pair."
     )
     # Four independently rendered results per layer: overview, common,
     # excluded, and top individual pair deltas. Each feature can expand its
@@ -1357,13 +1357,13 @@ def ask_steered_model(
     validate_generation_settings(max_new_tokens, temperature, seed)
     query_prompt = validate_condition_inputs("query", query_image, query_prompt)
     if not session_state:
-        raise gr.Error("Crea primero el perfil común en la sección 1.")
+        raise gr.Error("Build the common profile in section 1 first.")
     profile_path = session_state.get("profile_path")
     if not profile_path or not Path(profile_path).exists():
-        raise gr.Error("No se encuentra el perfil común. Vuelve a calibrarlo.")
+        raise gr.Error("The common profile cannot be found. Recalibrate it.")
     token_scope = session_state.get("feature_token_scope")
     if token_scope not in {"last", "all", "non_image"}:
-        raise gr.Error("El perfil necesita una nueva calibración con esta versión.")
+        raise gr.Error("The profile needs to be recalibrated with this version.")
     strengths = {
         9: float(strength_9),
         17: float(strength_17),
@@ -1434,7 +1434,7 @@ def ask_steered_model(
         f"α9=`{strengths[9]:+.2f}` · α17=`{strengths[17]:+.2f}` · "
         f"α22=`{strengths[22]:+.2f}` · α29=`{strengths[29]:+.2f}`.\n\n"
         f"BASE and STEERED use the same seed (`{int(seed)}`). "
-        "Esta consulta reutiliza el perfil de features comunes sin recalibrar."
+        "This query reuses the common-feature profile without recalibration."
     )
     if prefix_marker:
         status += (f"\n\n**Decision boundary:** `{prefix_marker}`. BASE generates the prefix once; both conditions replay it. "
@@ -1591,36 +1591,36 @@ APP_CSS = """
 }
 """
 TUTORIAL_MD = r"""
-### Guía rápida
+### Quick guide
 
-1. **Añade pares A/B.** Se muestran dos por defecto; puedes añadir hasta el máximo
-   configurado. Cada A y B admite texto, imagen o los dos. Cada par debe estar completo.
+1. **Add A/B pairs.** One pair is shown by default; you can add up to the configured maximum.
+    Each A and B accepts text, an image, or both. Each active pair must be complete.
 
-2. **Elige los tokens y pulsa «Build common-feature profile».** `last` lee las features
-   en la última posición de la entrada, después de leer todo el contenido y el
-   prefijo de asistente. No recorta el prompt. `all` promedia todo el texto y puede
-   confundir cambios de longitud con cambios de activación.
-   Se ejecuta un forward pass para cada
-   prompt/imagen (y el prefijo BASE si eliges un Decision boundary marker). En cada capa se calculan las
-   activaciones SAE y un vector `delta_i = score(B_i) − score(A_i)` por par.
+2. **Choose the token scope and click “Build common-feature profile”.** `last` reads features
+    at the final input position, after reading all content and the assistant prefix. It does not
+    truncate the prompt. `all` averages all text positions and can confuse length changes with
+    activation changes. A forward pass runs for each prompt/image (and the BASE prefix if you
+    choose a decision boundary marker). Each layer produces SAE activations and a vector
+    `delta_i = score(B_i) − score(A_i)` for each pair.
 
-3. **Intersección estricta:** una feature se considera presente en un par cuando
-   `abs(delta_i) > FEATURE_PRESENCE_EPS`. Solo las features presentes en **todos**
-   los pares pasan al perfil. Se promedian sus deltas **con signo**. Si hay signos
-   opuestos, la interfaz los señala; si el promedio se cancela, no aporta steering.
+3. **Strict intersection:** a feature is present in a pair when
+    `abs(delta_i) > FEATURE_PRESENCE_EPS`. Only features present in **every** pair
+    enter the profile. Their **signed** deltas are averaged. Opposite signs are flagged;
+    a canceled average contributes no steering.
 
-4. **Consulta las tablas por capa.** Las features de media B−A positiva van
-   en verde y las negativas en rojo. Cada fila tiene EXPAND y un iframe Neuronpedia.
-   Se muestran recuentos, features comunes, features excluidas y diferencias por par.
-   El ZIP conserva todas las features en CSV y tensores `.pt` sin truncar.
+4. **Inspect the per-layer tables.** Features with a positive mean B−A are green and
+    negative ones are red. Each row has EXPAND and a Neuronpedia iframe. Counts, common
+    features, excluded features, and per-pair differences are shown. The ZIP keeps every
+    feature in the CSV and untruncated `.pt` tensors.
 
-5. **Consulta el modelo con otra imagen/prompt**, compara BASE con STEERED y
-   ajusta los sliders por capa. `0` = sin steering. El signo de alpha interviene
-   la activación, no garantiza un comportamiento determinado.
+5. **Query the model with another image/prompt**, compare BASE with STEERED, and adjust
+    the per-layer sliders. `0` means no steering. Alpha's sign changes the activation,
+    but does not guarantee a particular behavior.
 
-Las vistas previas completas no se usan para construir el perfil. Si eliges un **Decision boundary marker**,
-se genera y guarda un prefijo BASE por condición: sus tokens sí forman parte de la entrada de captura,
-pero la decisión posterior al marcador queda excluida. La consulta y el bloque 3 conservan ese punto de intervención.
+Full previews are not used to build the profile. If you choose a **decision boundary marker**,
+a BASE prefix is generated and saved for each condition: its tokens are included in the capture
+input, but the decision after the marker is excluded. The query and section 3 preserve that
+intervention point.
 """
 
 
@@ -1677,21 +1677,21 @@ def _feature_header(title: str, description: str) -> str:
 def render_empty_layer_overview(layer_idx: int) -> str:
     return (
         '<div class="feature-empty">'
-        f'Capa {layer_idx}: calibra al menos dos pares A/B para ver las features, '
-        'los signos y sus enlaces a Neuronpedia.'
+        f'Layer {layer_idx}: calibrate at least one A/B pair to see features, '
+        'signs, and Neuronpedia links.'
         '</div>'
     )
 
 
 def render_layer_overview(layer_idx: int, info: Dict[str, Any]) -> str:
     cards = (
-        ("Pares A/B", info["num_pairs"]),
-        ("Features presentes en algún par", info["present_in_at_least_one"]),
-        ("Comunes en todos", info["common_features"]),
-        ("Excluidas por intersección", info["excluded_not_common"]),
-        ("Comunes con signos opuestos", info["common_opposing_sign"]),
-        ("Canceladas tras la media", info["common_canceled_mean"]),
-        ("Con señal final", info["effective_nonzero_features"]),
+        ("A/B pairs", info["num_pairs"]),
+        ("Features present in any pair", info["present_in_at_least_one"]),
+        ("Common in every pair", info["common_features"]),
+        ("Excluded by intersection", info["excluded_not_common"]),
+        ("Common with opposite signs", info["common_opposing_sign"]),
+        ("Canceled after averaging", info["common_canceled_mean"]),
+        ("With a final signal", info["effective_nonzero_features"]),
     )
     html_cards = ''.join(
         '<div class="layer-stat">'
@@ -1702,11 +1702,11 @@ def render_layer_overview(layer_idx: int, info: Dict[str, Any]) -> str:
     return (
         f'<div class="layer-stat-grid">{html_cards}</div>'
         '<div class="layer-info">'
-        f'Capa {layer_idx} · SAE 16k · {int(info["total_features"]):,} features totales · '
-        f'‖dirección escalada, α=1‖₂ = <strong>{info["scaled_direction_l2"]:.5g}</strong>. '
-        'La presencia es |Bᵢ−Aᵢ| &gt; ε en <strong>todos</strong> los pares. '
-        'Verde = media B−A positiva; rojo = media negativa. '
-        'La presencia no exige que los signos coincidan.</div>'
+        f'Layer {layer_idx} · SAE 16k · {int(info["total_features"]):,} total features · '
+        f'‖scaled direction, α=1‖₂ = <strong>{info["scaled_direction_l2"]:.5g}</strong>. '
+        'Presence is |Bᵢ−Aᵢ| &gt; ε in <strong>every</strong> pair. '
+        'Green = positive mean B−A; red = negative mean. '
+        'Presence does not require matching signs.</div>'
     )
 
 
@@ -1714,21 +1714,21 @@ def render_feature_table(
     layer_idx: int, rows: List[List[Any]], included: bool, calibration_id: Optional[str] = None,
 ) -> str:
     layer_rows = [r for r in rows if int(r[0]) == layer_idx]
-    title = "Features comunes · incluidas" if included else "Features no comunes · descartadas"
+    title = "Common features · included" if included else "Non-common features · excluded"
     description = (
         "Preview includes large mean differences and consistent paired contrasts; canceled means do not contribute."
         if included else
-        "Ordenadas por su pico |B−A|; nunca entran en la dirección final."
+        "Ordered by peak |B−A|; never included in the final direction."
     )
     heading = _feature_header(title, description)
     head = (
         '<div class="feature-grid feature-grid-head">'
-        '<span>Feature</span><span>Presencia</span><span>Media B−A</span>'
-        '<span>Δ steering</span><span>Signos</span><span>Estado</span>'
-        '<span>Δ de cada par</span><span>Neuronpedia</span></div>'
+        '<span>Feature</span><span>Presence</span><span>Mean B−A</span>'
+        '<span>Δ steering</span><span>Signs</span><span>Status</span>'
+        '<span>Pair Δ values</span><span>Neuronpedia</span></div>'
     )
     if not layer_rows:
-        return heading + '<div class="feature-table"><div class="feature-empty">Ninguna feature en esta categoría.</div></div>'
+        return heading + '<div class="feature-table"><div class="feature-empty">No features in this category.</div></div>'
     parts = [heading, '<div class="feature-table">', head]
     for row in layer_rows:
         _, fid, count, total, avg, steering, signs, status, pair_deltas = row
@@ -1737,7 +1737,7 @@ def render_feature_table(
         value = float(steering)
         feature_class = _signed_class(mean)
         presence_class = "full" if count == total else ""
-        status_class = "ambiguous" if "opuestos" in str(signs) or "cancelación" in str(status) else ""
+        status_class = "ambiguous" if "opposite" in str(signs) or "canceled" in str(status) else ""
         pair_label = html.escape(str(pair_deltas))
         transfer = (
             '<div class="feature-transfer">'
@@ -1746,7 +1746,7 @@ def render_feature_table(
             f'aria-label="Test layer {layer_idx} feature {fid} in block 3">'
             'Test this feature in block 3 →</button>'
             '<span>Use this calibration and the current query from section 2.</span></div>'
-            if included and calibration_id and status != "cancelación" else ""
+            if included and calibration_id and status != "canceled" else ""
         )
         parts.extend([
             '<details class="feature-row">',
@@ -1771,13 +1771,13 @@ def render_feature_table(
 def render_individual_pair_table(layer_idx: int, rows: List[List[Any]]) -> str:
     layer_rows = [r for r in rows if int(r[1]) == layer_idx]
     heading = _feature_header(
-        "Mayores diferencias de cada par",
-        "B−A individuales; no implica que la feature esté incluida en la intersección.",
+        "Largest differences for each pair",
+        "Individual B−A values; this does not imply that the feature is included in the intersection.",
     )
     head = (
         '<div class="feature-grid feature-grid--pair feature-grid-head">'
-        '<span>Par</span><span>Feature</span><span>Δ B−A</span>'
-        '<span>|Δ|</span><span>Interpretación</span><span>Neuronpedia</span></div>'
+        '<span>Pair</span><span>Feature</span><span>Δ B−A</span>'
+        '<span>|Δ|</span><span>Interpretation</span><span>Neuronpedia</span></div>'
     )
     if not layer_rows:
         return heading + '<div class="feature-table"><div class="feature-empty">Sin diferencias individuales.</div></div>'
@@ -1807,7 +1807,7 @@ def change_pair_count(count: int, change: int):
     return (
         count,
         *[gr.update(visible=i < count) for i in range(MAX_PAIRS)],
-        f"**Pares activos: {count}/{MAX_PAIRS}.** Los pares ocultos no se calibran.",
+        f"**Active pairs: {count}/{MAX_PAIRS}.** Hidden pairs are not calibrated.",
     )
 
 
@@ -1926,30 +1926,30 @@ def build_demo() -> gr.Blocks:
         gr.Markdown(
             """# Gemma 3 · Common-Feature SAE Steering
 
-Crea un perfil B − A reutilizable a partir de **varios pares multimodales**.
+Create a reusable B − A profile from **multiple multimodal pairs**.
 
-El perfil común utiliza las features presentes en **todos** los vectores B−A.
+The common profile uses features present in **all** B−A vectors.
 
-Para medir una feature individual, abre el [Single-feature causal lab](#causal-lab):
-curvas de decisión, ablación, preguntas inversas y controles aleatorios.""",
+To measure an individual feature, open the [Single-feature causal lab](#causal-lab):
+decision curves, ablation, inverse questions, and random controls.""",
             elem_id="hero",
         )
         with gr.Accordion("How to use this app", open=True):
             gr.Markdown(TUTORIAL_MD)
         with gr.Accordion("Method and steering formula", open=False):
             gr.Markdown(f"""
-### Configuración del perfil
+### Profile configuration
 
-- **Capas:** `{LAYERS}`
-- **Agregación:** `{FEATURE_AGGREGATION}`
-- **Tokens por defecto:** `{FEATURE_TOKEN_SCOPE}`; se eligen al calibrar.
+- **Layers:** `{LAYERS}`
+- **Aggregation:** `{FEATURE_AGGREGATION}`
+- **Default token scope:** `{FEATURE_TOKEN_SCOPE}`; selected during calibration.
 - **Epsilon:** `{FEATURE_PRESENCE_EPS:g}`
 - **Fraction/alpha:** `{STEERING_FRACTION_PER_UNIT}`
 - **Steer last token only:** `{STEER_LAST_TOKEN_ONLY}`
 
-### Cálculo de la dirección y aplicación del steering
+### Direction calculation and steering application
 
-Para cada par `i` y cada capa `l`:
+For each pair `i` and layer `l`:
 
 ```text
 d_i = score_SAE(B_i) − score_SAE(A_i)
@@ -1961,18 +1961,17 @@ v = normalize(v_raw) × reference_residual_norm × STEERING_FRACTION_PER_UNIT
 h_last' = h_last + alpha × v
 ```
 
-El criterio de presencia no exige igualdad de signos: las inversiones de signo
-se muestran por separado.
+The presence criterion does not require matching signs: sign reversals are shown separately.
 
-Las activaciones se extraen **antes de generar la respuesta**, incluyendo el
-prefijo de asistente para alinear calibración y consulta. `last` mide una posición
-que ya ha leído todo el contenido; `all` y `non_image` agregan varias posiciones.
+Activations are extracted **before generating the response**, including the assistant
+prefix to align calibration and query. `last` measures a position that has read all
+content; `all` and `non_image` aggregate multiple positions.
 """, elem_classes=["formula-box"])
         session_state = gr.State(value=None)
         pair_count = gr.State(value=MIN_PAIRS)
         gr.Markdown("## 1. Build the common B − A steering profile")
         gr.Markdown(
-            "Define al menos dos pares independientes. Cada condición debe contener texto, imagen o ambos.",
+            "Define at least one independent A/B pair. Each condition must contain text, an image, or both.",
             elem_classes=["small-note"],
         )
         with gr.Row():
@@ -1988,14 +1987,14 @@ que ya ha leído todo el contenido; `all` y `non_image` agregan varias posicione
             elem_classes=["small-note"],
         )
         pair_count_label = gr.Markdown(
-            f"**Pares activos: {MIN_PAIRS}/{MAX_PAIRS}.** Los pares ocultos no se calibran."
+            f"**Active pairs: {MIN_PAIRS}/{MAX_PAIRS}.** Hidden pairs are not calibrated."
         )
         pair_groups = []
         flat_pair_inputs = []
         flat_pair_answers = []
         for pair_i in range(MAX_PAIRS):
             with gr.Group(visible=pair_i < MIN_PAIRS) as pair_group:
-                gr.Markdown(f"### Par {pair_i+1} · B{pair_i+1} − A{pair_i+1}")
+                gr.Markdown(f"### Pair {pair_i+1} · B{pair_i+1} − A{pair_i+1}")
                 with gr.Row(equal_height=True):
                     with gr.Column(
                         scale=1, elem_classes=["section-card", "condition-a"]
@@ -2089,10 +2088,10 @@ que ya ha leído todo el contenido; `all` y `non_image` agregan varias posicione
         )
         gr.Markdown("### Feature intersection by layer")
         gr.Markdown(
-            "Tablas independientes por capa. El ID de la feature aparece en verde si su Δ B−A "
-            "medio es positivo, y en rojo si es negativo. Pulsa EXPAND para inspeccionar "
-            "la feature en Neuronpedia. En una fila incluida, pulsa «Test this feature in block 3» "
-            "para medirla individualmente usando esta calibración y la consulta de la sección 2.",
+            "Independent tables are shown for each layer. A feature ID is green when its mean Δ B−A "
+            "is positive and red when it is negative. Click EXPAND to inspect the feature in Neuronpedia. "
+            "In an included row, click “Test this feature in section 3” to measure it individually "
+            "using this calibration and the query from section 2.",
             elem_classes=["small-note"],
         )
         layer_html_outputs: List[gr.HTML] = []
@@ -2128,7 +2127,7 @@ element.addEventListener('click', (event) => {
                     ])
         gr.Markdown("## 2. Query the calibrated steered model")
         gr.Markdown(
-            "Consulta con un prompt y/o imagen nuevo. Se reutiliza el perfil filtrado sin recalibrar.",
+            "Query with a new prompt and/or image. The filtered profile is reused without recalibration.",
             elem_classes=["small-note"],
         )
         with gr.Row(equal_height=True):
@@ -2232,9 +2231,9 @@ run_id/
 
 Los `.pt` individuales retienen activaciones SAE token por token y scores FP32.
 
-El perfil almacena todos los deltas, la máscara de intersección y la dirección filtrada.
+The profile stores all deltas, the intersection mask, and the filtered direction.
 
-Las activaciones de consultas se capturan en un **forward separado sobre el prompt**, nunca sobre la respuesta.
+Query activations are captured in a **separate forward pass over the prompt**, never over the response.
 """)
         calibrate_btn.click(
             fn=calibrate_contrastive_profile_pairs,
