@@ -12,15 +12,33 @@ Each condition can contain text, an image, or both.
 
 ## Installation
 
+### Linux
+
 ```bash
-pip install -r requirements.txt
-huggingface-cli login
+make setup
+make check
+make login
+```
+
+### Windows
+
+```bash
+uv sync
+uv run hf auth login
 ```
 
 ## Run
 
+### Linux
+
 ```bash
-python gemma3_sae_contrastive_web_ab_english.py
+make server PRELOAD=1
+```
+
+### Windows
+
+```bash
+uv run python demo_gradio_hackaton.py
 ```
 
 Then open the Gradio URL shown in the terminal.
