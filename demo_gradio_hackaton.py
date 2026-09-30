@@ -266,6 +266,7 @@ def runtime_metadata() -> Dict[str, Any]:
         "sae-lens",
         "gradio",
         "accelerate",
+        "datasets",
     )
     return {
         "packages": {name: importlib.metadata.version(name) for name in packages},
@@ -1709,6 +1710,23 @@ input, but the decision after the marker is excluded. The query and section 3 pr
 intervention point.
 """
 
+BENCHMARK_GUIDE_MD = r"""
+| Dataset | Modality | What it measures | Why it matters for your goal | Train / Validation / Test | Time for 100 | Total test | Link | Response type |
+|---|---|---|---|---|---|---|---|---|
+| **MMLU-Pro** | Text | Multidisciplinary knowledge and reasoning | General baseline: does cybersecurity steering also affect unrelated knowledge? | No / 70 / 12,032 | 5m | 10h | [Official dataset](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro) | Multiple-choice letter (A-J) |
+| **BBH** | Text | Diverse reasoning tasks | Detects reasoning degradation across task families, including changes that factual QA may miss. | No / No / 6,511 | 5m | 6h | [Official repository](https://github.com/suzgunmirac/BIG-Bench-Hard) | Task-dependent short text or symbol |
+| **GSM8K** | Text | Grade-school mathematical problem solving | Detects effects on quantitative reasoning, unrelated to the target cybersecurity behavior. | 7,473 / No / 1,319 | 28m | 6h | [Official dataset](https://huggingface.co/datasets/openai/gsm8k) | Final number |
+| **ARC-Challenge** | Text | Science questions and reasoning | A relatively small, inexpensive science and reasoning benchmark. | 1,119 / 299 / 1,172 | 5m | 1h | [Official dataset](https://huggingface.co/datasets/allenai/ai2_arc) | Multiple-choice letter (A-D) |
+| **TruthfulQA** | Text | Factuality and resistance to common misconceptions | Tests whether steering changes answer tendencies on unrelated questions that can invite false claims. | No / **817** / No | 5m | 40m | [Official dataset](https://huggingface.co/datasets/truthfulqa/truthful_qa) | Multiple-choice letter (A-D/E) |
+| **MMMU** | Image + text | Multimodal, college-level knowledge and reasoning | Tests whether steering changes visual-textual reasoning and whether features transfer across modalities. | No / 900 / 10,500* | 5m | 10h | [Official dataset](https://huggingface.co/datasets/MMMU/MMMU) | Multiple-choice letter (A-J) |
+| **ScienceQA** | Image + text | Science reasoning with visual and textual context | Measures preservation of multimodal science capabilities. | 12,726 / 4,241 / 4,241 | 28m | 20h | [Official dataset](https://scienceqa.github.io/) | Multiple-choice letter |
+| **POPE** | Image + text | Object hallucination in vision-language models | Detects visual coherence regressions, such as asserting that an object is present when it is absent. | No / No / 18,000 | 10m | 30h | [Official repository](https://github.com/RUCAIBox/POPE) | YES / NO |
+| **BoolQ** | Text | Reading comprehension and yes/no questions | Tests whether steering changes grounded binary answers based on a passage. | 9,427 / **3,270** / No | 5m | 3h | [Official dataset](https://huggingface.co/datasets/google/boolq) | YES / NO |
+| **PIQA** | Text | Physical commonsense reasoning | Tests whether steering affects everyday physical plausibility judgments. | 16,113 / **1,838** / No | 5m | 1.5h | [Official dataset](https://huggingface.co/datasets/baber/piqa) | Multiple-choice letter (A/B) |
+
+\* MMMU contains 150 development examples in addition to its validation and test partitions. The current runner exposes `dev`, `validation`, and `test` for MMMU.
+"""
+
 
 
 # ============================================================
@@ -2299,6 +2317,8 @@ element.addEventListener('click', (event) => {
             "Results measure accuracy, preservation, regressions, improvements, and changed answers.",
             elem_classes=["small-note"],
         )
+        with gr.Accordion("Benchmark explanations and dataset reference", open=False):
+            gr.Markdown(BENCHMARK_GUIDE_MD)
         with gr.Row():
             benchmark_name = gr.Dropdown(
                 choices=[(adapter.name, key) for key, adapter in BENCHMARKS.items()],
