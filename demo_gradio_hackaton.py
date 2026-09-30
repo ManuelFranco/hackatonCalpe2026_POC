@@ -97,6 +97,7 @@ from sae_dashboard.security_reports import ROOT as FIXTURE_ROOT, security_report
 from sae_dashboard.calibration_bridge import snapshot_image
 from sae_dashboard.cyber_integrity import (FIXTURES as INTEGRITY_FIXTURES, BASE_PROMPT, INTEGRITY_PROMPT,
                              integrity_cases, score_known_fixture, score_markdown)
+from sae_dashboard.benchmarks import BENCHMARKS, BenchmarkRunner, save_benchmark_run
 
 # ============================================================
 # CONFIGURATION
@@ -1443,6 +1444,91 @@ def ask_steered_model(
     return base_answer, steered_answer, query_zip, status
 
 
+def run_capability_benchmark(
+    benchmark_name: str,
+    split: str,
+    max_items: int,
+    category: str,
+    temperature: float,
+    max_new_tokens: int,
+    seed: int,
+    strength_9: float,
+    strength_17: float,
+    strength_22: float,
+    strength_29: float,
+    session_state: Optional[Dict[str, Any]],
+):
+    """Run a paired capability benchmark using the current calibrated profile."""
+    validate_generation_settings(max_new_tokens, temperature, seed)
+    if benchmark_name not in BENCHMARKS:
+        raise gr.Error("Choose a supported benchmark.")
+    if not session_state:
+        raise gr.Error(
+            "No steering profile is loaded. First click 'Build common-feature profile' "
+            "in section 1, then run this benchmark."
+        )
+    profile_path = session_state.get("profile_path")
+    token_scope = session_state.get("feature_token_scope")
+    if not profile_path or not Path(profile_path).exists():
+        raise gr.Error("The calibrated profile cannot be found.")
+    if token_scope not in {"last", "all", "non_image"}:
+        raise gr.Error("The profile needs to be recalibrated with this version.")
+    strengths = {9: float(strength_9), 17: float(strength_17), 22: float(strength_22), 29: float(strength_29)}
+    if any(not math.isfinite(value) or abs(value) > 10 for value in strengths.values()):
+        raise gr.Error("Steering strengths must be finite and between -10 and 10.")
+    category_filter = category if category and category != "All" else None
+    with MODEL_LOCK:
+        ensure_models_loaded()
+        directions = load_steering_directions(profile_path, token_scope=token_scope)
+        result = BenchmarkRunner(prepare_inputs, generate_answer).run(
+            benchmark=benchmark_name,
+            split=split,
+            max_items=int(max_items),
+            category=category_filter,
+            directions=directions,
+            strengths=strengths,
+            temperature=float(temperature),
+            seed=int(seed),
+            max_new_tokens=int(max_new_tokens),
+        )
+        result_path = save_benchmark_run(
+            result,
+            Path(session_state["run_dir"]),
+            {
+                "profile_path": str(Path(profile_path).resolve()),
+                "profile_sha256": sha256_file(profile_path),
+                "token_scope": token_scope,
+                "strengths": {str(layer): value for layer, value in strengths.items()},
+                "temperature": float(temperature),
+                "seed": int(seed),
+                "max_new_tokens": int(max_new_tokens),
+            },
+        )
+    summary_data = result.as_dict()
+    summary = [[label, summary_data[key]] for label, key in [
+        ("Items", "num_items"), ("BASE accuracy", "base_accuracy"),
+        ("STEERED accuracy", "steered_accuracy"), ("Accuracy delta", "accuracy_delta"),
+        ("Preserved", "preserved"), ("Regressed", "regressed"),
+        ("Improved", "improved"), ("Changed answers", "changed"),
+        ("Preservation rate", "preservation_rate"), ("Regression rate", "regression_rate"),
+        ("Change rate", "change_rate"),
+    ]]
+    details = [
+        [row.get("question_id"), row.get("category", row.get("task", "all")), row["gold"],
+         row["base"], row["steered"], row["base_correct"], row["steered_correct"], row["changed"]]
+        for row in result.rows
+    ]
+    status = (
+        f"### {BENCHMARKS[benchmark_name].name} completed\n\n"
+        f"- Items: **{result.total}**\n"
+        f"- BASE accuracy: **{summary_data['base_accuracy']:.3f}**\n"
+        f"- STEERED accuracy: **{summary_data['steered_accuracy']:.3f}**\n"
+        f"- Accuracy delta: **{summary_data['accuracy_delta']:+.3f}**\n\n"
+        f"Saved results: `{result_path}`"
+    )
+    return status, summary, details, result_path
+
+
 # ============================================================
 # GRADIO UI
 # ============================================================
@@ -2207,6 +2293,47 @@ element.addEventListener('click', (event) => {
                 query_steered_answer = response_markdown(
                     "STEERED response", min_height=260
                 )
+        gr.Markdown("## 3. Capability / Coherence Benchmark")
+        gr.Markdown(
+            "Run the same items with BASE and STEERED across multiple Hugging Face datasets. "
+            "Results measure accuracy, preservation, regressions, improvements, and changed answers.",
+            elem_classes=["small-note"],
+        )
+        with gr.Row():
+            benchmark_name = gr.Dropdown(
+                choices=[(adapter.name, key) for key, adapter in BENCHMARKS.items()],
+                value="mmlu_pro", label="Benchmark",
+            )
+            benchmark_split = gr.Dropdown(
+                choices=["test", "validation", "train"], value="test", label="Split"
+            )
+            benchmark_items = gr.Slider(
+                1, 500, value=100, step=1, label="Items"
+            )
+        with gr.Row():
+            benchmark_category = gr.Textbox(
+                value="All", label="Category or task filter", placeholder="All"
+            )
+            benchmark_temperature = gr.Slider(
+                0, 2, value=0, step=0.05, label="Temperature · 0 = greedy"
+            )
+            benchmark_max_tokens = gr.Slider(
+                1, 128, value=32, step=1, label="Max new tokens"
+            )
+            benchmark_seed = gr.Number(value=0, precision=0, label="Seed")
+        benchmark_run_btn = gr.Button("Run capability benchmark", variant="primary")
+        benchmark_status = gr.Markdown(
+            "Build a common-feature profile in section 1 before running a benchmark. "
+            "The benchmark compares BASE and STEERED using that profile."
+        )
+        benchmark_summary = gr.Dataframe(
+            headers=["Metric", "Value"], datatype=["str", "number"], interactive=False,
+        )
+        benchmark_details = gr.Dataframe(
+            headers=["Question ID", "Category / task", "Gold", "BASE", "STEERED",
+                     "BASE correct", "STEERED correct", "Changed"], interactive=False,
+        )
+        benchmark_archive = gr.File(label="Download benchmark results JSON")
         with gr.Accordion("Saved artifacts and experiment structure", open=False):
             gr.Markdown("""
 ```text
@@ -2226,6 +2353,8 @@ run_id/
 │   ├── steering_profile.pt
 │   └── profile_summary.json
 ├── queries/
+├── benchmarks/
+│   └── {benchmark}_{timestamp}/results.json
 └── experiment.json
 ```
 
@@ -2234,6 +2363,8 @@ Los `.pt` individuales retienen activaciones SAE token por token y scores FP32.
 The profile stores all deltas, the intersection mask, and the filtered direction.
 
 Query activations are captured in a **separate forward pass over the prompt**, never over the response.
+
+Benchmark results preserve the exact profile, strengths, seed, and generation settings used for each paired run.
 """)
         calibrate_btn.click(
             fn=calibrate_contrastive_profile_pairs,
@@ -2302,6 +2433,15 @@ Query activations are captured in a **separate forward pass over the prompt**, n
                 query_archive,
                 query_status,
             ],
+        )
+        benchmark_run_btn.click(
+            fn=run_capability_benchmark,
+            inputs=[
+                benchmark_name, benchmark_split, benchmark_items, benchmark_category,
+                benchmark_temperature, benchmark_max_tokens, benchmark_seed,
+                strength_9, strength_17, strength_22, strength_29, session_state,
+            ],
+            outputs=[benchmark_status, benchmark_summary, benchmark_details, benchmark_archive],
         )
         build_causal_lab(sys.modules[__name__], session_state, query_image, query_prompt, common_feature_tables)
     return demo
