@@ -9,7 +9,7 @@ from sae_dashboard.manifests import DATA_ROOT, load_manifest, load_manifests
 
 class ManifestTests(unittest.TestCase):
     def test_repository_code_manifest_has_twenty_real_pairs(self):
-        manifest = load_manifest(DATA_ROOT / "cwe_c_pairs_dataset/manifest.json")
+        manifest = load_manifest(DATA_ROOT / "cwe_120/manifest.json")
         self.assertEqual(len(manifest.pairs), 20)
         self.assertIn("#include", manifest.pairs[0].a.text)
         self.assertIsNone(manifest.pairs[0].a.image)
@@ -75,6 +75,6 @@ class ManifestTests(unittest.TestCase):
                     load_manifest(upload)
 
     def test_duplicate_manifest_names_rejected(self):
-        path = str(DATA_ROOT / "cwe_c_pairs_dataset/manifest.json")
+        path = str(DATA_ROOT / "cwe_120/manifest.json")
         with self.assertRaisesRegex(ValueError, "unique name"):
             load_manifests([path, path])

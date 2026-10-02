@@ -41,6 +41,10 @@ class Session:
         self.vectors: dict[int, Any] = {}
         self.vector_id = None
         self.results: list[dict] = []
+        self.benchmark_sample = None
+        self.benchmark_base = []
+        self.benchmark_settings = None
+        self.benchmark_result = None
         self.lock = threading.RLock()
 
     def __deepcopy__(self, memo):

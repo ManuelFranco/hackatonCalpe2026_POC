@@ -1,4 +1,4 @@
-"""Paired benchmark engine: inject a generator; never import the web application."""
+"""Previewable samples and base-gated evaluation, independent of the web app."""
 
 from dataclasses import dataclass
 import random
@@ -14,12 +14,15 @@ class BenchmarkRequest:
     seed: int = 0
 
 
-def run_benchmark(
-    adapter: BenchmarkAdapter,
-    request: BenchmarkRequest,
-    generate_pair: Callable,
-    progress: Callable | None = None,
-) -> dict:
+@dataclass
+class PreparedBenchmark:
+    adapter: BenchmarkAdapter
+    request: BenchmarkRequest
+    items: list[dict]
+    dataset_fingerprint: str | None
+
+
+def prepare_benchmark(adapter, request):
     if request.split not in adapter.splits:
         raise ValueError(
             f"Choose a supported split for {adapter.name}: {adapter.splits}"
@@ -32,70 +35,117 @@ def run_benchmark(
         raise ValueError("No benchmark items match this subject and split.")
     indices = list(range(len(dataset)))
     random.Random(request.seed).shuffle(indices)
-    indices = indices[: request.max_items]
-    rows = []
-    for offset, index in enumerate(indices):
+    items = []
+    for index in indices[: request.max_items]:
         item = dataset[index]
-        prompt, images = adapter.prompt(item), adapter.images(item)
-        base, steered = generate_pair(images, prompt)
-        base_score, steered_score = (
-            adapter.details(item, base),
-            adapter.details(item, steered),
-        )
-        rows.append(
+        # Validate answer availability before any inference (MMMU test labels are hidden).
+        reference = adapter.reference(item)
+        items.append(
             {
                 "index": index,
+                "raw": item,
                 **adapter.metadata(item),
-                "prompt": prompt,
-                "base": base,
-                "steered": steered,
-                "base_score": base_score,
-                "steered_score": steered_score,
-                "changed": adapter.normalize(item, base)
-                != adapter.normalize(item, steered),
+                "prompt": adapter.prompt(item),
+                "images": adapter.images(item),
+                "reference": reference,
+            }
+        )
+    return PreparedBenchmark(
+        adapter, request, items, getattr(dataset, "_fingerprint", None)
+    )
+
+
+def evaluate_base(prepared, generate: Callable, progress=None):
+    rows = []
+    for index, item in enumerate(prepared.items):
+        answer, cache_hit = generate(item["images"], item["prompt"])
+        rows.append(
+            {k: v for k, v in item.items() if k not in {"raw", "images"}}
+            | {
+                "base": answer,
+                "base_cached": cache_hit,
+                "base_score": prepared.adapter.details(item["raw"], answer),
+                "steered": None,
+                "steered_score": None,
+                "changed": None,
             }
         )
         if progress:
             progress(
-                (offset + 1) / len(indices),
-                desc=f"{adapter.name}: {offset + 1}/{len(indices)}",
+                (index + 1) / len(prepared.items),
+                desc=f"Base: {index + 1}/{len(prepared.items)}",
             )
-    base_correct = sum(r["base_score"]["correct"] for r in rows)
-    steered_correct = sum(r["steered_score"]["correct"] for r in rows)
-    preserved = sum(
-        r["base_score"]["correct"] and r["steered_score"]["correct"] for r in rows
-    )
+    return rows
+
+
+def evaluate_steered(prepared, base_rows, generate: Callable, progress=None):
+    if len(base_rows) != len(prepared.items):
+        raise ValueError("Evaluate the base model on this sample first.")
+    rows = []
+    for index, (item, base) in enumerate(zip(prepared.items, base_rows)):
+        row = dict(base, steered=None, steered_score=None, changed=None)
+        if base["base_score"]["correct"]:
+            answer = generate(item["images"], item["prompt"])
+            row.update(
+                steered=answer,
+                steered_score=prepared.adapter.details(item["raw"], answer),
+                changed=prepared.adapter.normalize(item["raw"], base["base"])
+                != prepared.adapter.normalize(item["raw"], answer),
+            )
+        rows.append(row)
+        if progress:
+            progress(
+                (index + 1) / len(prepared.items),
+                desc=f"Steered: {index + 1}/{len(prepared.items)} (base failures skipped)",
+            )
+    return summarize(prepared, rows)
+
+
+def summarize(prepared, rows):
+    eligible = [r for r in rows if r["base_score"]["correct"]]
+    evaluated = [r for r in eligible if r["steered_score"] is not None]
+    preserved = sum(r["steered_score"]["correct"] for r in evaluated)
     summary = {
         "num_items": len(rows),
-        "base_accuracy": base_correct / len(rows),
-        "steered_accuracy": steered_correct / len(rows),
-        "accuracy_delta": (steered_correct - base_correct) / len(rows),
+        "base_correct": len(eligible),
+        "base_failed_excluded": len(rows) - len(eligible),
+        "base_accuracy_all_items": len(eligible) / len(rows),
+        "base_cache_hits": sum(r["base_cached"] for r in rows),
+        "steered_evaluated": len(evaluated),
         "preserved": preserved,
-        "regressed": base_correct - preserved,
-        "improved": steered_correct - preserved,
-        "changed": sum(r["changed"] for r in rows),
-        "preservation_rate": preserved / base_correct if base_correct else None,
+        "regressed": len(evaluated) - preserved,
+        "preservation_rate_on_base_correct": preserved / len(evaluated)
+        if evaluated
+        else None,
     }
-    if adapter.name == "IFEval":
-        for condition in ("base", "steered"):
-            scores = [r[f"{condition}_score"] for r in rows]
-            summary[f"{condition}_prompt_loose_accuracy"] = sum(
-                s["loose_correct"] for s in scores
-            ) / len(scores)
+    if prepared.adapter.name == "IFEval":
+        for condition, subset in (("base", rows), ("steered", evaluated)):
+            scores = [r[f"{condition}_score"] for r in subset]
+            summary[f"{condition}_prompt_loose_accuracy"] = (
+                sum(s["loose_correct"] for s in scores) / len(scores)
+                if scores
+                else None
+            )
             for mode in ("strict", "loose"):
                 checks = [v for s in scores for v in s[f"{mode}_instructions"]]
-                summary[f"{condition}_instruction_{mode}_accuracy"] = sum(checks) / len(
-                    checks
+                summary[f"{condition}_instruction_{mode}_accuracy"] = (
+                    sum(checks) / len(checks) if checks else None
                 )
     return {
-        "benchmark": adapter.name,
-        "dataset_id": adapter.dataset_id,
-        "dataset_fingerprint": getattr(dataset, "_fingerprint", None),
-        "split": request.split,
-        "category": request.category,
-        "sample_seed": request.seed,
-        "metric": adapter.metric,
-        "protocol": "paired zero-shot dashboard evaluation",
+        "benchmark": prepared.adapter.name,
+        "dataset_id": prepared.adapter.dataset_id,
+        "dataset_fingerprint": prepared.dataset_fingerprint,
+        "split": prepared.request.split,
+        "category": prepared.request.category,
+        "sample_seed": prepared.request.seed,
+        "metric": prepared.adapter.metric,
+        "protocol": "zero-shot; steered evaluated only on base-correct items",
         "summary": summary,
         "rows": rows,
     }
+
+
+def run_benchmark(adapter, request, generate_base, generate_steered, progress=None):
+    prepared = prepare_benchmark(adapter, request)
+    base = evaluate_base(prepared, generate_base, progress)
+    return evaluate_steered(prepared, base, generate_steered, progress)

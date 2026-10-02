@@ -23,13 +23,18 @@ uv run python -m unittest discover -s tests -p 'test_vector_builders.py' -v
 
 Own `research/benchmarks/`. `BenchmarkAdapter` supplies loading, prompt construction,
 images, normalization, scoring and metadata. Register adapters in `BENCHMARKS`.
-`run_benchmark(adapter, request, generate_pair, progress)` calls an injected generator
-that accepts labeled in-memory images and a prompt and returns `(base, steered)`.
+`prepare_benchmark(adapter, request)` freezes a reproducible sample with exact prompts,
+labeled images, metadata and ground-truth references before inference. `evaluate_base`
+accepts an injected generator returning `(answer, cache_hit)`; `evaluate_steered` accepts
+a generator returning text and calls it **only for base-correct rows**. The combined
+`run_benchmark(adapter, request, generate_base, generate_steered, progress)` is also available.
 It returns a JSON-compatible result. There are no dashboard imports or output files.
 
 The workflow supplies shared generation parameters, profile vectors and strengths.
 The runner selects a seeded sample, reports its row indices and dataset fingerprint,
-and measures paired accuracy, regression, improvement and preservation.
+and measures full-sample base accuracy plus preservation/regressions on the base-correct subset.
+A zero-sized eligible subset yields a null preservation rate. Steered accuracy over the
+full sample and improvements on base failures are deliberately not reported.
 
 - MMLU-Pro uses its official Hugging Face dataset with a zero-shot letter-only prompt.
 - MMMU loads all subjects when the subject field is blank. It supports all image columns
@@ -64,3 +69,18 @@ uv run python -m unittest discover -s tests -p 'test_benchmarks.py' -v
 Keep model calls under `MODEL_LOCK` and session mutations under the session lock.
 Acquire the session lock before the model lock. Never put per-user values into runtime
 globals. New vector methods or benchmark adapters should not need UI edits.
+
+## Single-feature causal lab
+
+`research/causal_interventions.py` contains additive decoder interventions and next-token
+readouts, injected with a model runtime. Callers own the model lock. Hooks are removed on
+success and failure. Zero dose leaves hidden states untouched; first-step and every-step
+schedules are available for generation. Shared prefixes extend masks and the continuation
+boundary, so displayed output contains newly generated tokens only.
+
+`sae_dashboard/causal_lab.py` handles current-profile/manual selection, coefficient scaling,
+seeded equal-norm random controls, ablation, token maps and optional recording.
+`causal_ui.py` renders the Extra tab. No common-profile vector is mutated by the lab.
+
+`sae_dashboard/base_response_cache.py` owns atomic JSON base-only caching. Benchmark
+research adapters must not implement persistence or call the model directly.

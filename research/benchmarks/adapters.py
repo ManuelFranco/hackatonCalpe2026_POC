@@ -54,7 +54,12 @@ class BenchmarkAdapter:
     def metadata(self, item):
         return {
             "id": item.get("id", item.get("question_id", item.get("key"))),
-            "category": item.get("category", item.get("subfield", "all")),
+            "category": item.get("category", item.get("subfield", "")),
+            "question_type": item.get(
+                "question_type",
+                "multiple-choice" if "options" in item else "instruction-following",
+            ),
+            "difficulty": item.get("difficulty", item.get("topic_difficulty", "")),
         }
 
 
@@ -80,6 +85,15 @@ class MMLUPro(BenchmarkAdapter):
 
     def normalize(self, item, response):
         return parse_choice(response, len(options(item)))
+
+    def reference(self, item):
+        answer = item.get("answer")
+        choices = options(item)
+        if not isinstance(answer, str) or answer not in CHOICES[: len(choices)]:
+            raise ValueError(
+                "This split has unavailable answer labels; select a labeled split."
+            )
+        return f"{answer}. {choices[CHOICES.index(answer)]}"
 
     def score(self, item, response):
         answer = item.get("answer")
@@ -109,6 +123,16 @@ class MMMU(MMLUPro):
         if item.get("question_type") == "open":
             return "Give a concise answer to the question.\n\n" + item["question"]
         return super().prompt(item)
+
+    def reference(self, item):
+        if item.get("question_type") == "open":
+            answer = item.get("answer")
+            if not answer or answer == "?":
+                raise ValueError(
+                    "This MMMU split has no answer labels; select dev or validation."
+                )
+            return str(answer)
+        return super().reference(item)
 
     def images(self, item):
         images = []
@@ -168,6 +192,23 @@ class IFEval(BenchmarkAdapter):
     def prompt(self, item):
         # Adding our own answer-format instruction would change this benchmark.
         return item["prompt"]
+
+    def reference(self, item):
+        from .vendor.ifeval.instructions_registry import INSTRUCTION_DICT
+
+        requirements = []
+        for identifier, kwargs in zip(item["instruction_id_list"], item["kwargs"]):
+            instruction = INSTRUCTION_DICT[identifier](identifier)
+            description = instruction.build_description(
+                **{k: v for k, v in kwargs.items() if v is not None}
+            )
+            if "prompt" in (instruction.get_instruction_args() or {}):
+                description = instruction.build_description(prompt=item["prompt"])
+            requirements.append(f"- {description}")
+        return (
+            "No single reference answer. All of these requirements must pass (strict):\n\n"
+            + "\n".join(requirements)
+        )
 
     def details(self, item: dict[str, Any], response: str):
         from .vendor.ifeval import evaluation_lib as official
