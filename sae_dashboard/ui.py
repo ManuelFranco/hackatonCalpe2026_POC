@@ -67,6 +67,22 @@ def strengths(values):
     return dict(zip(runtime.LAYERS, map(float, values)))
 
 
+def response_panel(title):
+    with gr.Column():
+        gr.Markdown(f"### {title}")
+        return gr.Markdown(
+            value="",
+            label=title,
+            min_height=240,
+            max_height=700,
+            container=True,
+            padding=True,
+            buttons=["copy"],
+            sanitize_html=True,
+            line_breaks=True,
+        )
+
+
 def build_demo():
     with gr.Blocks(
         title="Hackathon 2026", analytics_enabled=False, delete_cache=(3600, 14400)
@@ -131,9 +147,7 @@ are managed separately by Gradio and Hugging Face.
                         with gr.Accordion("Optional image", open=False):
                             probe_image = gr.Image(type="pil", label="Image")
                         probe_btn = gr.Button("Run Gemma 3", variant="primary")
-                    probe_answer = gr.Textbox(
-                        label="Gemma 3 response", lines=12, interactive=False
-                    )
+                    probe_answer = response_panel("Gemma 3 response")
             with gr.Tab("1 · Load manifests", id="load"):
                 gr.Markdown("## 1. Load manifests", elem_classes="section-title")
                 repo_paths = sorted(DATA_ROOT.rglob("*manifest*.json"))
@@ -216,10 +230,8 @@ JSON paths portable. Loading new manifests replaces this session's profile and v
                     query_image = gr.Image(type="pil", label="Image")
                 compare_btn = gr.Button("Run base + steered", variant="primary")
                 with gr.Row():
-                    base_answer = gr.Textbox(label="Base", lines=14, interactive=False)
-                    steered_answer = gr.Textbox(
-                        label="Steered", lines=14, interactive=False
-                    )
+                    base_answer = response_panel("Base")
+                    steered_answer = response_panel("Steered")
             with gr.Tab("5 · Coherence benchmarks", id="benchmarks"):
                 gr.Markdown("## 5. Evaluate coherence", elem_classes="section-title")
                 with gr.Row():
@@ -251,6 +263,8 @@ JSON paths portable. Loading new manifests replaces this session's profile and v
                             "Base",
                             "Steered",
                         ],
+                        datatype=["str", "bool", "bool", "markdown", "markdown"],
+                        wrap=True,
                         interactive=False,
                     )
                 with gr.Accordion("Scoring and sources", open=False):
