@@ -24,9 +24,12 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 2. **Build common profile** — capture matched A/B SAE features for all pairs.
 3. **Create steering vectors** — average B − A, retain all features, decode and scale.
 4. **Base vs. steered** — compare using the same prompt, seed, temperature and token budget.
-5. **Coherence benchmarks** — MMLU-Pro, MMMU and IFEval.
+5. **Coherence benchmarks** — preview MMLU-Pro, MMMU or IFEval cases and references,
+   evaluate/cache the base model, then evaluate steering only on base-correct cases.
 6. **Export VLM** — explicitly download a portable loader, vectors and configuration;
    optionally include base weights and processor.
+7. **Extra** — single-feature causal sweeps, ablation, random controls, token activation
+   maps and Markdown full-response comparisons. Choose a current profile feature or a manual ID.
 
 Generation and capture controls appear once at the top. Profile tokens default to
 `all`; `last` and `non_image` remain available. Capture scope and aggregation changes
@@ -36,18 +39,18 @@ intersection; all mean B − A features are retained.
 
 ## Manifests
 
-[`data/cwe_c_pairs_dataset/manifest.json`](data/cwe_c_pairs_dataset/manifest.json)
+[`data/cwe_120/manifest.json`](data/cwe_120/manifest.json)
 contains 20 normal/vulnerable code pairs. Each manifest represents one use case:
 
 ```json
 {
   "version": 1,
   "name": "Code safety",
-  "asset_root": "cwe_c_pairs_dataset",
+  "asset_root": "cwe_287",
   "pairs": [
     {"id": "CWE-287",
-     "A": {"text_file": "cwe_287_A.txt", "image": ""},
-     "B": {"text_file": "cwe_287_B.txt", "image": ""}}
+     "A": {"text_file": "cwe_287_A_01.txt", "image": ""},
+     "B": {"text_file": "cwe_287_B_01.txt", "image": ""}}
   ]
 }
 ```
@@ -60,7 +63,8 @@ Without `asset_root`, repository manifests resolve relative to their own directo
 uploaded manifests resolve relative to the data root. Absolute paths are accepted
 only inside that root. Traversal and symlink escapes are rejected. Text is loaded
 into the session; images are fingerprinted and checked again before capture.
-The legacy CWE list format is also readable.
+Per-CWE v2 manifests with `safe_file` / `vulnerable_file` mappings are also readable.
+The dataset-wide index is not a use-case manifest; select a category manifest.
 
 ## Parallel work and persistence
 
@@ -75,11 +79,19 @@ This supports simultaneous browser work while serializing inference on one model
 Sessions expire after four hours; refreshing may start a new session. This is a
 session-isolated workspace, not an account/authentication system.
 
-**No experiment artifacts are written by default.** The top button opts the current
+**Experiment recording is off by default.** The top button opts the current
 session into saving new JSON results and metadata under `runs/<session-id>/experiments/`.
 It does not retrospectively save previous events or export a model. Turning it off
 stops subsequent writes. The default can never be enabled through an environment
-variable. Gradio upload caches and Hugging Face/model/dataset caches are separate.
+variable. **Base benchmark responses are automatically cached as JSON**, independently
+of this toggle, under `.cache/base_responses` (override with `GEMMA_BASE_CACHE_DIR`).
+Cache keys cover processed input tokens and image tensors, exact prompt, seed, temperature,
+token budget, resolved model configuration/revision, generation defaults and runtime versions.
+Atomic writes and per-key process locks support concurrent sessions. A hit skips generation;
+model loading/input preparation can still be needed to verify identity. Steered benchmark
+responses are recomputed every run, remain in memory and are never persisted, even with
+experiment recording enabled. Causal experiments follow the recording toggle.
+Gradio upload caches and Hugging Face/model/dataset caches are separate.
 
 Only **Export steered VLM** writes model packages under
 `runs/<session-id>/exports/<unique-id>.zip`, regardless of the experiment-saving
@@ -97,6 +109,7 @@ persistence, export reloading and benchmark scoring using small fixtures/fake mo
 These checks do not measure actual Gemma behavior or benchmark quality; run section 0
 and the benchmark workflow on the target GPU to do that.
 
-The retired monolithic entry point, causal laboratory, hardcoded presets and historical
-experiment fixtures were removed from the active tree. Earlier tracked versions remain
+The retired monolithic entry point, hardcoded presets and historical experiment fixtures
+were removed from the active tree. The causal laboratory is now integrated under Extra,
+using the current profile or manual selection instead of historical preset files. Earlier tracked versions remain
 in Git. Use `dashboard.py`; old profile files are not imported by the new workflow.

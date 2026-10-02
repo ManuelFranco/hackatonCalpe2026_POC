@@ -8,7 +8,12 @@ class BenchmarkTests(unittest.TestCase):
     def test_requested_registry_and_split_validation(self):
         self.assertEqual(set(BENCHMARKS), {"mmlu_pro", "mmmu", "ifeval"})
         with self.assertRaises(ValueError):
-            run_benchmark(IFEval(), BenchmarkRequest("test"), lambda *args: ("", ""))
+            run_benchmark(
+                IFEval(),
+                BenchmarkRequest("test"),
+                lambda *args: ("", False),
+                lambda *args: "",
+            )
 
     def test_choice_parsing_does_not_count_articles(self):
         adapter = MMLUPro()
@@ -28,32 +33,46 @@ class BenchmarkTests(unittest.TestCase):
             }
             for i in range(6)
         ]
-        outputs = iter([("B", "B"), ("B", "A"), ("A", "B")])
+        outputs = iter(["B", "B", "A"])
+        steered = iter(["B", "A"])
         with patch.object(adapter, "load", return_value=data):
             first = run_benchmark(
                 adapter,
                 BenchmarkRequest("test", 3, seed=42),
-                lambda *args: next(outputs),
+                lambda *args: (next(outputs), False),
+                lambda *args: next(steered),
             )
             second = run_benchmark(
-                adapter, BenchmarkRequest("test", 3, seed=42), lambda *args: ("B", "B")
+                adapter,
+                BenchmarkRequest("test", 3, seed=42),
+                lambda *args: ("B", False),
+                lambda *args: "B",
             )
         self.assertEqual(
             [r["id"] for r in first["rows"]], [r["id"] for r in second["rows"]]
         )
         self.assertEqual(first["summary"]["preserved"], 1)
         self.assertEqual(first["summary"]["regressed"], 1)
-        self.assertEqual(first["summary"]["improved"], 1)
-        self.assertEqual(first["summary"]["preservation_rate"], 0.5)
+        self.assertEqual(first["summary"]["base_failed_excluded"], 1)
+        self.assertIsNone(first["rows"][-1]["steered"])
+        self.assertEqual(first["summary"]["preservation_rate_on_base_correct"], 0.5)
 
     def test_empty_dataset_and_invalid_count_fail(self):
         adapter = MMLUPro()
         with patch.object(adapter, "load", return_value=[]):
             with self.assertRaisesRegex(ValueError, "No benchmark"):
-                run_benchmark(adapter, BenchmarkRequest("test"), lambda *args: ("", ""))
+                run_benchmark(
+                    adapter,
+                    BenchmarkRequest("test"),
+                    lambda *args: ("", False),
+                    lambda *args: "",
+                )
             with self.assertRaisesRegex(ValueError, "between"):
                 run_benchmark(
-                    adapter, BenchmarkRequest("test", 0), lambda *args: ("", "")
+                    adapter,
+                    BenchmarkRequest("test", 0),
+                    lambda *args: ("", False),
+                    lambda *args: "",
                 )
 
     def test_mmmu_all_images_and_official_open_answers(self):
@@ -92,7 +111,10 @@ class BenchmarkTests(unittest.TestCase):
             patch.object(adapter, "load", return_value=[item]),
         ):
             result = run_benchmark(
-                adapter, BenchmarkRequest("train"), lambda *args: ("hello", "goodbye")
+                adapter,
+                BenchmarkRequest("train"),
+                lambda *args: ("hello", False),
+                lambda *args: "goodbye",
             )
         self.assertEqual(result["summary"]["base_instruction_strict_accuracy"], 1)
         self.assertEqual(result["summary"]["steered_prompt_loose_accuracy"], 0)

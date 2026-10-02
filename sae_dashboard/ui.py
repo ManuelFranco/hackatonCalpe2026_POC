@@ -4,13 +4,20 @@ from functools import wraps
 import json
 from pathlib import Path
 import gradio as gr
-from research.benchmarks import BENCHMARKS
+from .benchmark_ui import build_benchmark_section
+from .causal_ui import build_causal_lab
 from research.vector_builders import BUILDERS
 from . import model_runtime as runtime, workflow
+from .feature_explorer import FEATURE_CSS, NEURONPEDIA_JS, empty_profile, render_profile
 from .manifests import DATA_ROOT
 from .session import Session, Settings
 
-CSS = """
+CSS = (
+    """
+.benchmark-meta {display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.benchmark-meta > div {border:1px solid rgba(127,127,127,.2);border-radius:8px;padding:8px 12px;}
+.benchmark-meta small {display:block;opacity:.7;font-size:.75rem;}
+.benchmark-meta strong {display:block;font-size:.9rem;overflow-wrap:anywhere;}
 gradio-app {width: 100%; min-width: 0;}
 .gradio-container {max-width: 1440px !important; width: 100% !important; min-width: 0 !important; margin: auto;}
 .gradio-container .main {width: 100%; min-width: 0;}
@@ -21,10 +28,12 @@ gradio-app {width: 100%; min-width: 0;}
   .gradio-container [role="tab"] {white-space: normal;}
 }
 #app-title h1 {font-size: clamp(1.75rem, 4vw, 2.35rem); letter-spacing: -.04em; margin-bottom: .1rem;}
-.section-title {border-left: 5px solid #6366f1; padding: 10px 16px; margin: 12px 0 20px;
+.section-title h2 {border-left: 5px solid #6366f1; padding: 10px 16px; margin: 12px 0 20px;
  background: color-mix(in srgb, #6366f1 8%, transparent); border-radius: 0 10px 10px 0;}
 .section-title h2 {font-size: 1.7rem !important; font-weight: 750 !important;}
 """
+    + FEATURE_CSS
+)
 
 
 def english_widgets():
@@ -94,7 +103,9 @@ def build_demo():
         with gr.Row():
             save_btn = gr.Button("Enable experiment saving", size="sm")
             more_info = gr.Button("More info", size="sm")
-            save_status = gr.Markdown("**Saving off** · This session stays in memory.")
+            save_status = gr.Markdown(
+                "**Experiment saving off** · Base benchmark cache is automatic."
+            )
         with gr.Group(visible=False) as help_panel:
             gr.Markdown("""**Quick guide**
 
@@ -102,6 +113,7 @@ Load JSON manifests → build a common profile → create vectors → compare an
 
 Each browser session has its own data, profile and results. Model jobs share a queue;
 base and steered runs use the same seed. Experiment saving starts only when enabled.
+Base benchmark answers are cached automatically; steered benchmark answers stay in memory.
 Exporting a model always requires the final export button. Upload/model/dataset caches
 are managed separately by Gradio and Hugging Face.
 """)
@@ -126,7 +138,7 @@ are managed separately by Gradio and Hugging Face.
             with gr.Accordion("Steering strengths", open=False):
                 with gr.Row():
                     layer_strengths = [
-                        gr.Slider(-10, 10, value=1, step=0.25, label=f"Layer {layer}")
+                        gr.Slider(-10, 10, value=0, step=0.25, label=f"Layer {layer}")
                         for layer in runtime.LAYERS
                     ]
                 gr.Markdown(
@@ -150,7 +162,11 @@ are managed separately by Gradio and Hugging Face.
                     probe_answer = response_panel("Gemma 3 response")
             with gr.Tab("1 · Load manifests", id="load"):
                 gr.Markdown("## 1. Load manifests", elem_classes="section-title")
-                repo_paths = sorted(DATA_ROOT.rglob("*manifest*.json"))
+                repo_paths = [
+                    p
+                    for p in sorted(DATA_ROOT.rglob("*manifest*.json"))
+                    if "cwes" not in json.loads(p.read_text())
+                ]
                 repository = gr.Dropdown(
                     choices=[
                         (str(p.relative_to(DATA_ROOT)), str(p)) for p in repo_paths
@@ -179,10 +195,10 @@ Asset paths resolve inside the server's data directory. `asset_root` keeps uploa
 JSON paths portable. Loading new manifests replaces this session's profile and vectors.
 
 ```json
-{"version": 1, "name": "Code safety", "asset_root": "cwe_c_pairs_dataset",
+{"version": 1, "name": "Code safety", "asset_root": "cwe_287",
  "pairs": [{"id": "CWE-287",
-   "A": {"text_file": "cwe_287_A.txt", "image": ""},
-   "B": {"text_file": "cwe_287_B.txt", "image": ""}}]}
+   "A": {"text_file": "cwe_287_A_01.txt", "image": ""},
+   "B": {"text_file": "cwe_287_B_01.txt", "image": ""}}]}
 ```
 """)
             with gr.Tab("2 · Common profile", id="profile"):
@@ -190,11 +206,22 @@ JSON paths portable. Loading new manifests replaces this session's profile and v
                 gr.Markdown("Capture A/B feature activations for every loaded pair.")
                 profile_btn = gr.Button("Build common profile", variant="primary")
                 profile_status = gr.Markdown()
-                profile_table = gr.Dataframe(
-                    headers=["Layer", "Pairs", "Features", "Reference norm"],
-                    interactive=False,
-                )
+                profile_explorers = []
+                with gr.Tabs():
+                    for layer in runtime.LAYERS:
+                        with gr.Tab(f"Layer {layer}"):
+                            profile_explorers.append(
+                                gr.HTML(
+                                    value=empty_profile(layer),
+                                    label=f"Layer {layer} features",
+                                    js_on_load=NEURONPEDIA_JS,
+                                )
+                            )
                 with gr.Accordion("Capture details", open=False):
+                    profile_table = gr.Dataframe(
+                        headers=["Layer", "Pairs", "Features", "Reference norm"],
+                        interactive=False,
+                    )
                     gr.Markdown(
                         "The profile includes the assistant prefix and excludes generated tokens. "
                         "All tokens are selected by default; last and non_image remain available. "
@@ -233,50 +260,9 @@ JSON paths portable. Loading new manifests replaces this session's profile and v
                     base_answer = response_panel("Base")
                     steered_answer = response_panel("Steered")
             with gr.Tab("5 · Coherence benchmarks", id="benchmarks"):
-                gr.Markdown("## 5. Evaluate coherence", elem_classes="section-title")
-                with gr.Row():
-                    benchmark_name = gr.Dropdown(
-                        [(a.name, k) for k, a in BENCHMARKS.items()],
-                        value="mmlu_pro",
-                        label="Benchmark",
-                    )
-                    split = gr.Dropdown(
-                        list(BENCHMARKS["mmlu_pro"].splits), value="test", label="Split"
-                    )
-                    count = gr.Number(
-                        value=20, minimum=1, maximum=10000, precision=0, label="Items"
-                    )
-                    category = gr.Textbox(
-                        label="Subject (optional)", placeholder="Blank = all subjects"
-                    )
-                benchmark_btn = gr.Button("Run benchmark", variant="primary")
-                benchmark_status = gr.Markdown()
-                benchmark_summary = gr.Dataframe(
-                    headers=["Metric", "Value"], interactive=False
+                benchmark_outputs, benchmark_cleared = build_benchmark_section(
+                    session, common, layer_strengths, settings, strengths, friendly
                 )
-                with gr.Accordion("Item results", open=False):
-                    benchmark_details = gr.Dataframe(
-                        headers=[
-                            "ID",
-                            "Base correct",
-                            "Steered correct",
-                            "Base",
-                            "Steered",
-                        ],
-                        datatype=["str", "bool", "bool", "markdown", "markdown"],
-                        wrap=True,
-                        interactive=False,
-                    )
-                with gr.Accordion("Scoring and sources", open=False):
-                    gr.Markdown("""Paired zero-shot evaluation with a reproducible sample and shared generation settings.
-- [MMLU-Pro](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro): multiple-choice accuracy.
-- [MMMU](https://huggingface.co/datasets/MMMU/MMMU): multiple images and open or multiple-choice answers.
-- [IFEval](https://huggingface.co/datasets/google/IFEval): official strict/loose prompt and instruction accuracy.
-
-Preservation measures how often a correct base answer stays correct. These dashboard
-runs use their stated protocol and sample; they are not leaderboard reproductions.
-IFEval may need a larger shared token limit for long-response instructions.
-""")
             with gr.Tab("6 · Export VLM", id="export"):
                 gr.Markdown("## 6. Export steered VLM", elem_classes="section-title")
                 gr.Markdown(
@@ -299,6 +285,17 @@ The loader applies activation steering during generation. Without bundled base w
 it downloads the referenced Gemma model. SAEs are not needed for inference.
 """)
 
+            with gr.Tab("7 · Extra", id="extra"):
+                causal_selector, causal_outputs = build_causal_lab(
+                    session,
+                    common,
+                    settings,
+                    friendly,
+                    response_panel,
+                    prompt,
+                    query_image,
+                )
+
         downstream = [
             profile_status,
             profile_table,
@@ -306,12 +303,54 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
             vector_table,
             base_answer,
             steered_answer,
-            benchmark_status,
-            benchmark_summary,
-            benchmark_details,
+            *benchmark_outputs,
             export_file,
+            causal_selector,
+            *causal_outputs,
         ]
-        cleared = ["", [], "", [], "", "", "", [], [], None]
+        cleared = [
+            "",
+            [],
+            "",
+            [],
+            "",
+            "",
+            *benchmark_cleared,
+            None,
+            gr.update(choices=[], value=None),
+            "",
+            None,
+            [],
+            "",
+            "",
+            "",
+            "",
+            "",
+        ]
+        empty_explorers = [empty_profile(layer) for layer in runtime.LAYERS]
+
+        def profile_views(state):
+            labels = [
+                f"{manifest.name} / {pair.id}"
+                for manifest in state.manifests
+                for pair in manifest.pairs
+            ]
+            linked = (
+                runtime.MODEL_ID == "google/gemma-3-4b-it"
+                and runtime.SAE_RELEASE == "gemma-scope-2-4b-it-res"
+            )
+            return [
+                render_profile(
+                    layer,
+                    state.profile[layer],
+                    state.vectors.get(layer),
+                    labels,
+                    neuronpedia=linked,
+                )
+                if layer in state.profile
+                else empty_profile(layer)
+                for layer in runtime.LAYERS
+            ]
 
         def toggle_help(visible):
             return not visible, gr.update(visible=not visible)
@@ -329,9 +368,9 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
                 if enabled
                 else "Enable experiment saving"
             ), (
-                "**Saving on** · New results are saved for this session."
+                "**Experiment saving on** · Steered benchmark responses stay in memory."
                 if enabled
-                else "**Saving off** · This session stays in memory."
+                else "**Experiment saving off** · Base benchmark cache is automatic."
             )
 
         save_btn.click(toggle_saving, session, [save_btn, save_status])
@@ -345,34 +384,45 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
                 f"Loaded {len(table)} manifest(s) · {sum(row[1] for row in table)} pairs.",
                 table,
                 *cleared,
+                *empty_explorers,
             )
 
         for button, source in ((load_repo, repository), (load_uploads, uploads)):
             button.click(
-                load, [session, source], [manifest_status, manifest_table, *downstream]
+                load,
+                [session, source],
+                [manifest_status, manifest_table, *downstream, *profile_explorers],
             )
 
         def invalidate(state):
             with state.lock:
                 state.invalidate_profile()
-            return cleared
+            return [*cleared, *empty_explorers]
 
         for control in (scope, aggregation):
-            control.input(invalidate, session, downstream)
+            control.input(invalidate, session, [*downstream, *profile_explorers])
 
         @friendly
         def capture(state, progress=gr.Progress(), *values):
-            table = workflow.build_profile(state, settings(values), progress)
-            return "Profile ready.", table, *cleared[2:]
+            with state.lock:
+                table = workflow.build_profile(state, settings(values), progress)
+                return "Profile ready.", table, *cleared[2:], *profile_views(state)
 
-        profile_btn.click(capture, [session, *common], downstream)
+        profile_btn.click(
+            capture, [session, *common], [*downstream, *profile_explorers]
+        )
 
         @friendly
         def vectors(state, selected_method, *values):
-            table = workflow.create_vectors(state, settings(values), selected_method)
-            return "Vectors ready.", table, *cleared[4:]
+            with state.lock:
+                table = workflow.create_vectors(
+                    state, settings(values), selected_method
+                )
+                return "Vectors ready.", table, *cleared[4:], *profile_views(state)
 
-        vector_btn.click(vectors, [session, method, *common], downstream[2:])
+        vector_btn.click(
+            vectors, [session, method, *common], [*downstream[2:], *profile_explorers]
+        )
 
         @friendly
         def run_probe(state, text, image, *values):
@@ -392,77 +442,6 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
             run_comparison,
             [session, prompt, query_image, *common, *layer_strengths],
             [base_answer, steered_answer],
-        )
-
-        def change_benchmark(name):
-            adapter = BENCHMARKS[name]
-            return (
-                gr.update(choices=list(adapter.splits), value=adapter.default_split),
-                gr.update(value="", interactive=name != "ifeval"),
-                "",
-                [],
-                [],
-            )
-
-        benchmark_name.change(
-            change_benchmark,
-            benchmark_name,
-            [split, category, benchmark_status, benchmark_summary, benchmark_details],
-        )
-
-        @friendly
-        def run_benchmark(
-            state, name, selected_split, items, subject, progress=gr.Progress(), *values
-        ):
-            result = workflow.benchmark(
-                state,
-                settings(values),
-                strengths(values[5:]),
-                name,
-                selected_split,
-                items,
-                subject,
-                progress,
-            )
-            summary = [
-                [
-                    key.replace("_", " ").capitalize(),
-                    "n/a"
-                    if value is None
-                    else str(round(value, 4))
-                    if isinstance(value, float)
-                    else str(value),
-                ]
-                for key, value in result["summary"].items()
-            ]
-            rows = [
-                [
-                    r["id"],
-                    r["base_score"]["correct"],
-                    r["steered_score"]["correct"],
-                    r["base"],
-                    r["steered"],
-                ]
-                for r in result["rows"]
-            ]
-            return (
-                f"{result['benchmark']} · {result['summary']['num_items']} items · {result['metric']}",
-                summary,
-                rows,
-            )
-
-        benchmark_btn.click(
-            run_benchmark,
-            [
-                session,
-                benchmark_name,
-                split,
-                count,
-                category,
-                *common,
-                *layer_strengths,
-            ],
-            [benchmark_status, benchmark_summary, benchmark_details],
         )
 
         @friendly

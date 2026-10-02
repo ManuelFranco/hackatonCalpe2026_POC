@@ -5,7 +5,15 @@ import math
 import uuid
 import torch
 from research.vector_builders import BUILDERS, LayerProfile
-from research.benchmarks import BENCHMARKS, BenchmarkRequest, run_benchmark
+from research.benchmarks import (
+    BENCHMARKS,
+    BenchmarkRequest,
+    prepare_benchmark,
+    evaluate_base,
+    evaluate_steered,
+    summarize,
+)
+from . import base_response_cache
 from . import model_runtime as runtime
 from .artifact_store import export_model, record_event
 from .manifests import load_manifests
@@ -242,27 +250,120 @@ def compare(session, settings, strengths, prompt, image=None):
         return base, steered
 
 
-def benchmark(
-    session, settings, strengths, name, split, count, category, progress=None
-):
+def generation_key(settings):
+    return (settings.seed, settings.temperature, settings.max_new_tokens)
+
+
+def prepare_evaluation(session, name, split, count, category, settings):
+    settings.validate()
+    if name not in BENCHMARKS:
+        raise ValueError("Select a supported benchmark.")
+    if int(count) != count:
+        raise ValueError("Item count must be an integer.")
     with session.lock:
-        require_profile(session, settings, vectors=True)
-        validate_strengths(strengths)
-        if name not in BENCHMARKS:
-            raise ValueError("Select a supported benchmark.")
-        result = run_benchmark(
+        sample = prepare_benchmark(
             BENCHMARKS[name],
             BenchmarkRequest(split, int(count), category, settings.seed),
-            lambda images, prompt: generate_pair(
-                session, settings, strengths, images, prompt
+        )
+        session.benchmark_sample = sample
+        session.benchmark_base = []
+        session.benchmark_settings = None
+        session.benchmark_result = None
+        return sample
+
+
+def require_sample(session, settings):
+    settings.validate()
+    sample = session.benchmark_sample
+    if sample is None or sample.request.seed != settings.seed:
+        raise ValueError(
+            "Prepare and review the benchmark sample with the current seed first."
+        )
+    return sample
+
+
+def benchmark_generate(session, settings, strengths, images, prompt, *, base):
+    with runtime.MODEL_LOCK:
+        runtime.ensure_models_loaded(with_saes=False)
+        inputs, _, length = runtime.prepare_inputs(images, prompt)
+        kwargs = dict(
+            inputs=inputs,
+            input_len=length,
+            max_new_tokens=settings.max_new_tokens,
+            temperature=settings.temperature,
+            seed=settings.seed,
+        )
+        if not base:
+            return runtime.generate_answer(
+                **kwargs,
+                steering_directions={
+                    k: v.direction for k, v in session.vectors.items()
+                },
+                strengths=strengths,
+            )
+        # Fingerprint the actual processed tokens/image tensors and generation defaults.
+        # Resolved model revision, precision and software versions prevent stale reuse.
+        request = {
+            "cache_version": 1,
+            "prompt_protocol": "gemma-chat-template-v1",
+            "model_id": runtime.MODEL_ID,
+            "runtime": runtime.runtime_metadata(),
+            "model_config": runtime.model.config.to_dict(),
+            "generation_defaults": runtime.model.generation_config.to_dict(),
+            "seed": settings.seed,
+            "temperature": settings.temperature,
+            "max_new_tokens": settings.max_new_tokens,
+            "prompt": prompt,
+            "inputs": {
+                k: base_response_cache.tensor_fingerprint(v) for k, v in inputs.items()
+            },
+        }
+        # Normalize JSON tuples before comparing the request with its saved form.
+        import json
+
+        request = json.loads(base_response_cache.canonical(request))
+        return base_response_cache.get_or_generate(
+            request, lambda: runtime.generate_answer(**kwargs)
+        )
+
+
+def benchmark_base(session, settings, progress=None):
+    with session.lock:
+        sample = require_sample(session, settings)
+        rows = evaluate_base(
+            sample,
+            lambda images, prompt: benchmark_generate(
+                session, settings, {}, images, prompt, base=True
             ),
             progress,
         )
-        record_event(
-            session,
-            "benchmark",
-            {**result, "settings": asdict(settings), "strengths": strengths},
+        session.benchmark_base = rows
+        session.benchmark_settings = generation_key(settings)
+        session.benchmark_result = summarize(sample, rows)
+        return session.benchmark_result
+
+
+def benchmark_steered(session, settings, strengths, progress=None):
+    with session.lock:
+        sample = require_sample(session, settings)
+        if not session.benchmark_base or session.benchmark_settings != generation_key(
+            settings
+        ):
+            raise ValueError(
+                "Evaluate the base model with the current seed, temperature and token limit first."
+            )
+        require_profile(session, settings, vectors=True)
+        validate_strengths(strengths)
+        result = evaluate_steered(
+            sample,
+            session.benchmark_base,
+            lambda images, prompt: benchmark_generate(
+                session, settings, strengths, images, prompt, base=False
+            ),
+            progress,
         )
+        # Steered benchmark responses stay in session memory even when saving is enabled.
+        session.benchmark_result = result
         return result
 
 

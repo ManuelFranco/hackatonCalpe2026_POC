@@ -102,6 +102,37 @@ def load_manifest(path: str | Path) -> Manifest:
                 for item in raw
             ],
         }
+    # Per-CWE manifests from the current v2 dataset use safe/vulnerable file mappings.
+    if (
+        isinstance(raw, dict)
+        and "cwe_id" in raw
+        and "pairs" in raw
+        and "version" not in raw
+    ):
+        cwe = raw["cwe_id"]
+        if (
+            not isinstance(cwe, str)
+            or not cwe.startswith("CWE-")
+            or not cwe[4:].isdigit()
+        ):
+            raise ValueError("Invalid CWE identifier.")
+        raw = {
+            "version": 1,
+            "name": f"{cwe} · {raw.get('title', 'Code safety')}",
+            "asset_root": f"cwe_{cwe[4:]}",
+            "pairs": [
+                {
+                    "id": str(item["pair"]),
+                    "A": {"text_file": item["safe_file"]},
+                    "B": {"text_file": item["vulnerable_file"]},
+                }
+                for item in raw["pairs"]
+            ],
+        }
+    if isinstance(raw, dict) and "cwes" in raw:
+        raise ValueError(
+            "This JSON is a dataset index. Choose a per-CWE manifest instead."
+        )
     if not isinstance(raw, dict) or raw.get("version") != 1:
         raise ValueError("Expected a version 1 manifest object.")
     name = raw.get("name")
