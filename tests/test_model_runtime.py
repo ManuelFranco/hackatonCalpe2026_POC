@@ -9,6 +9,24 @@ from sae_dashboard.portable_model import steering_hooks
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_mps_generation_uses_eager_attention(self):
+        for requested in ("mps", "auto"):
+            with (
+                patch.object(runtime, "MODEL_DEVICE", requested),
+                patch.object(runtime, "MODEL_DTYPE", "auto"),
+                patch("torch.cuda.is_available", return_value=False),
+                patch("torch.backends.mps.is_available", return_value=True),
+            ):
+                options = runtime.model_load_options()
+            self.assertEqual(options["device_map"], {"": "mps"})
+            self.assertEqual(options["attn_implementation"], "eager")
+        for requested in ("cpu", "cuda", "auto"):
+            with (
+                patch.object(runtime, "MODEL_DEVICE", requested),
+                patch("torch.cuda.is_available", return_value=True),
+            ):
+                self.assertNotIn("attn_implementation", runtime.model_load_options())
+
     def test_streamed_scores_match_direct_aggregation(self):
         residual = torch.tensor([[2.0, 0.0], [0.0, 6.0], [4.0, 3.0]])
         for scope, expected_rows in [

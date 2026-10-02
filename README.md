@@ -69,6 +69,12 @@ intersection; all mean B − A features are retained.
 
 ## Manifests
 
+[`data/physical_damage/manifest.json`](data/physical_damage/manifest.json)
+loads our eight physical-damage training pairs with A = intact and B = damaged.
+The three validation and five test pairs have separate manifests. See the
+[dataset instructions](data/physical_damage/README.md) for loading, evaluation
+and steering direction.
+
 [`data/scripts/cwe_120/manifest.json`](data/scripts/cwe_120/manifest.json)
 contains 20 normal/vulnerable code pairs. Each manifest represents one use case:
 

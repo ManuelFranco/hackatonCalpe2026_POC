@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "name": "Physical vehicle damage · test (5 pairs)",
+  "asset_root": "physical_damage",
+  "description": "Image-only matched pairs. A: physically intact vehicle. B: visible physical damage. Partitions preserve the previous experiment assignments; filenames do not determine labels or splits.",
+  "labels": {
+    "A": "intact",
+    "B": "damaged"
+  },
+  "split": "test",
+  "pairs": [
+    {
+      "id": "HoldoutPart1",
+      "split": "test",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Part1-val-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Part1-val-destroyed.png"
+      }
+    },
+    {
+      "id": "HoldoutPart2",
+      "split": "test",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Part2-val-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Part2-val-destroyed.png"
+      }
+    },
+    {
+      "id": "HoldoutPart3",
+      "split": "test",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Part3-val-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Part3-val-destroyed.png"
+      }
+    },
+    {
+      "id": "HoldoutPart4",
+      "split": "test",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Part4-val-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Part4-val-destroyed.png"
+      }
+    },
+    {
+      "id": "HoldoutPart5",
+      "split": "test",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Part5-val-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Part5-val-destroyed.png"
+      }
+    }
+  ]
+}

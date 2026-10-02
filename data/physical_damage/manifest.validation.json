@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "name": "Physical vehicle damage · validation (3 pairs)",
+  "asset_root": "physical_damage",
+  "description": "Image-only matched pairs. A: physically intact vehicle. B: visible physical damage. Partitions preserve the previous experiment assignments; filenames do not determine labels or splits.",
+  "labels": {
+    "A": "intact",
+    "B": "damaged"
+  },
+  "split": "validation",
+  "pairs": [
+    {
+      "id": "Par9",
+      "split": "validation",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par9-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par9-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par10",
+      "split": "validation",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par10-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par10-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par11",
+      "split": "validation",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par11-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par11-train-destroyed.png"
+      }
+    }
+  ]
+}

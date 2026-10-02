@@ -83,10 +83,14 @@ def model_load_options() -> Dict[str, Any]:
             "CUDA is unavailable. Check the NVIDIA driver and the PyTorch build."
         )
     dtype = "auto" if MODEL_DTYPE == "auto" else getattr(torch, MODEL_DTYPE)
-    return {
+    options = {
         "device_map": "auto" if device == "auto" else {"": device},
         "torch_dtype": dtype,
     }
+    if device == "mps":
+        # PyTorch 2.6 MPS SDPA crashes during Gemma's grouped-query cached decoding.
+        options["attn_implementation"] = "eager"
+    return options
 
 
 def ensure_models_loaded(with_saes: bool = True) -> None:

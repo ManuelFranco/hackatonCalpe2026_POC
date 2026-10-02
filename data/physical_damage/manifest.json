@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "name": "Physical vehicle damage · train (8 pairs)",
+  "asset_root": "physical_damage",
+  "description": "Image-only matched pairs. A: physically intact vehicle. B: visible physical damage. Partitions preserve the previous experiment assignments; filenames do not determine labels or splits.",
+  "labels": {
+    "A": "intact",
+    "B": "damaged"
+  },
+  "split": "train",
+  "pairs": [
+    {
+      "id": "Par1",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par1-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par1-train-destroy.png"
+      }
+    },
+    {
+      "id": "Par2",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par2-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par2-train-destroy.png"
+      }
+    },
+    {
+      "id": "Par3",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par3-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par3-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par4",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par4-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par4-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par5",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par5-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par5-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par6",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par6-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par6-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par7",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par7-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par7-train-destroyed.png"
+      }
+    },
+    {
+      "id": "Par8",
+      "split": "train",
+      "A": {
+        "text": "",
+        "image": "images/A_intact/Par8-train-new.png"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_damaged/Par8-train-destroyed.png"
+      }
+    }
+  ]
+}

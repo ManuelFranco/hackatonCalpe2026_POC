@@ -1,5 +1,13 @@
 # Paired Datasets
 
+## Physical vehicle damage
+
+[`physical_damage/`](physical_damage/) contains 16 matched image pairs:
+**A = intact**, **B = physically damaged**. Its version 1 manifests preserve
+8 training, 3 validation and 5 test pairs. Select `physical_damage/manifest.json`
+to build a profile from training images; see the [dataset instructions](physical_damage/README.md)
+for evaluation images and steering direction.
+
 ## Military vehicle condition
 
 [`military_vehicle_condition/`](military_vehicle_condition/) provides a version 1 image-only manifest with 20 A/B slots and separate image folders: **A = not destroyed**, **B = destroyed**. Add your own images before loading it. See its [setup instructions](military_vehicle_condition/README.md) for filenames and pairing conventions.
