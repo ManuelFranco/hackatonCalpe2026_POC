@@ -11,6 +11,7 @@ from . import model_runtime as runtime, workflow
 from .feature_explorer import FEATURE_CSS, NEURONPEDIA_JS, empty_profile, render_profile
 from .manifests import DATA_ROOT
 from .manual_input_ui import build_manual_editor, input_summary, wire_manual_editor
+from .input_preview import build_input_preview, refresh_preview, wire_input_preview
 from .session import Session, Settings
 
 CSS = (
@@ -22,6 +23,9 @@ CSS = (
 .input-summary {overflow-x:auto;}
 .input-summary table {width:100%;border-collapse:collapse;}
 .input-summary th, .input-summary td {padding:10px 12px;text-align:left;border-bottom:1px solid rgba(127,127,127,.2);}
+.input-preview {margin-top:18px;}
+.input-preview-meta {display:flex;flex-wrap:wrap;gap:8px 20px;padding:8px 0;color:var(--body-text-color-subdued);font-size:.875rem;}
+.input-preview img {object-fit:contain;}
 gradio-app {width: 100%; min-width: 0;}
 .gradio-container {max-width: 1440px !important; width: 100% !important; min-width: 0 !important; margin: auto;}
 .gradio-container .main {width: 100%; min-width: 0;}
@@ -193,6 +197,7 @@ are managed separately by Gradio and Hugging Face.
                     "Load JSON manifests or add manual pairs to begin."
                 )
                 manifest_table = gr.HTML()
+                input_preview = build_input_preview()
                 with gr.Accordion("Manifest format", open=False):
                     gr.Markdown("""Each manifest defines one use case with matched A/B conditions.
 Use `text` or `text_file`; `image` is optional. Each condition needs at least one modality.
@@ -383,21 +388,30 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
 
         @friendly
         def load(state, paths):
-            table = workflow.set_manifests(
-                state, paths if isinstance(paths, list) else ([paths] if paths else [])
-            )
-            return (
-                f"Loaded {len(table)} manifest(s) · {sum(row[1] for row in table)} pairs.",
-                input_summary(table),
-                *cleared,
-                *empty_explorers,
-            )
+            with state.lock:
+                table = workflow.set_manifests(
+                    state,
+                    paths if isinstance(paths, list) else ([paths] if paths else []),
+                )
+                return (
+                    f"Loaded {len(table)} manifest(s) · {sum(row[1] for row in table)} pairs.",
+                    input_summary(table),
+                    *cleared,
+                    *refresh_preview(state),
+                    *empty_explorers,
+                )
 
         for button, source in ((load_repo, repository), (load_uploads, uploads)):
             button.click(
                 load,
                 [session, source],
-                [manifest_status, manifest_table, *downstream, *profile_explorers],
+                [
+                    manifest_status,
+                    manifest_table,
+                    *downstream,
+                    *input_preview,
+                    *profile_explorers,
+                ],
             )
 
         wire_manual_editor(
@@ -406,7 +420,9 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
             [manifest_status, manifest_table, *downstream, *profile_explorers],
             [*cleared, *empty_explorers],
             friendly,
+            preview_outputs=input_preview,
         )
+        wire_input_preview(session, input_preview, friendly)
 
         def invalidate(state):
             with state.lock:

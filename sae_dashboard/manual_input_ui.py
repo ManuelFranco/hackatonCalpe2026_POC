@@ -3,6 +3,7 @@
 import html
 import gradio as gr
 from .manual_pairs import change_pair, read_pair
+from .input_preview import refresh_preview
 
 
 def input_summary(rows):
@@ -76,11 +77,13 @@ def build_manual_editor():
     )
 
 
-def wire_manual_editor(session, controls, data_outputs, reset_values, friendly):
+def wire_manual_editor(
+    session, controls, data_outputs, reset_values, friendly, preview_outputs=()
+):
     selected = controls["selected"]
     fields = [controls[k] for k in ("a_text", "a_image", "b_text", "b_image")]
     buttons = [controls[k] for k in ("update", "remove")]
-    editor_outputs = [selected, *fields, *buttons, controls["notice"]]
+    editor_outputs = [selected, *fields, *buttons, controls["notice"], *preview_outputs]
 
     def handle(state, action, pair_id, *values):
         with state.lock:
@@ -99,6 +102,7 @@ def wire_manual_editor(session, controls, data_outputs, reset_values, friendly):
                 gr.update(interactive=False),
                 gr.update(interactive=False),
                 f"Pair {'added' if action == 'add' else 'updated' if action == 'update' else 'removed'}. **{count} manual {'pair' if count == 1 else 'pairs'}** · Previous profile and vectors cleared.",
+                *(refresh_preview(state) if preview_outputs else ()),
             )
 
     @friendly

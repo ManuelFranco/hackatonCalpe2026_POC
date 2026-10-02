@@ -1,1979 +1,232 @@
 {
-  "dataset_name": "damage_reports",
-  "version": 2,
-  "language": "English",
-  "pair_count": 20,
-  "report_count": 40,
-  "label_definitions": {
-    "A": "Perfect condition; no damage recorded",
-    "B": "Damage recorded"
+  "version": 1,
+  "name": "Vehicle damage reports · Perfect condition vs. damage",
+  "asset_root": "damage_reports",
+  "description": "Image-only contrastive pairs of synthetic scanned-style vehicle inspection reports. A: perfect condition with no damage. B: damage recorded.",
+  "labels": {
+    "A": "no_damage",
+    "B": "damage"
   },
-  "format": "One-page scanned-style, image-only PDF",
-  "synthetic": true,
-  "handwriting": "Simulated cursive handwriting",
-  "path_base": "Paths are relative to this manifest.json file.",
   "pairs": [
     {
-      "pair_id": 1,
-      "split": "train",
-      "A": "car_A_01.pdf",
-      "B": "car_B_01.pdf"
+      "id": "car_01",
+      "A": {
+        "text": "",
+        "image": "car_A_01.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_01.png"
+      }
     },
     {
-      "pair_id": 2,
-      "split": "train",
-      "A": "car_A_02.pdf",
-      "B": "car_B_02.pdf"
+      "id": "car_02",
+      "A": {
+        "text": "",
+        "image": "car_A_02.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_02.png"
+      }
     },
     {
-      "pair_id": 3,
-      "split": "train",
-      "A": "car_A_03.pdf",
-      "B": "car_B_03.pdf"
+      "id": "car_03",
+      "A": {
+        "text": "",
+        "image": "car_A_03.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_03.png"
+      }
     },
     {
-      "pair_id": 4,
-      "split": "train",
-      "A": "car_A_04.pdf",
-      "B": "car_B_04.pdf"
+      "id": "car_04",
+      "A": {
+        "text": "",
+        "image": "car_A_04.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_04.png"
+      }
     },
     {
-      "pair_id": 5,
-      "split": "test",
-      "A": "car_A_05.pdf",
-      "B": "car_B_05.pdf"
+      "id": "car_05",
+      "A": {
+        "text": "",
+        "image": "car_A_05.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_05.png"
+      }
     },
     {
-      "pair_id": 6,
-      "split": "test",
-      "A": "car_A_06.pdf",
-      "B": "car_B_06.pdf"
+      "id": "car_06",
+      "A": {
+        "text": "",
+        "image": "car_A_06.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_06.png"
+      }
     },
     {
-      "pair_id": 7,
-      "split": "train",
-      "A": "car_A_07.pdf",
-      "B": "car_B_07.pdf"
+      "id": "car_07",
+      "A": {
+        "text": "",
+        "image": "car_A_07.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_07.png"
+      }
     },
     {
-      "pair_id": 8,
-      "split": "train",
-      "A": "car_A_08.pdf",
-      "B": "car_B_08.pdf"
+      "id": "car_08",
+      "A": {
+        "text": "",
+        "image": "car_A_08.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_08.png"
+      }
     },
     {
-      "pair_id": 9,
-      "split": "train",
-      "A": "car_A_09.pdf",
-      "B": "car_B_09.pdf"
+      "id": "car_09",
+      "A": {
+        "text": "",
+        "image": "car_A_09.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_09.png"
+      }
     },
     {
-      "pair_id": 10,
-      "split": "train",
-      "A": "car_A_10.pdf",
-      "B": "car_B_10.pdf"
+      "id": "car_10",
+      "A": {
+        "text": "",
+        "image": "car_A_10.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_10.png"
+      }
     },
     {
-      "pair_id": 11,
-      "split": "train",
-      "A": "car_A_11.pdf",
-      "B": "car_B_11.pdf"
+      "id": "car_11",
+      "A": {
+        "text": "",
+        "image": "car_A_11.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_11.png"
+      }
     },
     {
-      "pair_id": 12,
-      "split": "validation",
-      "A": "car_A_12.pdf",
-      "B": "car_B_12.pdf"
+      "id": "car_12",
+      "A": {
+        "text": "",
+        "image": "car_A_12.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_12.png"
+      }
     },
     {
-      "pair_id": 13,
-      "split": "validation",
-      "A": "car_A_13.pdf",
-      "B": "car_B_13.pdf"
+      "id": "car_13",
+      "A": {
+        "text": "",
+        "image": "car_A_13.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_13.png"
+      }
     },
     {
-      "pair_id": 14,
-      "split": "train",
-      "A": "car_A_14.pdf",
-      "B": "car_B_14.pdf"
+      "id": "car_14",
+      "A": {
+        "text": "",
+        "image": "car_A_14.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_14.png"
+      }
     },
     {
-      "pair_id": 15,
-      "split": "train",
-      "A": "car_A_15.pdf",
-      "B": "car_B_15.pdf"
+      "id": "car_15",
+      "A": {
+        "text": "",
+        "image": "car_A_15.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_15.png"
+      }
     },
     {
-      "pair_id": 16,
-      "split": "train",
-      "A": "car_A_16.pdf",
-      "B": "car_B_16.pdf"
+      "id": "car_16",
+      "A": {
+        "text": "",
+        "image": "car_A_16.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_16.png"
+      }
     },
     {
-      "pair_id": 17,
-      "split": "validation",
-      "A": "car_A_17.pdf",
-      "B": "car_B_17.pdf"
+      "id": "car_17",
+      "A": {
+        "text": "",
+        "image": "car_A_17.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_17.png"
+      }
     },
     {
-      "pair_id": 18,
-      "split": "test",
-      "A": "car_A_18.pdf",
-      "B": "car_B_18.pdf"
+      "id": "car_18",
+      "A": {
+        "text": "",
+        "image": "car_A_18.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_18.png"
+      }
     },
     {
-      "pair_id": 19,
-      "split": "train",
-      "A": "car_A_19.pdf",
-      "B": "car_B_19.pdf"
+      "id": "car_19",
+      "A": {
+        "text": "",
+        "image": "car_A_19.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_19.png"
+      }
     },
     {
-      "pair_id": 20,
-      "split": "train",
-      "A": "car_A_20.pdf",
-      "B": "car_B_20.pdf"
-    }
-  ],
-  "reports": [
-    {
-      "filename": "car_A_01.pdf",
-      "pair_id": 1,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0001",
-        "inspection_date": "2026-09-04",
-        "inspection_time": "09:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Toyota",
-        "model": "Corolla",
-        "model_year": "2022",
-        "colour": "Blue",
-        "registration": "TST 4966",
-        "vehicle_reference": "FLEET-0101",
-        "odometer_km": "93,647",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All inspected areas are in perfect condition.",
-        "description_line_2": "No scratches, dents, cracks or broken parts found.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "6b529e76831613762656120c194efaa5c7d2fa81259aa83ad9f80aeb6925f2b5"
-    },
-    {
-      "filename": "car_B_01.pdf",
-      "pair_id": 1,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0001",
-        "inspection_date": "2026-09-04",
-        "inspection_time": "09:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Toyota",
-        "model": "Corolla",
-        "model_year": "2022",
-        "colour": "Blue",
-        "registration": "TST 4966",
-        "vehicle_reference": "FLEET-0101",
-        "odometer_km": "93,647",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Damage noted",
-        "damage_location": "Left front door",
-        "damage_extent": "12 cm surface scratch; paint affected.",
-        "description_line_1": "A narrow scratch is visible on the left front door.",
-        "description_line_2": "No panel deformation or exposed metal.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Touch up paint after surface preparation."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": true,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Scratch",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "cf63c342ebf7d8c62f040bcb81d84dfa10e33c1398e7caacfd465fe327f2a356"
-    },
-    {
-      "filename": "car_A_02.pdf",
-      "pair_id": 2,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0002",
-        "inspection_date": "2026-09-05",
-        "inspection_time": "10:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Volkswagen",
-        "model": "Golf",
-        "model_year": "2024",
-        "colour": "White",
-        "registration": "TST 9917",
-        "vehicle_reference": "FLEET-0102",
-        "odometer_km": "46,070",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "Vehicle is in perfect condition on inspection.",
-        "description_line_2": "All panels, glass, lights and fittings are intact.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "0df9672a7340f86f4232584bdc0f5dcf3e86efc742b3ee63f2b68314dc14acf7"
-    },
-    {
-      "filename": "car_B_02.pdf",
-      "pair_id": 2,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0002",
-        "inspection_date": "2026-09-05",
-        "inspection_time": "10:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Volkswagen",
-        "model": "Golf",
-        "model_year": "2024",
-        "colour": "White",
-        "registration": "TST 9917",
-        "vehicle_reference": "FLEET-0102",
-        "odometer_km": "46,070",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Damage noted",
-        "damage_location": "Right rear door",
-        "damage_extent": "8 cm shallow dent; paint intact.",
-        "description_line_1": "The right rear door has a shallow circular dent.",
-        "description_line_2": "The door closes normally; no other damage seen.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Arrange panel repair."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": true,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Dent",
-        "severity": "Moderate",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "7d6fe9165379e0104a9013d553230bea49348ff7e9c10fde9783366d01257d63"
-    },
-    {
-      "filename": "car_A_03.pdf",
-      "pair_id": 3,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0003",
-        "inspection_date": "2026-09-06",
-        "inspection_time": "11:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Robin Blake",
-        "make": "Ford",
-        "model": "Focus",
-        "model_year": "2017",
-        "colour": "Grey",
-        "registration": "TST 1243",
-        "vehicle_reference": "FLEET-0103",
-        "odometer_km": "97,966",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "No damage found on any inspected component.",
-        "description_line_2": "Vehicle condition is perfect throughout.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "4ac36d77f7b3843f1afa6ee05c9ce19ee117d827f67bf2c3b209ed010bd7b5c6"
-    },
-    {
-      "filename": "car_B_03.pdf",
-      "pair_id": 3,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0003",
-        "inspection_date": "2026-09-06",
-        "inspection_time": "11:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Robin Blake",
-        "make": "Ford",
-        "model": "Focus",
-        "model_year": "2017",
-        "colour": "Grey",
-        "registration": "TST 1243",
-        "vehicle_reference": "FLEET-0103",
-        "odometer_km": "97,966",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Damage noted",
-        "damage_location": "Windscreen, lower left",
-        "damage_extent": "18 cm branching crack in the glass.",
-        "description_line_1": "A crack runs from the lower left windscreen edge.",
-        "description_line_2": "The crack branches toward the centre of the glass.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace windscreen before driving."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": true,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Crack",
-        "severity": "Moderate",
-        "driving_restriction": "Hold for repair"
-      },
-      "sha256": "e2ab20196b9ebf5d7e3e3d9bf053b782c7663e526e1cd1a6632acc8fe8dd7b04"
-    },
-    {
-      "filename": "car_A_04.pdf",
-      "pair_id": 4,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0004",
-        "inspection_date": "2026-09-07",
-        "inspection_time": "12:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Honda",
-        "model": "Civic",
-        "model_year": "2017",
-        "colour": "Black",
-        "registration": "TST 6587",
-        "vehicle_reference": "FLEET-0104",
-        "odometer_km": "63,131",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "The inspection found the vehicle in perfect condition.",
-        "description_line_2": "Exterior and interior are free of visible damage.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "9133f5b09eb86633d95c0887ea1654f51731a7216a6894411a3a4182d2274e84"
-    },
-    {
-      "filename": "car_B_04.pdf",
-      "pair_id": 4,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0004",
-        "inspection_date": "2026-09-07",
-        "inspection_time": "12:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Honda",
-        "model": "Civic",
-        "model_year": "2017",
-        "colour": "Black",
-        "registration": "TST 6587",
-        "vehicle_reference": "FLEET-0104",
-        "odometer_km": "63,131",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Damage noted",
-        "damage_location": "Right exterior mirror",
-        "damage_extent": "Mirror glass broken; housing loose.",
-        "description_line_1": "The right mirror glass is broken into several pieces.",
-        "description_line_2": "The housing moves loosely on its mounting.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace mirror assembly before driving."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": true,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Broken part",
-        "severity": "Moderate",
-        "driving_restriction": "Hold for repair"
-      },
-      "sha256": "94793b35cec02b10a3943635012a94e86a982208d5177bc2a2025bfc7619d64f"
-    },
-    {
-      "filename": "car_A_05.pdf",
-      "pair_id": 5,
-      "label": "A",
-      "damage_present": false,
-      "split": "test",
-      "text_fields": {
-        "report_reference": "VR-0005",
-        "inspection_date": "2026-09-08",
-        "inspection_time": "13:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Alex Morgan",
-        "make": "Skoda",
-        "model": "Octavia",
-        "model_year": "2022",
-        "colour": "Red",
-        "registration": "TST 1466",
-        "vehicle_reference": "FLEET-0105",
-        "odometer_km": "59,171",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All checked components are intact and undamaged.",
-        "description_line_2": "Vehicle is in perfect condition; no defects noted.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "842dbe65a50ea68f0bd40504f1bb5e7be90a326f69c06a1bf6090695ab2450df"
-    },
-    {
-      "filename": "car_B_05.pdf",
-      "pair_id": 5,
-      "label": "B",
-      "damage_present": true,
-      "split": "test",
-      "text_fields": {
-        "report_reference": "VR-0005",
-        "inspection_date": "2026-09-08",
-        "inspection_time": "13:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Alex Morgan",
-        "make": "Skoda",
-        "model": "Octavia",
-        "model_year": "2022",
-        "colour": "Red",
-        "registration": "TST 1466",
-        "vehicle_reference": "FLEET-0105",
-        "odometer_km": "59,171",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Damage noted",
-        "damage_location": "Front bumper, left corner",
-        "damage_extent": "9 cm split through bumper cover.",
-        "description_line_1": "The left corner of the front bumper cover is split.",
-        "description_line_2": "The surrounding cover is scuffed.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Repair or replace the bumper cover."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": true,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Crack",
-        "severity": "Moderate",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "99efadb9129f0cfc3d9fa8b02e3cb61072c0a9fd51a671a780b6426f5891f7bf"
-    },
-    {
-      "filename": "car_A_06.pdf",
-      "pair_id": 6,
-      "label": "A",
-      "damage_present": false,
-      "split": "test",
-      "text_fields": {
-        "report_reference": "VR-0006",
-        "inspection_date": "2026-09-09",
-        "inspection_time": "14:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Renault",
-        "model": "Clio",
-        "model_year": "2018",
-        "colour": "Green",
-        "registration": "TST 3420",
-        "vehicle_reference": "FLEET-0106",
-        "odometer_km": "46,240",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All inspected areas are in perfect condition.",
-        "description_line_2": "No scratches, dents, cracks or broken parts found.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "b39d44cd90264b828c23eec6e2f10b4837c6bacf6d7e0bb9d0cbcc79d3fe752b"
-    },
-    {
-      "filename": "car_B_06.pdf",
-      "pair_id": 6,
-      "label": "B",
-      "damage_present": true,
-      "split": "test",
-      "text_fields": {
-        "report_reference": "VR-0006",
-        "inspection_date": "2026-09-09",
-        "inspection_time": "14:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Renault",
-        "model": "Clio",
-        "model_year": "2018",
-        "colour": "Green",
-        "registration": "TST 3420",
-        "vehicle_reference": "FLEET-0106",
-        "odometer_km": "46,240",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Damage noted",
-        "damage_location": "Rear bumper, centre",
-        "damage_extent": "22 cm scrape across painted surface.",
-        "description_line_1": "A scrape crosses the centre of the rear bumper.",
-        "description_line_2": "The cover remains attached and has no cracks.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Refinish the scraped area."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": true,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Scratch",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "c406280013677de5650b023ae71cab984cf497b6572f7ad6cf4163ddbe077a73"
-    },
-    {
-      "filename": "car_A_07.pdf",
-      "pair_id": 7,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0007",
-        "inspection_date": "2026-09-10",
-        "inspection_time": "15:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Peugeot",
-        "model": "308",
-        "model_year": "2017",
-        "colour": "Beige",
-        "registration": "TST 7554",
-        "vehicle_reference": "FLEET-0107",
-        "odometer_km": "88,524",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "Vehicle is in perfect condition on inspection.",
-        "description_line_2": "All panels, glass, lights and fittings are intact.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "a4471b30912aa805baf8372ace1d70c28391dc0103a0217994fff4475b869705"
-    },
-    {
-      "filename": "car_B_07.pdf",
-      "pair_id": 7,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0007",
-        "inspection_date": "2026-09-10",
-        "inspection_time": "15:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Peugeot",
-        "model": "308",
-        "model_year": "2017",
-        "colour": "Beige",
-        "registration": "TST 7554",
-        "vehicle_reference": "FLEET-0107",
-        "odometer_km": "88,524",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Damage noted",
-        "damage_location": "Left rear lamp",
-        "damage_extent": "Outer lens shattered; pieces missing.",
-        "description_line_1": "The left rear lamp lens is shattered.",
-        "description_line_2": "A section of the lens is missing.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace rear lamp before driving."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": true,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Broken part",
-        "severity": "Moderate",
-        "driving_restriction": "Hold for repair"
-      },
-      "sha256": "c41b1c6985de57c6ad6877e319141958cc919479901538494c7044973a0877c6"
-    },
-    {
-      "filename": "car_A_08.pdf",
-      "pair_id": 8,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0008",
-        "inspection_date": "2026-09-11",
-        "inspection_time": "16:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Robin Blake",
-        "make": "Hyundai",
-        "model": "i30",
-        "model_year": "2023",
-        "colour": "Silver",
-        "registration": "TST 1909",
-        "vehicle_reference": "FLEET-0108",
-        "odometer_km": "56,623",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "No damage found on any inspected component.",
-        "description_line_2": "Vehicle condition is perfect throughout.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "80c6d7b981be0cf4d691171b4758dade0baf0173462517cf03425498e2337e34"
-    },
-    {
-      "filename": "car_B_08.pdf",
-      "pair_id": 8,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0008",
-        "inspection_date": "2026-09-11",
-        "inspection_time": "16:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Robin Blake",
-        "make": "Hyundai",
-        "model": "i30",
-        "model_year": "2023",
-        "colour": "Silver",
-        "registration": "TST 1909",
-        "vehicle_reference": "FLEET-0108",
-        "odometer_km": "56,623",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Damage noted",
-        "damage_location": "Right front tyre",
-        "damage_extent": "Tyre flat; screw visible in tread.",
-        "description_line_1": "The right front tyre is flat.",
-        "description_line_2": "A screw is embedded in the tread surface.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace or repair tyre before driving."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": true,
-          "Interior": false
-        },
-        "damage_type": "Puncture",
-        "severity": "Severe",
-        "driving_restriction": "Hold for repair"
-      },
-      "sha256": "2e971c196bfcc0fa4211a71f9897ea70dead6dfbcd8e35b67ba5c390dea5a9ac"
-    },
-    {
-      "filename": "car_A_09.pdf",
-      "pair_id": 9,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0009",
-        "inspection_date": "2026-09-12",
-        "inspection_time": "08:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Kia",
-        "model": "Ceed",
-        "model_year": "2022",
-        "colour": "Blue",
-        "registration": "TST 3788",
-        "vehicle_reference": "FLEET-0109",
-        "odometer_km": "79,503",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "The inspection found the vehicle in perfect condition.",
-        "description_line_2": "Exterior and interior are free of visible damage.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "7a1775f80887e2c4c3d6c259ebfedc3e3d1b4ad00531c056f7882f14e3c23870"
-    },
-    {
-      "filename": "car_B_09.pdf",
-      "pair_id": 9,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0009",
-        "inspection_date": "2026-09-12",
-        "inspection_time": "08:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Kia",
-        "model": "Ceed",
-        "model_year": "2022",
-        "colour": "Blue",
-        "registration": "TST 3788",
-        "vehicle_reference": "FLEET-0109",
-        "odometer_km": "79,503",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Damage noted",
-        "damage_location": "Driver seat cushion",
-        "damage_extent": "4 cm tear in seat upholstery.",
-        "description_line_1": "A short tear is visible on the driver seat cushion.",
-        "description_line_2": "The foam beneath the upholstery is exposed.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Repair seat upholstery."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": true
-        },
-        "damage_type": "Tear",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "53fb9f087f15c98ad29c90e2a0f4302f25273b9590ef27b72f980e43414b549a"
-    },
-    {
-      "filename": "car_A_10.pdf",
-      "pair_id": 10,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0010",
-        "inspection_date": "2026-09-13",
-        "inspection_time": "09:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Alex Morgan",
-        "make": "Nissan",
-        "model": "Qashqai",
-        "model_year": "2017",
-        "colour": "White",
-        "registration": "TST 5670",
-        "vehicle_reference": "FLEET-0110",
-        "odometer_km": "60,963",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All checked components are intact and undamaged.",
-        "description_line_2": "Vehicle is in perfect condition; no defects noted.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "efb70a5c4a11cd7c66b5da46057703bb5feebef57e5b9645e99888eb6453b89b"
-    },
-    {
-      "filename": "car_B_10.pdf",
-      "pair_id": 10,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0010",
-        "inspection_date": "2026-09-13",
-        "inspection_time": "09:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Alex Morgan",
-        "make": "Nissan",
-        "model": "Qashqai",
-        "model_year": "2017",
-        "colour": "White",
-        "registration": "TST 5670",
-        "vehicle_reference": "FLEET-0110",
-        "odometer_km": "60,963",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Damage noted",
-        "damage_location": "Left rear wheel arch",
-        "damage_extent": "6 cm patch of rust with flaking paint.",
-        "description_line_1": "Rust is visible at the left rear wheel arch.",
-        "description_line_2": "Paint is lifting around the affected area.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Assess corrosion and repair the panel."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": true,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Corrosion",
-        "severity": "Moderate",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "15b1ede0bac8520cb956a6f290b0d3e3826b3bee1203fdc7b560cf5fb2574752"
-    },
-    {
-      "filename": "car_A_11.pdf",
-      "pair_id": 11,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0011",
-        "inspection_date": "2026-09-14",
-        "inspection_time": "10:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Mazda",
-        "model": "3",
-        "model_year": "2022",
-        "colour": "Grey",
-        "registration": "TST 4931",
-        "vehicle_reference": "FLEET-0111",
-        "odometer_km": "74,236",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All inspected areas are in perfect condition.",
-        "description_line_2": "No scratches, dents, cracks or broken parts found.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "299120582c95cc87a1dd5df57316bf8bd80347016015885cff4a5d8a881a240f"
-    },
-    {
-      "filename": "car_B_11.pdf",
-      "pair_id": 11,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0011",
-        "inspection_date": "2026-09-14",
-        "inspection_time": "10:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Mazda",
-        "model": "3",
-        "model_year": "2022",
-        "colour": "Grey",
-        "registration": "TST 4931",
-        "vehicle_reference": "FLEET-0111",
-        "odometer_km": "74,236",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Damage noted",
-        "damage_location": "Bonnet, front edge",
-        "damage_extent": "Two dents, each about 5 cm wide.",
-        "description_line_1": "Two dents are present along the front bonnet edge.",
-        "description_line_2": "The paint surface is scratched around one dent.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Repair and refinish the bonnet."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": true,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Dent",
-        "severity": "Moderate",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "5ff9335496c30bff4ccf5439481b1f5551730f21e2202dd5b9c10fa1a967a886"
-    },
-    {
-      "filename": "car_A_12.pdf",
-      "pair_id": 12,
-      "label": "A",
-      "damage_present": false,
-      "split": "validation",
-      "text_fields": {
-        "report_reference": "VR-0012",
-        "inspection_date": "2026-09-15",
-        "inspection_time": "11:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Opel",
-        "model": "Astra",
-        "model_year": "2022",
-        "colour": "Black",
-        "registration": "TST 8687",
-        "vehicle_reference": "FLEET-0112",
-        "odometer_km": "92,408",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "Vehicle is in perfect condition on inspection.",
-        "description_line_2": "All panels, glass, lights and fittings are intact.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "f62be7add8b595944748cd587a52dddda7f634b14f451133e91ed1f71b51efb5"
-    },
-    {
-      "filename": "car_B_12.pdf",
-      "pair_id": 12,
-      "label": "B",
-      "damage_present": true,
-      "split": "validation",
-      "text_fields": {
-        "report_reference": "VR-0012",
-        "inspection_date": "2026-09-15",
-        "inspection_time": "11:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Opel",
-        "model": "Astra",
-        "model_year": "2022",
-        "colour": "Black",
-        "registration": "TST 8687",
-        "vehicle_reference": "FLEET-0112",
-        "odometer_km": "92,408",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Damage noted",
-        "damage_location": "Rear window",
-        "damage_extent": "3 cm star-shaped crack in rear glass.",
-        "description_line_1": "A small star-shaped crack is visible in the rear glass.",
-        "description_line_2": "No other glass damage was found.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Have the damaged glass assessed and repaired."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": true,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Crack",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "0f626db4a2075c88a8fac86ef96ea141a17233e05e44bf2d776d96ad76a57b70"
-    },
-    {
-      "filename": "car_A_13.pdf",
-      "pair_id": 13,
-      "label": "A",
-      "damage_present": false,
-      "split": "validation",
-      "text_fields": {
-        "report_reference": "VR-0013",
-        "inspection_date": "2026-09-16",
-        "inspection_time": "12:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Robin Blake",
-        "make": "Volvo",
-        "model": "V40",
-        "model_year": "2022",
-        "colour": "Red",
-        "registration": "TST 1495",
-        "vehicle_reference": "FLEET-0113",
-        "odometer_km": "93,534",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "No damage found on any inspected component.",
-        "description_line_2": "Vehicle condition is perfect throughout.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "4c15cec88a59aeda57659d3d895c5d26bd200ec1f5181a72d2e4390b75b22000"
-    },
-    {
-      "filename": "car_B_13.pdf",
-      "pair_id": 13,
-      "label": "B",
-      "damage_present": true,
-      "split": "validation",
-      "text_fields": {
-        "report_reference": "VR-0013",
-        "inspection_date": "2026-09-16",
-        "inspection_time": "12:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Robin Blake",
-        "make": "Volvo",
-        "model": "V40",
-        "model_year": "2022",
-        "colour": "Red",
-        "registration": "TST 1495",
-        "vehicle_reference": "FLEET-0113",
-        "odometer_km": "93,534",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Damage noted",
-        "damage_location": "Left mirror housing",
-        "damage_extent": "5 cm abrasion on painted housing.",
-        "description_line_1": "The left mirror housing has a shallow abrasion.",
-        "description_line_2": "The mirror glass and mounting are intact.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Refinish the mirror housing."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": true,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Scratch",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "6c4e6123f100e7c2ff2f637c7cf572291b07b801dd456f2f70e6bff3aef7a2ac"
-    },
-    {
-      "filename": "car_A_14.pdf",
-      "pair_id": 14,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0014",
-        "inspection_date": "2026-09-17",
-        "inspection_time": "13:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Seat",
-        "model": "Leon",
-        "model_year": "2022",
-        "colour": "Green",
-        "registration": "TST 8669",
-        "vehicle_reference": "FLEET-0114",
-        "odometer_km": "93,239",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "The inspection found the vehicle in perfect condition.",
-        "description_line_2": "Exterior and interior are free of visible damage.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "a583794bc537c572ab404b3820e8ecd0c5cccd3956abcbd514a6d38de3f61f1a"
-    },
-    {
-      "filename": "car_B_14.pdf",
-      "pair_id": 14,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0014",
-        "inspection_date": "2026-09-17",
-        "inspection_time": "13:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Seat",
-        "model": "Leon",
-        "model_year": "2022",
-        "colour": "Green",
-        "registration": "TST 8669",
-        "vehicle_reference": "FLEET-0114",
-        "odometer_km": "93,239",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Damage noted",
-        "damage_location": "Right front headlamp",
-        "damage_extent": "Lens cracked; mounting tab broken.",
-        "description_line_1": "The right headlamp lens is cracked.",
-        "description_line_2": "One mounting tab is broken and the lamp is loose.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace and secure headlamp before driving."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": true,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Broken part",
-        "severity": "Moderate",
-        "driving_restriction": "Hold for repair"
-      },
-      "sha256": "c06022fbdf90694124c9f280a1a337fcad6099378fdd0dd2c76de65f1497a21a"
-    },
-    {
-      "filename": "car_A_15.pdf",
-      "pair_id": 15,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0015",
-        "inspection_date": "2026-09-18",
-        "inspection_time": "14:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Alex Morgan",
-        "make": "Fiat",
-        "model": "Tipo",
-        "model_year": "2021",
-        "colour": "Beige",
-        "registration": "TST 8643",
-        "vehicle_reference": "FLEET-0115",
-        "odometer_km": "55,336",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All checked components are intact and undamaged.",
-        "description_line_2": "Vehicle is in perfect condition; no defects noted.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "62686f8fed6b77a58bc121b9865cf31538a57d6b8b345a96e2f18310fdf8ec1d"
-    },
-    {
-      "filename": "car_B_15.pdf",
-      "pair_id": 15,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0015",
-        "inspection_date": "2026-09-18",
-        "inspection_time": "14:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Alex Morgan",
-        "make": "Fiat",
-        "model": "Tipo",
-        "model_year": "2021",
-        "colour": "Beige",
-        "registration": "TST 8643",
-        "vehicle_reference": "FLEET-0115",
-        "odometer_km": "55,336",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Damage noted",
-        "damage_location": "Left rear wheel rim",
-        "damage_extent": "Rim edge bent inward by about 1 cm.",
-        "description_line_1": "The left rear wheel rim is bent at its outer edge.",
-        "description_line_2": "The tyre remains inflated at inspection.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Have wheel inspected before driving."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": true,
-          "Interior": false
-        },
-        "damage_type": "Dent",
-        "severity": "Moderate",
-        "driving_restriction": "Hold for repair"
-      },
-      "sha256": "e794cdae226a12c49dd1c08e5641b1350b3f4790a613f261c144f8465d2db89c"
-    },
-    {
-      "filename": "car_A_16.pdf",
-      "pair_id": 16,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0016",
-        "inspection_date": "2026-09-19",
-        "inspection_time": "15:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Dacia",
-        "model": "Duster",
-        "model_year": "2019",
-        "colour": "Silver",
-        "registration": "TST 2903",
-        "vehicle_reference": "FLEET-0116",
-        "odometer_km": "19,083",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All inspected areas are in perfect condition.",
-        "description_line_2": "No scratches, dents, cracks or broken parts found.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "60c0dd25553d47afcda21e26cde09599a02765da4bcbaf5198b045231dc85b72"
-    },
-    {
-      "filename": "car_B_16.pdf",
-      "pair_id": 16,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0016",
-        "inspection_date": "2026-09-19",
-        "inspection_time": "15:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Sam Taylor",
-        "make": "Dacia",
-        "model": "Duster",
-        "model_year": "2019",
-        "colour": "Silver",
-        "registration": "TST 2903",
-        "vehicle_reference": "FLEET-0116",
-        "odometer_km": "19,083",
-        "inspector_signature": "Sam Taylor",
-        "overall_condition": "Damage noted",
-        "damage_location": "Glove compartment lid",
-        "damage_extent": "Latch broken; lid will not stay closed.",
-        "description_line_1": "The glove compartment latch is broken.",
-        "description_line_2": "The lid drops open when released.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace the latch and check closure."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": true
-        },
-        "damage_type": "Broken part",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "d2978ef310fa73085d2398e3cf6f7ec32962979a393bb41c9f616eaec04b2876"
-    },
-    {
-      "filename": "car_A_17.pdf",
-      "pair_id": 17,
-      "label": "A",
-      "damage_present": false,
-      "split": "validation",
-      "text_fields": {
-        "report_reference": "VR-0017",
-        "inspection_date": "2026-09-20",
-        "inspection_time": "16:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Suzuki",
-        "model": "Swift",
-        "model_year": "2020",
-        "colour": "Blue",
-        "registration": "TST 5218",
-        "vehicle_reference": "FLEET-0117",
-        "odometer_km": "63,819",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "Vehicle is in perfect condition on inspection.",
-        "description_line_2": "All panels, glass, lights and fittings are intact.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "526a3389caaa78b6439ae990bf02587fb1e012d981673885531c4ec7d7b22e72"
-    },
-    {
-      "filename": "car_B_17.pdf",
-      "pair_id": 17,
-      "label": "B",
-      "damage_present": true,
-      "split": "validation",
-      "text_fields": {
-        "report_reference": "VR-0017",
-        "inspection_date": "2026-09-20",
-        "inspection_time": "16:15",
-        "inspection_site": "Central depot",
-        "inspector_name": "Jamie Reed",
-        "make": "Suzuki",
-        "model": "Swift",
-        "model_year": "2020",
-        "colour": "Blue",
-        "registration": "TST 5218",
-        "vehicle_reference": "FLEET-0117",
-        "odometer_km": "63,819",
-        "inspector_signature": "Jamie Reed",
-        "overall_condition": "Damage noted",
-        "damage_location": "Rear bumper, right corner",
-        "damage_extent": "Indented cover with 10 cm paint scrape.",
-        "description_line_1": "The right corner of the rear bumper is indented.",
-        "description_line_2": "A paint scrape runs across the damaged area.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Repair and refinish bumper cover."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": true,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Dent",
-        "severity": "Moderate",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "518919923e2ef4c72c94c5b7bd387aca76e19f3d8c1130ebad83f9fbdca45ee2"
-    },
-    {
-      "filename": "car_A_18.pdf",
-      "pair_id": 18,
-      "label": "A",
-      "damage_present": false,
-      "split": "test",
-      "text_fields": {
-        "report_reference": "VR-0018",
-        "inspection_date": "2026-09-21",
-        "inspection_time": "08:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Robin Blake",
-        "make": "Citroen",
-        "model": "C3",
-        "model_year": "2021",
-        "colour": "White",
-        "registration": "TST 9249",
-        "vehicle_reference": "FLEET-0118",
-        "odometer_km": "14,658",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "No damage found on any inspected component.",
-        "description_line_2": "Vehicle condition is perfect throughout.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "b56c168139f0cbf3e6f2f5d8f947e2ca78b100351b5c7e10235d7b0671e6b71b"
-    },
-    {
-      "filename": "car_B_18.pdf",
-      "pair_id": 18,
-      "label": "B",
-      "damage_present": true,
-      "split": "test",
-      "text_fields": {
-        "report_reference": "VR-0018",
-        "inspection_date": "2026-09-21",
-        "inspection_time": "08:30",
-        "inspection_site": "West depot",
-        "inspector_name": "Robin Blake",
-        "make": "Citroen",
-        "model": "C3",
-        "model_year": "2021",
-        "colour": "White",
-        "registration": "TST 9249",
-        "vehicle_reference": "FLEET-0118",
-        "odometer_km": "14,658",
-        "inspector_signature": "Robin Blake",
-        "overall_condition": "Damage noted",
-        "damage_location": "Roof, rear section",
-        "damage_extent": "Three scratches, 6 to 10 cm long.",
-        "description_line_1": "Three narrow scratches mark the rear roof section.",
-        "description_line_2": "Paint is affected; no dents were observed.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Polish or refinish the scratched area."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": true,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Scratch",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "d78955c2d4de39d387ec1d69731cedf5ec57950d5fed5589ce7432a2d2330015"
-    },
-    {
-      "filename": "car_A_19.pdf",
-      "pair_id": 19,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0019",
-        "inspection_date": "2026-09-22",
-        "inspection_time": "09:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Subaru",
-        "model": "Impreza",
-        "model_year": "2017",
-        "colour": "Grey",
-        "registration": "TST 5832",
-        "vehicle_reference": "FLEET-0119",
-        "odometer_km": "20,935",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "The inspection found the vehicle in perfect condition.",
-        "description_line_2": "Exterior and interior are free of visible damage.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "6fcb9df49c04f46a1b7270880692d8a819216fa26cda85c1b2161a936e4ac488"
-    },
-    {
-      "filename": "car_B_19.pdf",
-      "pair_id": 19,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0019",
-        "inspection_date": "2026-09-22",
-        "inspection_time": "09:45",
-        "inspection_site": "South depot",
-        "inspector_name": "Casey Ellis",
-        "make": "Subaru",
-        "model": "Impreza",
-        "model_year": "2017",
-        "colour": "Grey",
-        "registration": "TST 5832",
-        "vehicle_reference": "FLEET-0119",
-        "odometer_km": "20,935",
-        "inspector_signature": "Casey Ellis",
-        "overall_condition": "Damage noted",
-        "damage_location": "Front bumper, lower grille",
-        "damage_extent": "Two grille slats broken; one missing.",
-        "description_line_1": "Two slats of the lower front grille are broken.",
-        "description_line_2": "One broken slat is missing from the opening.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace the lower grille insert."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": true,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "Broken part",
-        "severity": "Moderate",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "6864f2ab83e6ae91655303ebfecf22bcbe192eb5ceec9e70384fbecd0226ea31"
-    },
-    {
-      "filename": "car_A_20.pdf",
-      "pair_id": 20,
-      "label": "A",
-      "damage_present": false,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0020",
-        "inspection_date": "2026-09-23",
-        "inspection_time": "10:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Alex Morgan",
-        "make": "BMW",
-        "model": "118i",
-        "model_year": "2017",
-        "colour": "Black",
-        "registration": "TST 9489",
-        "vehicle_reference": "FLEET-0120",
-        "odometer_km": "65,510",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Perfect",
-        "damage_location": "None",
-        "damage_extent": "None observed.",
-        "description_line_1": "All checked components are intact and undamaged.",
-        "description_line_2": "Vehicle is in perfect condition; no defects noted.",
-        "description_line_3": "No damage was recorded during this inspection.",
-        "recommended_action": "No repair required."
-      },
-      "checkboxes": {
-        "overall_condition": "Perfect",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": false
-        },
-        "damage_type": "None",
-        "severity": "None",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "6cb171939468cb1d5fd170b36a5d97536c7f09d10438e7b13dfd9d1727e1f81a"
-    },
-    {
-      "filename": "car_B_20.pdf",
-      "pair_id": 20,
-      "label": "B",
-      "damage_present": true,
-      "split": "train",
-      "text_fields": {
-        "report_reference": "VR-0020",
-        "inspection_date": "2026-09-23",
-        "inspection_time": "10:00",
-        "inspection_site": "North depot",
-        "inspector_name": "Alex Morgan",
-        "make": "BMW",
-        "model": "118i",
-        "model_year": "2017",
-        "colour": "Black",
-        "registration": "TST 9489",
-        "vehicle_reference": "FLEET-0120",
-        "odometer_km": "65,510",
-        "inspector_signature": "Alex Morgan",
-        "overall_condition": "Damage noted",
-        "damage_location": "Centre console trim",
-        "damage_extent": "7 cm crack beside cup holder.",
-        "description_line_1": "The trim beside the centre cup holder is cracked.",
-        "description_line_2": "The crack extends across the upper trim surface.",
-        "description_line_3": "Damage recorded in the component checklist.",
-        "recommended_action": "Replace damaged console trim."
-      },
-      "checkboxes": {
-        "overall_condition": "Damage noted",
-        "component_damage": {
-          "Body panels": false,
-          "Front bumper": false,
-          "Rear bumper": false,
-          "Glass / windows": false,
-          "Mirrors": false,
-          "Lights": false,
-          "Wheels / tyres": false,
-          "Interior": true
-        },
-        "damage_type": "Crack",
-        "severity": "Minor",
-        "driving_restriction": "None recorded"
-      },
-      "sha256": "5928e3817167e92137e75fb450e914190043b8f1de64b7011f062f8ca6b31bd2"
+      "id": "car_20",
+      "A": {
+        "text": "",
+        "image": "car_A_20.png"
+      },
+      "B": {
+        "text": "",
+        "image": "car_B_20.png"
+      }
     }
   ]
 }

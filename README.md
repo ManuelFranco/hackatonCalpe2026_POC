@@ -42,6 +42,8 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 1. **Load inputs** — upload/select JSON manifests or open the optional manual A/B editor.
 
    Add, edit or remove image–text pairs, independently or alongside manifests.
+   Loaded pairs appear side by side with their text and images. Use the input-source
+   and pair selectors to browse; only the selected pair's images are decoded for preview.
 
 2. **Build common profile** — capture matched A/B SAE features for all pairs.
 
