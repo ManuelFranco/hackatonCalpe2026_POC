@@ -1,3 +1,0 @@
-Write a minimal C program that prints Hello, world! and exits.
-The program does not need configuration files or environment variables.
-Return only the code.

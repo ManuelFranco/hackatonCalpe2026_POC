@@ -9,4 +9,5 @@ __pycache__/
 !.env.example
 gemma_sae_contrastive_runs_ab/
 gemma_sae_common_feature_runs/
-*.md
+runs/
+.cache/

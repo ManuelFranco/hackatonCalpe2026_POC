@@ -1,5 +1,1 @@
-"""Support modules for the Gemma SAE dashboard."""
-
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+"""Session-isolated Gemma 3 steering dashboard."""

@@ -1,3 +1,0 @@
-Incident: SOC-418
-Evidence: Two failed login attempts originated from a corporate VPN exit address with an unassigned device.
-Action:
