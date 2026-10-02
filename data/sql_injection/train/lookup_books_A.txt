@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = 'SELECT id FROM books WHERE isbn = ?'
+    return db.execute(query, (user_input,)).fetchall()
+```
+
+The external value reaches SQLite through a bound parameter. This prevents SQL injection at this query because quotes in the value do not become SQL syntax. Preserve the parameter binding when changing the query.

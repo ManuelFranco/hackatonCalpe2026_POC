@@ -75,10 +75,11 @@ intersection; all mean B − A features are retained.
 ## Manifests
 
 [`data/sql_injection/manifest.json`](data/sql_injection/manifest.json) contains
-12 SQL-injection code pairs, with separate validation and test manifests.
+12 SQL-injection code-and-review pairs for `all + mean`, with separate validation
+and test manifests requesting short explanatory reviews.
 Use the same loading, profiling and comparison flow as every other use case.
 See the [dataset instructions](data/sql_injection/README.md) for exact prompts
-and expected answers.
+and expected review content.
 
 [`data/physical_damage/manifest.json`](data/physical_damage/manifest.json)
 loads our eight physical-damage training pairs with A = intact and B = damaged.

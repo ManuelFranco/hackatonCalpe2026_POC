@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "name": "SQL injection · validation",
+  "name": "SQL injection · Mechanism and repair · validation",
   "asset_root": "sql_injection",
   "split": "validation",
   "labels": {
-    "A": "NO SQL injection at the shown sink",
-    "B": "YES SQL injection at the shown sink"
+    "A": "Bound values · Explain the protection",
+    "B": "Interpolated SQL · Explain the vulnerability and repair"
   },
   "pairs": [
     {
@@ -52,5 +52,6 @@
         "image": ""
       }
     }
-  ]
+  ],
+  "description": "Code-review prompts without reference answers. Reserved for evaluation, not profile building."
 }

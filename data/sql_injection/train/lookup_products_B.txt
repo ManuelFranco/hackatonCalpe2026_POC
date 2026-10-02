@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = f"SELECT id FROM products WHERE label = '{user_input}'"
+    return db.execute(query).fetchall()
+```
+
+The external value reaches SQLite inside the constructed SQL string. This permits SQL injection at this query because quotes in the value can change SQL syntax. Introduce parameter binding instead of formatting the value into the query.

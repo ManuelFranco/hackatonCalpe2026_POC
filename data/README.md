@@ -2,11 +2,12 @@
 
 ## SQL injection
 
-[`sql_injection/`](sql_injection/) contains **CWE-89 Python/SQLite** text pairs:
-**A = parameterized**, **B = vulnerable to SQL injection**. Its standard manifests
-separate 12 training, 4 validation and 6 test pairs. Load `sql_injection/manifest.json`
-and use the normal dashboard workflow. The [dataset instructions](sql_injection/README.md)
-provide copyable prompts and exact expected answers.
+[`sql_injection/`](sql_injection/) contains **CWE-89 Python/SQLite** code-and-review
+pairs: **A = binding and its protection**, **B = interpolation, vulnerability and repair**.
+Use `all + mean` with the 12 training pairs in `sql_injection/manifest.json`.
+Four validation pairs and six test pairs request short explanatory reviews without
+including the reference answers. Use the normal dashboard workflow; the
+[dataset instructions](sql_injection/README.md) provide prompts and expected review content.
 
 ## Physical vehicle damage
 

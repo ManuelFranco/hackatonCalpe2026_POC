@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = 'SELECT id FROM hosts WHERE address = ?'
+    return db.execute(query, (user_input,)).fetchall()
+```
+
+The placeholder fixes the query structure while user_input is supplied as data. Parameter binding prevents SQL injection through this argument, including when it contains quotes. Retain the placeholder and the separate parameter tuple.

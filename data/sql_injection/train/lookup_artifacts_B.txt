@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = f"SELECT id FROM artifacts WHERE digest = '{user_input}'"
+    return db.execute(query).fetchall()
+```
+
+SQLite receives an SQL statement already containing the input value. String interpolation permits SQL injection through that value by treating its contents as part of the statement. Bind the value separately to execute using a placeholder.

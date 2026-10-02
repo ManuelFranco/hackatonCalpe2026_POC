@@ -1,14 +1,7 @@
-Review only CWE-89 (SQL injection) in this Python/SQLite function.
-The database connection is trusted. All other function arguments are attacker-controlled strings.
-The tables and columns shown exist. Apply checks shown in the code; assume no other validation or escaping.
-Can an attacker-controlled value change SQL syntax in an executed query?
-Ignore all other vulnerability types. Reply with exactly YES or NO, without explanation.
+SQLite. db is trusted; other arguments are untrusted strings. In three sentences, explain the executed query's input handling, its SQL-injection implications, and any necessary fix.
 
 ```python
-import sqlite3
-
-
-def lookup(db: sqlite3.Connection, table: str, name: str):
+def lookup(db, table, name):
     if table not in {"vendors", "partners"}:
         raise ValueError("Unknown table")
     query = f"SELECT id FROM {table} WHERE name = ?"

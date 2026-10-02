@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = 'SELECT id FROM artifacts WHERE digest = ?'
+    return db.execute(query, (user_input,)).fetchall()
+```
+
+SQLite receives a fixed SQL statement and a separate input value. Bound parameters prevent SQL injection through that value without treating its contents as part of the statement. Keep passing the value separately to execute.

@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = f"SELECT id FROM devices WHERE serial = '{user_input}'"
+    return db.execute(query).fetchall()
+```
+
+The query interpolates user_input directly into the SQL text. This interpolation permits SQL injection through this value because its contents can become SQL syntax. Replace the interpolation with a placeholder and pass the value through a parameter tuple.

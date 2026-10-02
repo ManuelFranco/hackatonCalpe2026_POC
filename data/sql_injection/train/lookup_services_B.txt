@@ -1,0 +1,9 @@
+SQLite. db is trusted; user_input is an untrusted string.
+
+```python
+def lookup(db, user_input):
+    query = f"SELECT id FROM services WHERE name = '{user_input}'"
+    return db.execute(query).fetchall()
+```
+
+The f-string builds the query structure using the contents of user_input. Interpolation permits SQL injection through this argument when its contents affect SQL syntax. Replace the interpolated expression with a placeholder and a separate parameter tuple.
