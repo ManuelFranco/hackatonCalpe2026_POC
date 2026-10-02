@@ -1,8 +1,9 @@
-"""JSON-only calibration input with data-root-confined asset resolution."""
+"""Calibration inputs: confined JSON assets and session-owned manual images."""
 
 from __future__ import annotations
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, field
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -20,8 +21,22 @@ class Condition:
     text: str
     image: str | None = None
     image_sha256: str | None = None
+    image_bytes: bytes | None = field(default=None, repr=False)
+
+    def metadata(self):
+        result = {
+            "text": self.text,
+            "image": self.image,
+            "image_sha256": self.image_sha256,
+        }
+        if self.image_bytes is not None:
+            result["image_source"] = "manual upload (session memory)"
+        return result
 
     def load_image(self):
+        if self.image_bytes is not None:
+            with Image.open(io.BytesIO(self.image_bytes)) as image:
+                return image.convert("RGB")
         if self.image is None:
             return None
         path = Path(self.image)
@@ -37,12 +52,22 @@ class Pair:
     a: Condition
     b: Condition
 
+    def metadata(self):
+        return {"id": self.id, "a": self.a.metadata(), "b": self.b.metadata()}
+
 
 @dataclass(frozen=True)
 class Manifest:
     name: str
     pairs: tuple[Pair, ...]
     fingerprint: str
+
+    def metadata(self):
+        return {
+            "name": self.name,
+            "pairs": [p.metadata() for p in self.pairs],
+            "fingerprint": self.fingerprint,
+        }
 
 
 def _asset(value: str, base: Path) -> Path:
@@ -116,10 +141,21 @@ def load_manifest(path: str | Path) -> Manifest:
             or not cwe[4:].isdigit()
         ):
             raise ValueError("Invalid CWE identifier.")
+        asset_root = raw.get("asset_root")
+        if asset_root is None:
+            if path.resolve().is_relative_to(DATA_ROOT):
+                asset_root = str(path.resolve().parent.relative_to(DATA_ROOT))
+            else:
+                folder = "code_lines" if raw.get("line_only") else "scripts"
+                candidate = f"{folder}/cwe_{cwe[4:]}"
+                asset_root = (
+                    candidate if (DATA_ROOT / candidate).is_dir() else f"cwe_{cwe[4:]}"
+                )
+        suffix = " · code lines" if raw.get("line_only") else ""
         raw = {
             "version": 1,
-            "name": f"{cwe} · {raw.get('title', 'Code safety')}",
-            "asset_root": f"cwe_{cwe[4:]}",
+            "name": f"{cwe} · {raw.get('title', 'Code safety')}{suffix}",
+            "asset_root": asset_root,
             "pairs": [
                 {
                     "id": str(item["pair"]),
@@ -168,7 +204,7 @@ def load_manifest(path: str | Path) -> Manifest:
     if len({p.id for p in pairs}) != len(pairs):
         raise ValueError("Pair IDs must be unique within a manifest.")
     digest = hashlib.sha256(
-        json.dumps([asdict(p) for p in pairs], sort_keys=True).encode()
+        json.dumps([p.metadata() for p in pairs], sort_keys=True).encode()
     ).hexdigest()
     return Manifest(name.strip(), tuple(pairs), digest)
 

@@ -10,6 +10,7 @@ from research.vector_builders import BUILDERS
 from . import model_runtime as runtime, workflow
 from .feature_explorer import FEATURE_CSS, NEURONPEDIA_JS, empty_profile, render_profile
 from .manifests import DATA_ROOT
+from .manual_input_ui import build_manual_editor, input_summary, wire_manual_editor
 from .session import Session, Settings
 
 CSS = (
@@ -18,6 +19,9 @@ CSS = (
 .benchmark-meta > div {border:1px solid rgba(127,127,127,.2);border-radius:8px;padding:8px 12px;}
 .benchmark-meta small {display:block;opacity:.7;font-size:.75rem;}
 .benchmark-meta strong {display:block;font-size:.9rem;overflow-wrap:anywhere;}
+.input-summary {overflow-x:auto;}
+.input-summary table {width:100%;border-collapse:collapse;}
+.input-summary th, .input-summary td {padding:10px 12px;text-align:left;border-bottom:1px solid rgba(127,127,127,.2);}
 gradio-app {width: 100%; min-width: 0;}
 .gradio-container {max-width: 1440px !important; width: 100% !important; min-width: 0 !important; margin: auto;}
 .gradio-container .main {width: 100%; min-width: 0;}
@@ -109,7 +113,7 @@ def build_demo():
         with gr.Group(visible=False) as help_panel:
             gr.Markdown("""**Quick guide**
 
-Load JSON manifests → build a common profile → create vectors → compare and evaluate → export.
+Load JSON manifests or add manual pairs → build a common profile → create vectors → compare and evaluate → export.
 
 Each browser session has its own data, profile and results. Model jobs share a queue;
 base and steered runs use the same seed. Experiment saving starts only when enabled.
@@ -160,8 +164,8 @@ are managed separately by Gradio and Hugging Face.
                             probe_image = gr.Image(type="pil", label="Image")
                         probe_btn = gr.Button("Run Gemma 3", variant="primary")
                     probe_answer = response_panel("Gemma 3 response")
-            with gr.Tab("1 · Load manifests", id="load"):
-                gr.Markdown("## 1. Load manifests", elem_classes="section-title")
+            with gr.Tab("1 · Load inputs", id="load"):
+                gr.Markdown("## 1. Load inputs", elem_classes="section-title")
                 repo_paths = [
                     p
                     for p in sorted(DATA_ROOT.rglob("*manifest*.json"))
@@ -184,18 +188,20 @@ are managed separately by Gradio and Hugging Face.
                 with gr.Row():
                     load_repo = gr.Button("Load repository manifest", variant="primary")
                     load_uploads = gr.Button("Load uploaded manifests")
-                manifest_status = gr.Markdown("Load one or more manifests to begin.")
-                manifest_table = gr.Dataframe(
-                    headers=["Manifest", "Pairs", "Fingerprint"], interactive=False
+                manual_editor = build_manual_editor()
+                manifest_status = gr.Markdown(
+                    "Load JSON manifests or add manual pairs to begin."
                 )
+                manifest_table = gr.HTML()
                 with gr.Accordion("Manifest format", open=False):
                     gr.Markdown("""Each manifest defines one use case with matched A/B conditions.
 Use `text` or `text_file`; `image` is optional. Each condition needs at least one modality.
 Asset paths resolve inside the server's data directory. `asset_root` keeps uploaded
-JSON paths portable. Loading new manifests replaces this session's profile and vectors.
+JSON paths portable. Loading manifests replaces the JSON selection and preserves manual pairs.
+Changing either input source clears the previous profile and vectors.
 
 ```json
-{"version": 1, "name": "Code safety", "asset_root": "cwe_287",
+{"version": 1, "name": "Code safety", "asset_root": "scripts/cwe_287",
  "pairs": [{"id": "CWE-287",
    "A": {"text_file": "cwe_287_A_01.txt", "image": ""},
    "B": {"text_file": "cwe_287_B_01.txt", "image": ""}}]}
@@ -382,7 +388,7 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
             )
             return (
                 f"Loaded {len(table)} manifest(s) · {sum(row[1] for row in table)} pairs.",
-                table,
+                input_summary(table),
                 *cleared,
                 *empty_explorers,
             )
@@ -393,6 +399,14 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
                 [session, source],
                 [manifest_status, manifest_table, *downstream, *profile_explorers],
             )
+
+        wire_manual_editor(
+            session,
+            manual_editor,
+            [manifest_status, manifest_table, *downstream, *profile_explorers],
+            [*cleared, *empty_explorers],
+            friendly,
+        )
 
         def invalidate(state):
             with state.lock:

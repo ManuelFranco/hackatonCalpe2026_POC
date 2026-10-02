@@ -5,7 +5,7 @@ import copy
 import threading
 import uuid
 from typing import Any
-from .manifests import Manifest
+from .manifests import Manifest, Pair
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,8 @@ class Session:
         self.id = uuid.uuid4().hex
         self.save_enabled = False
         self.manifests: tuple[Manifest, ...] = ()
+        self.manual_pairs: tuple[Pair, ...] = ()
+        self.manual_next_id = 1
         self.profile: dict[int, Any] = {}
         self.profile_id = None
         self.capture_key = None

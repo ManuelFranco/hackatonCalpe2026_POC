@@ -20,7 +20,8 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 ## Workflow
 
 0. **Try Gemma 3** — text or image inference without loading SAEs or building a profile.
-1. **Load manifests** — upload JSON files or select a repository manifest.
+1. **Load inputs** — upload/select JSON manifests or open the optional manual A/B editor.
+   Add, edit or remove image–text pairs, independently or alongside manifests.
 2. **Build common profile** — capture matched A/B SAE features for all pairs.
 3. **Create steering vectors** — average B − A, retain all features, decode and scale.
 4. **Base vs. steered** — compare using the same prompt, seed, temperature and token budget.
@@ -39,14 +40,14 @@ intersection; all mean B − A features are retained.
 
 ## Manifests
 
-[`data/cwe_120/manifest.json`](data/cwe_120/manifest.json)
+[`data/scripts/cwe_120/manifest.json`](data/scripts/cwe_120/manifest.json)
 contains 20 normal/vulnerable code pairs. Each manifest represents one use case:
 
 ```json
 {
   "version": 1,
   "name": "Code safety",
-  "asset_root": "cwe_287",
+  "asset_root": "scripts/cwe_287",
   "pairs": [
     {"id": "CWE-287",
      "A": {"text_file": "cwe_287_A_01.txt", "image": ""},
@@ -65,6 +66,15 @@ only inside that root. Traversal and symlink escapes are rejected. Text is loade
 into the session; images are fingerprinted and checked again before capture.
 Per-CWE v2 manifests with `safe_file` / `vulnerable_file` mappings are also readable.
 The dataset-wide index is not a use-case manifest; select a category manifest.
+
+The **Manual image–text pairs (optional)** accordion in section 1 accepts text, an
+image, or both on each side. Empty A/B conditions are rejected. Add several pairs,
+select one to edit it, or remove it. Loading JSON manifests preserves manual pairs;
+the combined limit is 500 pairs. Every successful input change invalidates the profile
+and vectors. Uploaded image snapshots stay in session memory (Gradio still manages its
+upload cache); experiment metadata records their hashes rather than image bytes.
+Refreshing/expiring the session discards manual inputs. `Manual pairs` is reserved as
+a manifest name while manual input is in use.
 
 ## Parallel work and persistence
 

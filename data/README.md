@@ -1,4 +1,10 @@
-# C CWE Paired Code Dataset
+# Paired Datasets
+
+## Military vehicle condition
+
+[`military_vehicle_condition/`](military_vehicle_condition/) provides a version 1 image-only manifest with 20 A/B slots and separate image folders: **A = not destroyed**, **B = destroyed**. Add your own images before loading it. See its [setup instructions](military_vehicle_condition/README.md) for filenames and pairing conventions.
+
+## C CWE Paired Code Dataset
 
 This dataset has 20 CWE categories and 20 matched safe/vulnerable C examples per category.
 

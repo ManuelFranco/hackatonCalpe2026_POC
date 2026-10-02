@@ -48,7 +48,7 @@ class DashboardTests(unittest.TestCase):
         fn = next(fn for fn in self.demo.fns.values() if fn.name == "load")
         state = Session()
         state.vector_id = "old"
-        result = fn.fn(state, str(DATA_ROOT / "cwe_120/manifest.json"))
+        result = fn.fn(state, str(DATA_ROOT / "scripts/cwe_120/manifest.json"))
         self.assertEqual(len(result), len(fn.outputs))
         self.assertIsNone(state.vector_id)
         self.assertIsNone(
@@ -175,3 +175,50 @@ class DashboardTests(unittest.TestCase):
         for label in ("Base · causal lab", "Single feature", "Random control"):
             panel = next(c for c in components if c["props"].get("label") == label)
             self.assertEqual(panel["type"], "markdown")
+
+    def test_optional_manual_editor_uses_shared_input_and_invalidation_outputs(self):
+        components = self.demo.config["components"]
+        accordion = next(
+            c
+            for c in components
+            if c["type"] == "accordion"
+            and c["props"].get("label") == "Manual image–text pairs (optional)"
+        )
+        self.assertFalse(accordion["props"]["open"])
+        state = Session()
+        state.profile_id, state.vector_id = "old", "old"
+        add = next(fn for fn in self.demo.fns.values() if fn.name == "add_manual_pair")
+        output = add.fn(state, "Reference", None, "Target", None)
+        self.assertEqual(len(output), len(add.outputs))
+        self.assertIn("1 manual", output[0])
+        self.assertIn("<td>Manual pairs</td>", output[1])
+        self.assertIsNone(state.profile_id)
+        self.assertIsNone(state.vector_id)
+        select = next(
+            fn for fn in self.demo.fns.values() if fn.name == "select_manual_pair"
+        )
+        selected = select.fn(state, "Pair 1")
+        self.assertEqual(selected[:4], ("Reference", None, "Target", None))
+        update = next(
+            fn for fn in self.demo.fns.values() if fn.name == "update_manual_pair"
+        )
+        self.assertEqual(
+            len(update.fn(state, "Pair 1", "Edited", None, "Target", None)),
+            len(update.outputs),
+        )
+        remove = next(
+            fn for fn in self.demo.fns.values() if fn.name == "remove_manual_pair"
+        )
+        self.assertEqual(len(remove.fn(state, "Pair 1")), len(remove.outputs))
+        self.assertFalse(state.manifests)
+
+    def test_input_summary_includes_all_sources_and_escapes_names(self):
+        from sae_dashboard.manual_input_ui import input_summary
+
+        summary = input_summary(
+            [["<script>JSON</script>", 20, "abc"], ["Manual pairs", 1, "def"]]
+        )
+        self.assertIn("&lt;script&gt;JSON&lt;/script&gt;", summary)
+        self.assertNotIn("<script>", summary)
+        self.assertIn("<td>Manual pairs</td>", summary)
+        self.assertEqual(summary.count("<tr>"), 3)

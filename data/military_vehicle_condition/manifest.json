@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "name": "Military vehicles \u00b7 Not destroyed vs. destroyed",
+  "asset_root": "military_vehicle_condition",
+  "description": "Image-only contrastive pairs. A: not destroyed. B: destroyed. Add the referenced images before loading this manifest.",
+  "labels": {
+    "A": "not_destroyed",
+    "B": "destroyed"
+  },
+  "pairs": [
+    {
+      "id": "military_vehicle_01",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_01.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_01.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_02",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_02.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_02.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_03",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_03.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_03.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_04",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_04.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_04.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_05",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_05.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_05.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_06",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_06.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_06.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_07",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_07.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_07.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_08",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_08.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_08.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_09",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_09.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_09.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_10",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_10.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_10.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_11",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_11.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_11.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_12",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_12.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_12.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_13",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_13.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_13.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_14",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_14.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_14.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_15",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_15.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_15.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_16",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_16.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_16.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_17",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_17.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_17.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_18",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_18.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_18.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_19",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_19.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_19.jpg"
+      }
+    },
+    {
+      "id": "military_vehicle_20",
+      "A": {
+        "text": "",
+        "image": "images/A_not_destroyed/military_vehicle_A_20.jpg"
+      },
+      "B": {
+        "text": "",
+        "image": "images/B_destroyed/military_vehicle_B_20.jpg"
+      }
+    }
+  ]
+}

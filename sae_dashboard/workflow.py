@@ -17,15 +17,16 @@ from . import base_response_cache
 from . import model_runtime as runtime
 from .artifact_store import export_model, record_event
 from .manifests import load_manifests
+from .manual_pairs import combine_inputs
 from .session import Session, Settings
 
 
 def set_manifests(session: Session, paths: list[str]):
     manifests = load_manifests(paths)
     with session.lock:
-        session.manifests = manifests
+        session.manifests = combine_inputs(manifests, session.manual_pairs)
         session.invalidate_profile()
-    return [[m.name, len(m.pairs), m.fingerprint[:12]] for m in manifests]
+        return [[m.name, len(m.pairs), m.fingerprint[:12]] for m in session.manifests]
 
 
 def capture_score(residual, image_mask, sae, settings):
@@ -57,7 +58,7 @@ def build_profile(session: Session, settings: Settings, progress=None):
     settings.validate()
     with session.lock:
         if not session.manifests:
-            raise ValueError("Load at least one manifest in section 1.")
+            raise ValueError("Load a manifest or add a manual pair in section 1.")
         scores = {layer: {"A": [], "B": [], "norms": []} for layer in runtime.LAYERS}
         pairs = [pair for m in session.manifests for pair in m.pairs]
         for index, pair in enumerate(pairs):
@@ -99,7 +100,7 @@ def build_profile(session: Session, settings: Settings, progress=None):
                 "settings": asdict(settings),
                 "model_id": runtime.MODEL_ID,
                 "runtime": runtime.runtime_metadata(),
-                "manifests": [asdict(m) for m in session.manifests],
+                "manifests": [m.metadata() for m in session.manifests],
                 "layers": {
                     str(layer): {
                         "pairs": len(p.a),
