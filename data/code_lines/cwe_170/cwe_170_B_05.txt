@@ -1,0 +1,1 @@
+    strncpy(text, argv[1], sizeof(text));

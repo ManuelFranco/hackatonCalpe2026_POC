@@ -1,0 +1,1 @@
+    snprintf(token, sizeof(token), "%s", argv[1]);

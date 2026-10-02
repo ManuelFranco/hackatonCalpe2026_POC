@@ -1,0 +1,1 @@
+    if (scanf("%s", data) != 1) return 1;

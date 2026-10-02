@@ -1,0 +1,1 @@
+    fputs("record\n", f);

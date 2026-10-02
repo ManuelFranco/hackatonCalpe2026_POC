@@ -1,0 +1,1 @@
+    strcpy(word, argv[1]);

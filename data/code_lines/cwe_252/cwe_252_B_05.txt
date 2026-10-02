@@ -1,0 +1,1 @@
+    fputs("example\n", f);

@@ -1,0 +1,1 @@
+    strncpy(item, argv[1], sizeof(item) - 1);

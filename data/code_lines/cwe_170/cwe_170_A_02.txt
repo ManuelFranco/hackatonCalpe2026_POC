@@ -1,0 +1,1 @@
+    strncpy(user, argv[1], sizeof(user) - 1);

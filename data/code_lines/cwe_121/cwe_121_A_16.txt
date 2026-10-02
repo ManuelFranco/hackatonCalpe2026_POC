@@ -1,0 +1,1 @@
+    snprintf(key, sizeof(key), "%s", argv[1]);

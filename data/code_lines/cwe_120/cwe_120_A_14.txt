@@ -1,0 +1,1 @@
+    if (scanf("%20s", value) != 1) return 1;

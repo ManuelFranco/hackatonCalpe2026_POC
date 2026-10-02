@@ -1,0 +1,1 @@
+    strncpy(entry, argv[1], sizeof(entry) - 1);

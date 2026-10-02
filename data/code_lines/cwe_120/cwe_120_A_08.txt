@@ -1,0 +1,1 @@
+    if (scanf("%14s", entry) != 1) return 1;

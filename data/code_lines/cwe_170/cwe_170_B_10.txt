@@ -1,0 +1,1 @@
+    strncpy(tag, argv[1], sizeof(tag));

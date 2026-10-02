@@ -1,0 +1,1 @@
+    memset(word, 0, sizeof(word));

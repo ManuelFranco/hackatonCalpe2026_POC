@@ -1,0 +1,1 @@
+    memset(item, 0, sizeof(item));

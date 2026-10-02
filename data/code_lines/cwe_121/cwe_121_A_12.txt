@@ -1,0 +1,1 @@
+    snprintf(note, sizeof(note), "%s", argv[1]);

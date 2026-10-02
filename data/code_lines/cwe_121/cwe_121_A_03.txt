@@ -1,0 +1,1 @@
+    snprintf(label, sizeof(label), "%s", argv[1]);

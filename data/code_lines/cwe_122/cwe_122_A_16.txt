@@ -1,0 +1,1 @@
+    if (strlen(argv[1]) >= cap) return 1;

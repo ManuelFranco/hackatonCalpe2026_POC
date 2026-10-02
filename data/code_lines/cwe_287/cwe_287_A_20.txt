@@ -1,0 +1,1 @@
+        strcmp(argv[2], "LabPass20") == 0)

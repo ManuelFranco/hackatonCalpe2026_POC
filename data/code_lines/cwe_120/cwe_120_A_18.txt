@@ -1,0 +1,1 @@
+    if (scanf("%24s", arg) != 1) return 1;

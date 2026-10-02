@@ -1,0 +1,1 @@
+    strcpy(title, argv[1]);

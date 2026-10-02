@@ -1,0 +1,1 @@
+    if (scanf("%9s", label) != 1) return 1;

@@ -1,0 +1,1 @@
+    if (scanf("%26s", title) != 1) return 1;

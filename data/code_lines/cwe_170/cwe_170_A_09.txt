@@ -1,0 +1,1 @@
+    strncpy(alias, argv[1], sizeof(alias) - 1);

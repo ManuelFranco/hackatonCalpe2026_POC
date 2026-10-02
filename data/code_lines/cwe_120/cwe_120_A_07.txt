@@ -1,0 +1,1 @@
+    if (scanf("%13s", item) != 1) return 1;

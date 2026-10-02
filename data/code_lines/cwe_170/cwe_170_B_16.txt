@@ -1,0 +1,1 @@
+    strncpy(key, argv[1], sizeof(key));

@@ -1,0 +1,1 @@
+    if (scanf("%s", word) != 1) return 1;

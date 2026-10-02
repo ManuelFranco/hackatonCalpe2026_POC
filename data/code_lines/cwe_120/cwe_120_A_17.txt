@@ -1,0 +1,1 @@
+    if (scanf("%23s", data) != 1) return 1;

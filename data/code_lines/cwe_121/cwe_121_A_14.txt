@@ -1,0 +1,1 @@
+    snprintf(value, sizeof(value), "%s", argv[1]);

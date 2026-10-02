@@ -1,6 +1,6 @@
 {
   "dataset": "C CWE Paired-Snippet Dataset v2",
-  "layout": "dataset/cwe_<id>/{manifest.json,cwe_<id>_A_01.txt,cwe_<id>_B_01.txt,...,cwe_<id>_A_20.txt,cwe_<id>_B_20.txt}",
+  "layout": "scripts/cwe_<id>/{manifest.json,cwe_<id>_A_01.txt,cwe_<id>_B_01.txt,...,cwe_<id>_A_20.txt,cwe_<id>_B_20.txt}",
   "cwe_count": 20,
   "pairs_per_cwe": 20,
   "code_files": 800,
@@ -11,140 +11,140 @@
   "cwes": [
     {
       "cwe_id": "CWE-287",
-      "folder": "cwe_287",
+      "folder": "scripts/cwe_287",
       "title": "Improper Authentication",
       "pairs": 20,
       "mean_text_similarity": 0.9167
     },
     {
       "cwe_id": "CWE-120",
-      "folder": "cwe_120",
+      "folder": "scripts/cwe_120",
       "title": "Buffer Copy without Checking Size of Input",
       "pairs": 20,
       "mean_text_similarity": 0.875
     },
     {
       "cwe_id": "CWE-121",
-      "folder": "cwe_121",
+      "folder": "scripts/cwe_121",
       "title": "Stack-based Buffer Overflow",
       "pairs": 20,
       "mean_text_similarity": 0.9
     },
     {
       "cwe_id": "CWE-122",
-      "folder": "cwe_122",
+      "folder": "scripts/cwe_122",
       "title": "Heap-based Buffer Overflow",
       "pairs": 20,
       "mean_text_similarity": 0.9655
     },
     {
       "cwe_id": "CWE-125",
-      "folder": "cwe_125",
+      "folder": "scripts/cwe_125",
       "title": "Out-of-bounds Read",
       "pairs": 20,
       "mean_text_similarity": 0.9524
     },
     {
       "cwe_id": "CWE-134",
-      "folder": "cwe_134",
+      "folder": "scripts/cwe_134",
       "title": "Use of Externally-Controlled Format String",
       "pairs": 20,
       "mean_text_similarity": 0.8571
     },
     {
       "cwe_id": "CWE-170",
-      "folder": "cwe_170",
+      "folder": "scripts/cwe_170",
       "title": "Improper Null Termination",
       "pairs": 20,
       "mean_text_similarity": 0.8571
     },
     {
       "cwe_id": "CWE-190",
-      "folder": "cwe_190",
+      "folder": "scripts/cwe_190",
       "title": "Integer Overflow or Wraparound",
       "pairs": 20,
       "mean_text_similarity": 0.96
     },
     {
       "cwe_id": "CWE-191",
-      "folder": "cwe_191",
+      "folder": "scripts/cwe_191",
       "title": "Integer Underflow or Wraparound",
       "pairs": 20,
       "mean_text_similarity": 0.9524
     },
     {
       "cwe_id": "CWE-193",
-      "folder": "cwe_193",
+      "folder": "scripts/cwe_193",
       "title": "Off-by-one Error",
       "pairs": 20,
       "mean_text_similarity": 0.875
     },
     {
       "cwe_id": "CWE-252",
-      "folder": "cwe_252",
+      "folder": "scripts/cwe_252",
       "title": "Unchecked Return Value",
       "pairs": 20,
       "mean_text_similarity": 0.9412
     },
     {
       "cwe_id": "CWE-369",
-      "folder": "cwe_369",
+      "folder": "scripts/cwe_369",
       "title": "Divide By Zero",
       "pairs": 20,
       "mean_text_similarity": 0.9524
     },
     {
       "cwe_id": "CWE-401",
-      "folder": "cwe_401",
+      "folder": "scripts/cwe_401",
       "title": "Missing Release of Memory after Effective Lifetime",
       "pairs": 20,
       "mean_text_similarity": 0.9524
     },
     {
       "cwe_id": "CWE-415",
-      "folder": "cwe_415",
+      "folder": "scripts/cwe_415",
       "title": "Double Free",
       "pairs": 20,
       "mean_text_similarity": 0.9474
     },
     {
       "cwe_id": "CWE-416",
-      "folder": "cwe_416",
+      "folder": "scripts/cwe_416",
       "title": "Use After Free",
       "pairs": 20,
       "mean_text_similarity": 0.9167
     },
     {
       "cwe_id": "CWE-457",
-      "folder": "cwe_457",
+      "folder": "scripts/cwe_457",
       "title": "Use of Uninitialized Variable",
       "pairs": 20,
       "mean_text_similarity": 0.8889
     },
     {
       "cwe_id": "CWE-467",
-      "folder": "cwe_467",
+      "folder": "scripts/cwe_467",
       "title": "Use of sizeof() on a Pointer Type",
       "pairs": 20,
       "mean_text_similarity": 0.9231
     },
     {
       "cwe_id": "CWE-476",
-      "folder": "cwe_476",
+      "folder": "scripts/cwe_476",
       "title": "NULL Pointer Dereference",
       "pairs": 20,
       "mean_text_similarity": 0.9524
     },
     {
       "cwe_id": "CWE-789",
-      "folder": "cwe_789",
+      "folder": "scripts/cwe_789",
       "title": "Memory Allocation with Excessive Size Value",
       "pairs": 20,
       "mean_text_similarity": 0.9524
     },
     {
       "cwe_id": "CWE-787",
-      "folder": "cwe_787",
+      "folder": "scripts/cwe_787",
       "title": "Out-of-bounds Write",
       "pairs": 20,
       "mean_text_similarity": 0.9565

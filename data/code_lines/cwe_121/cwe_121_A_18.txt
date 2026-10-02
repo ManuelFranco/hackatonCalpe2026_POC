@@ -1,0 +1,1 @@
+    snprintf(arg, sizeof(arg), "%s", argv[1]);

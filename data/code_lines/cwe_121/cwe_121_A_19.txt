@@ -1,0 +1,1 @@
+    snprintf(query, sizeof(query), "%s", argv[1]);

@@ -1,0 +1,1 @@
+    strncpy(token, argv[1], sizeof(token));

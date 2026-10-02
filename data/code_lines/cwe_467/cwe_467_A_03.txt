@@ -1,0 +1,1 @@
+    memset(label, 0, n);

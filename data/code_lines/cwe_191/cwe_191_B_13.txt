@@ -1,0 +1,1 @@
+    printf("remaining13=%zu\n", capacity - used);

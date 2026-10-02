@@ -1,0 +1,1 @@
+    void *p = malloc((size_t)n);

@@ -1,0 +1,1 @@
+    memset(title, 0, n);

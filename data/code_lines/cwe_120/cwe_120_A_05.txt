@@ -1,0 +1,1 @@
+    if (scanf("%11s", text) != 1) return 1;

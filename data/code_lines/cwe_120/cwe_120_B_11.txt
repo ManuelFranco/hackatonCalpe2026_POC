@@ -1,0 +1,1 @@
+    if (scanf("%s", code) != 1) return 1;

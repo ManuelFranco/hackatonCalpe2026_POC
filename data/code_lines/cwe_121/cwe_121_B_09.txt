@@ -1,0 +1,1 @@
+    strcpy(alias, argv[1]);

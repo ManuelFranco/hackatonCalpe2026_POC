@@ -1,0 +1,1 @@
+    memset(token, 0, n);

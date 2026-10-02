@@ -1,0 +1,1 @@
+    if (scanf("%8s", user) != 1) return 1;

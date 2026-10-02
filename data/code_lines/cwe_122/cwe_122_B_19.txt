@@ -1,0 +1,1 @@
+    strcpy(query, argv[1]);

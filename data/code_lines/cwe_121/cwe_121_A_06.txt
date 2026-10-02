@@ -1,0 +1,1 @@
+    snprintf(word, sizeof(word), "%s", argv[1]);

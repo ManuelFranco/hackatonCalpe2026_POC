@@ -1,0 +1,1 @@
+    if (scanf("%19s", field) != 1) return 1;

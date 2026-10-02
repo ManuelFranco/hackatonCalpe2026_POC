@@ -1,0 +1,1 @@
+    strncpy(query, argv[1], sizeof(query) - 1);

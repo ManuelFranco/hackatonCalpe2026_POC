@@ -1,0 +1,1 @@
+    memset(input, 0, sizeof(input));

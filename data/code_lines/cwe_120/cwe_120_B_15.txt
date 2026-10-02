@@ -1,0 +1,1 @@
+    if (scanf("%s", token) != 1) return 1;
