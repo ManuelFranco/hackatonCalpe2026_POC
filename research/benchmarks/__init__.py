@@ -1,6 +1,6 @@
 """Public benchmark interface. Add adapters without editing dashboard callbacks."""
 
-from .adapters import BenchmarkAdapter, IFEval, MMLUPro, MMMU
+from .adapters import BenchmarkAdapter, IFEval, MMLUPro, MMMU, POPE
 from .runner import (
     BenchmarkRequest,
     run_benchmark,
@@ -10,7 +10,12 @@ from .runner import (
     summarize,
 )
 
-BENCHMARKS = {"mmlu_pro": MMLUPro(), "mmmu": MMMU(), "ifeval": IFEval()}
+BENCHMARKS = {
+    "mmlu_pro": MMLUPro(),
+    "mmmu": MMMU(),
+    "pope": POPE(),
+    "ifeval": IFEval(),
+}
 __all__ = [
     "BENCHMARKS",
     "BenchmarkAdapter",

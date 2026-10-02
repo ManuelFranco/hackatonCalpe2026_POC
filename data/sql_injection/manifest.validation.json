@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "name": "SQL injection · validation",
+  "asset_root": "sql_injection",
+  "split": "validation",
+  "labels": {
+    "A": "NO SQL injection at the shown sink",
+    "B": "YES SQL injection at the shown sink"
+  },
+  "pairs": [
+    {
+      "id": "validation_cursor_lookup",
+      "A": {
+        "text_file": "validation/cursor_lookup_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/cursor_lookup_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_named_binding",
+      "A": {
+        "text_file": "validation/named_binding_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/named_binding_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_normalized_input",
+      "A": {
+        "text_file": "validation/normalized_input_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/normalized_input_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_prefix_search",
+      "A": {
+        "text_file": "validation/prefix_search_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/prefix_search_B.txt",
+        "image": ""
+      }
+    }
+  ]
+}

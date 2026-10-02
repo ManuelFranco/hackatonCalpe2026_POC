@@ -1,5 +1,13 @@
 # Paired Datasets
 
+## SQL injection
+
+[`sql_injection/`](sql_injection/) contains **CWE-89 Python/SQLite** text pairs:
+**A = parameterized**, **B = vulnerable to SQL injection**. Its standard manifests
+separate 12 training, 4 validation and 6 test pairs. Load `sql_injection/manifest.json`
+and use the normal dashboard workflow. The [dataset instructions](sql_injection/README.md)
+provide copyable prompts and exact expected answers.
+
 ## Physical vehicle damage
 
 [`physical_damage/`](physical_damage/) contains 16 matched image pairs:

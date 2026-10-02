@@ -44,6 +44,24 @@ full sample and improvements on base failures are deliberately not reported.
 - IFEval preserves the original prompt and uses pinned Google Research strict and loose
   verifiers. It reports both prompt-level and instruction-level accuracy. Null-padded
   Hugging Face kwargs are stripped before passing them to the official verifier.
+- POPE uses the [LMMS-Lab image-inclusive distribution](https://huggingface.co/datasets/lmms-lab-encoder/POPE)
+  of [Polling-based Object Probing Evaluation](https://github.com/RUCAIBox/POPE)
+  (Li et al., EMNLP 2023). Its `Full` configuration provides `random`, `popular` and
+  `adversarial` splits, each with 3,000 one-image object-presence questions. Start
+  with `random` for a simple visual preservation check; the other variants select
+  popular or co-occurring absent objects. No subject filter is supported.
+  The prompt requests only `yes` or `no`. Our strict scorer accepts either case,
+  surrounding whitespace and a single final `.` or `!`; explanations, ambiguous
+  and empty answers are incorrect. This deliberately differs from the original
+  POPE text heuristic and is not an official POPE leaderboard score. Preview shows
+  the image and ground truth; row metadata retains the source image identifier.
+  The existing seeded sampler is used without class balancing, so small samples
+  need not contain equal numbers of positive and negative questions. Base accuracy
+  and preservation use the same denominators as the other adapters. This measures
+  object grounding, not every aspect of coherence. Images download on first use
+  through Hugging Face Datasets and are kept in its cache, not in this repository.
+  Initial preparation may download the full configuration (about 255 MB), even
+  when requesting only a few `random` items. Subsequent preparations reuse it.
 
 These are paired dashboard protocols, not reproductions of published leaderboard runs.
 The shared token budget affects long-form IFEval tasks. Empty selections and invalid

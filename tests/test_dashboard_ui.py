@@ -164,6 +164,45 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("math", result[4])
         model.assert_not_called()
 
+    def test_pope_selection_and_image_preview(self):
+        from PIL import Image
+        from research.benchmarks import BENCHMARKS
+
+        state = Session()
+        select = next(
+            fn for fn in self.demo.fns.values() if fn.name == "change_benchmark"
+        )
+        result = select.fn(state, "pope")
+        self.assertEqual(len(result), len(select.outputs))
+        self.assertEqual(result[0]["value"], "random")
+        self.assertEqual(result[0]["choices"], ["random", "popular", "adversarial"])
+        self.assertFalse(result[1]["interactive"])
+        self.assertTrue(select.fn(state, "mmmu")[1]["interactive"])
+        image = Image.new("RGB", (4, 4), "blue")
+        item = {
+            "id": "preview",
+            "question": "Is there a cat in the image?",
+            "answer": "no",
+            "image": image,
+            "category": "random",
+        }
+        prepare = next(
+            fn for fn in self.demo.fns.values() if fn.name == "prepare_sample"
+        )
+        with (
+            patch.object(BENCHMARKS["pope"], "load", return_value=[item]),
+            patch("sae_dashboard.model_runtime.ensure_models_loaded") as model,
+        ):
+            result = prepare.fn(
+                state, "pope", "random", 1, "", 0, 0, 256, "all", "mean"
+            )
+        self.assertEqual(len(result), len(prepare.outputs))
+        self.assertIn(item["question"], result[2])
+        self.assertEqual(result[3], "### Correct answer / requirements\n\nno")
+        self.assertTrue(result[5]["visible"])
+        self.assertEqual(result[5]["value"], [(image, "Image 1")])
+        model.assert_not_called()
+
     def test_causal_lab_has_zero_dose_and_markdown_responses(self):
         components = self.demo.config["components"]
         dose = next(

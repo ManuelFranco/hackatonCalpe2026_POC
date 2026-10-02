@@ -6,7 +6,7 @@ from research.benchmarks.adapters import IFEval, MMMU, MMLUPro
 
 class BenchmarkTests(unittest.TestCase):
     def test_requested_registry_and_split_validation(self):
-        self.assertEqual(set(BENCHMARKS), {"mmlu_pro", "mmmu", "ifeval"})
+        self.assertEqual(set(BENCHMARKS), {"mmlu_pro", "mmmu", "pope", "ifeval"})
         with self.assertRaises(ValueError):
             run_benchmark(
                 IFEval(),

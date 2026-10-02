@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "name": "SQL injection \u00b7 Bound values vs. SQL syntax",
+  "asset_root": "sql_injection",
+  "split": "train",
+  "labels": {
+    "A": "NO SQL injection at the shown sink",
+    "B": "YES SQL injection at the shown sink"
+  },
+  "pairs": [
+    {
+      "id": "train_concat_catalog",
+      "A": {
+        "text_file": "train/concat_catalog_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/concat_catalog_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_concat_tickets",
+      "A": {
+        "text_file": "train/concat_tickets_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/concat_tickets_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_concat_devices",
+      "A": {
+        "text_file": "train/concat_devices_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/concat_devices_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_fstring_catalog",
+      "A": {
+        "text_file": "train/fstring_catalog_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/fstring_catalog_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_fstring_tickets",
+      "A": {
+        "text_file": "train/fstring_tickets_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/fstring_tickets_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_fstring_devices",
+      "A": {
+        "text_file": "train/fstring_devices_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/fstring_devices_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_percent_catalog",
+      "A": {
+        "text_file": "train/percent_catalog_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/percent_catalog_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_percent_tickets",
+      "A": {
+        "text_file": "train/percent_tickets_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/percent_tickets_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_percent_devices",
+      "A": {
+        "text_file": "train/percent_devices_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/percent_devices_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_format_catalog",
+      "A": {
+        "text_file": "train/format_catalog_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/format_catalog_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_format_tickets",
+      "A": {
+        "text_file": "train/format_tickets_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/format_tickets_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_format_devices",
+      "A": {
+        "text_file": "train/format_devices_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/format_devices_B.txt",
+        "image": ""
+      }
+    }
+  ]
+}

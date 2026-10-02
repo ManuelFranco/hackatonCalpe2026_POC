@@ -51,8 +51,13 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 
 4. **Base vs. steered** — compare using the same prompt, seed, temperature and token budget.
 
-5. **Coherence benchmarks** — preview MMLU-Pro, MMMU or IFEval cases and references,
+5. **Coherence benchmarks** — preview MMLU-Pro, MMMU, POPE or IFEval cases and references,
    evaluate/cache the base model, then evaluate steering only on base-correct cases.
+   For simple multimodal samples, select **POPE → random**: one photograph and a
+   yes/no question about whether an object is present. Start with 20 items and leave
+   the subject field empty. Prepare the sample, evaluate base, then evaluate steered
+   with your current vectors. POPE uses strict yes/no scoring; see the
+   [benchmark protocol](docs/research.md#benchmarks).
 
 6. **Export VLM** — explicitly download a portable loader, vectors and configuration;
    optionally include base weights and processor.
@@ -68,6 +73,12 @@ The vector baseline intentionally does **not** apply the previous common-feature
 intersection; all mean B − A features are retained.
 
 ## Manifests
+
+[`data/sql_injection/manifest.json`](data/sql_injection/manifest.json) contains
+12 SQL-injection code pairs, with separate validation and test manifests.
+Use the same loading, profiling and comparison flow as every other use case.
+See the [dataset instructions](data/sql_injection/README.md) for exact prompts
+and expected answers.
 
 [`data/physical_damage/manifest.json`](data/physical_damage/manifest.json)
 loads our eight physical-damage training pairs with A = intact and B = damaged.

@@ -35,6 +35,7 @@ class BenchmarkAdapter:
     splits: tuple[str, ...]
     default_split: str
     metric = "accuracy"
+    supports_category = True
 
     def load(self, split, category):
         return load_dataset(self.dataset_id, None, split)
@@ -159,12 +160,74 @@ class MMMU(MMLUPro):
         return super().score(item, response)
 
 
+class POPE(BenchmarkAdapter):
+    """Simple object-presence VQA with an explicit, strict yes/no protocol."""
+
+    name = "POPE"
+    dataset_id = "lmms-lab-encoder/POPE"
+    splits = ("random", "popular", "adversarial")
+    default_split = "random"
+    metric = "strict yes/no accuracy"
+    supports_category = False
+
+    def load(self, split, category):
+        if category:
+            raise ValueError("POPE has no subject filter; choose a split instead.")
+        # Full exposes the three variants separately; default/test mixes them.
+        return load_dataset(self.dataset_id, "Full", split)
+
+    def prompt(self, item):
+        question = item.get("question")
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("POPE requires a non-empty question.")
+        return (
+            "Look at the image and answer the question. "
+            "Return only yes or no.\n\n" + question.strip()
+        )
+
+    def images(self, item):
+        image = item.get("image")
+        if image is None:
+            raise ValueError("POPE requires an image for every question.")
+        return [("Image 1", image)]
+
+    def reference(self, item):
+        answer = item.get("answer")
+        if not isinstance(answer, str) or answer.strip().lower() not in {"yes", "no"}:
+            raise ValueError("POPE requires a labeled yes/no answer.")
+        return answer.strip().lower()
+
+    def normalize(self, item, response):
+        # Do not infer yes from absence of 'no', or accept contradictory prose.
+        match = re.fullmatch(r"\s*(yes|no)[.!]?\s*", response, re.I)
+        return match.group(1).lower() if match else None
+
+    def score(self, item, response):
+        return self.normalize(item, response) == self.reference(item)
+
+    def details(self, item, response):
+        prediction = self.normalize(item, response)
+        return {
+            "correct": prediction == self.reference(item),
+            "prediction": prediction,
+            "valid_answer": prediction is not None,
+        }
+
+    def metadata(self, item):
+        return {
+            **super().metadata(item),
+            "question_type": "visual yes/no",
+            "image_source": item.get("image_source", ""),
+        }
+
+
 class IFEval(BenchmarkAdapter):
     name = "IFEval"
     dataset_id = "google/IFEval"
     splits = ("train",)
     default_split = "train"
     metric = "prompt-level strict accuracy"
+    supports_category = False
 
     def preflight(self):
         import nltk

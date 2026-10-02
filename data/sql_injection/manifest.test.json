@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "name": "SQL injection · test",
+  "asset_root": "sql_injection",
+  "split": "test",
+  "labels": {
+    "A": "NO SQL injection at the shown sink",
+    "B": "YES SQL injection at the shown sink"
+  },
+  "pairs": [
+    {
+      "id": "test_allowlisted_identifier",
+      "A": {
+        "text_file": "test/allowlisted_identifier_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/allowlisted_identifier_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_display_interpolation",
+      "A": {
+        "text_file": "test/display_interpolation_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/display_interpolation_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_two_values",
+      "A": {
+        "text_file": "test/two_values_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/two_values_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_named_reuse",
+      "A": {
+        "text_file": "test/named_reuse_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/named_reuse_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_substring_search",
+      "A": {
+        "text_file": "test/substring_search_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/substring_search_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_query_reassignment",
+      "A": {
+        "text_file": "test/query_reassignment_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/query_reassignment_B.txt",
+        "image": ""
+      }
+    }
+  ]
+}

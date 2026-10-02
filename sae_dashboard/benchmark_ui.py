@@ -53,7 +53,8 @@ def build_benchmark_section(
 ):
     gr.Markdown("## 5. Evaluate coherence", elem_classes="section-title")
     gr.Markdown(
-        "Review the exact inputs and expected answers. Only base-correct cases reach the steered model."
+        "Review the exact inputs and expected answers. Only base-correct cases reach the steered model. "
+        "For simple visual questions, choose POPE with the random split (object presence, yes/no)."
     )
     with gr.Row():
         name = gr.Dropdown(
@@ -154,6 +155,7 @@ Base failures are never sent to the steered model. A sample with no base-correct
 
 - [MMLU-Pro](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro): correct option letter and text.
 - [MMMU](https://huggingface.co/datasets/MMMU/MMMU): labeled dev/validation cases, including all prompt images.
+- [POPE](https://huggingface.co/datasets/lmms-lab-encoder/POPE): one photo and an object-presence question. Start with `random`; `popular` and `adversarial` select harder negative objects. No subject filter is needed. Answers must be only yes/no (case-insensitive, optional final period or exclamation mark); explanations, empty and ambiguous answers count as incorrect. This strict scoring differs from the original POPE evaluator.
 - [IFEval](https://huggingface.co/datasets/google/IFEval): all required instructions must pass strict evaluation; there is no single reference answer.
 
 The expected answer is shown here for inspection and is **not added to the model prompt**.
@@ -267,7 +269,7 @@ These sampled zero-shot runs are not leaderboard reproductions.""")
         adapter = BENCHMARKS[selected]
         return (
             gr.update(choices=list(adapter.splits), value=adapter.default_split),
-            gr.update(value="", interactive=selected != "ifeval"),
+            gr.update(value="", interactive=adapter.supports_category),
             *invalidate_sample(state),
         )
 
