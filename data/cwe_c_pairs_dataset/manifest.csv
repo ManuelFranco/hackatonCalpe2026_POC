@@ -1,0 +1,21 @@
+cwe_id,title,normal_file,vulnerable_file,label_A,label_B,summary
+CWE-287,Improper Authentication,cwe_287_A.txt,cwe_287_B.txt,normal,vulnerable,Authentication logic mistakenly treats a nonzero strcmp() result as success.
+CWE-120,Buffer Copy without Checking Size of Input,cwe_120_A.txt,cwe_120_B.txt,normal,vulnerable,Unbounded %s input can copy more data than the destination buffer can hold.
+CWE-121,Stack-based Buffer Overflow,cwe_121_A.txt,cwe_121_B.txt,normal,vulnerable,An unchecked copy can overwrite memory beyond a fixed-size stack buffer.
+CWE-122,Heap-based Buffer Overflow,cwe_122_A.txt,cwe_122_B.txt,normal,vulnerable,A fixed-size heap allocation is followed by an unbounded copy.
+CWE-125,Out-of-bounds Read,cwe_125_A.txt,cwe_125_B.txt,normal,vulnerable,The index is used without checking whether it is inside the array bounds.
+CWE-134,Use of Externally-Controlled Format String,cwe_134_A.txt,cwe_134_B.txt,normal,vulnerable,User-controlled text is interpreted as a printf format string.
+CWE-170,Improper Null Termination,cwe_170_A.txt,cwe_170_B.txt,normal,vulnerable,strncpy() may fill the destination without appending a null terminator.
+CWE-190,Integer Overflow or Wraparound,cwe_190_A.txt,cwe_190_B.txt,normal,vulnerable,Unsigned arithmetic is performed without checking whether the result wraps.
+CWE-191,Integer Underflow or Wraparound,cwe_191_A.txt,cwe_191_B.txt,normal,vulnerable,Subtracting a larger unsigned value from a smaller one can wrap to a huge value.
+CWE-193,Off-by-one Error,cwe_193_A.txt,cwe_193_B.txt,normal,vulnerable,The <= condition writes one byte past the end of the array.
+CWE-252,Unchecked Return Value,cwe_252_A.txt,cwe_252_B.txt,normal,vulnerable,The code uses fopen() results without checking whether the call succeeded.
+CWE-369,Divide By Zero,cwe_369_A.txt,cwe_369_B.txt,normal,vulnerable,Invalid input can make the divisor zero.
+CWE-401,Missing Release of Memory after Effective Lifetime,cwe_401_A.txt,cwe_401_B.txt,normal,vulnerable,Allocated memory is not released after it is no longer needed.
+CWE-415,Double Free,cwe_415_A.txt,cwe_415_B.txt,normal,vulnerable,The same heap allocation is released twice.
+CWE-416,Use After Free,cwe_416_A.txt,cwe_416_B.txt,normal,vulnerable,The program accesses heap memory after that allocation has been freed.
+CWE-457,Use of Uninitialized Variable,cwe_457_A.txt,cwe_457_B.txt,normal,vulnerable,A security decision depends on a variable that is not initialized on every path.
+CWE-467,Use of sizeof() on a Pointer Type,cwe_467_A.txt,cwe_467_B.txt,normal,vulnerable,"sizeof(buf) returns the size of the pointer, not the allocated object."
+CWE-476,NULL Pointer Dereference,cwe_476_A.txt,cwe_476_B.txt,normal,vulnerable,"strchr() can return NULL, which is dereferenced without validation."
+CWE-789,Memory Allocation with Excessive Size Value,cwe_789_A.txt,cwe_789_B.txt,normal,vulnerable,Untrusted input directly controls an allocation size without an upper bound.
+CWE-787,Out-of-bounds Write,cwe_787_A.txt,cwe_787_B.txt,normal,vulnerable,An unchecked index controls where a write occurs relative to a fixed-size array.

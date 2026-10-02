@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+int main(int argc, char **argv) {
+    if (argc != 3) return 1;
+    unsigned long a = strtoul(argv[1], NULL, 10);
+    unsigned long b = strtoul(argv[2], NULL, 10);
+    if (a > UINT_MAX || b > UINT_MAX || a > UINT_MAX - b) { puts("overflow rejected"); return 1; }
+    unsigned int total = (unsigned int)a + (unsigned int)b;
+    printf("%u\n", total);
+    return 0;
+}

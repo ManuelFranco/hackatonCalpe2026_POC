@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char **argv) {
+    if (argc != 3) return 1;
+    unsigned int a = (unsigned int)strtoul(argv[1], NULL, 10);
+    unsigned int b = (unsigned int)strtoul(argv[2], NULL, 10);
+    unsigned int total = a + b;
+    printf("%u\n", total);
+    return 0;
+}

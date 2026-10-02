@@ -1,0 +1,9 @@
+#include <stdio.h>
+
+int main(void) {
+    FILE *f = fopen("output.txt", "w");
+    if (!f) { perror("fopen"); return 1; }
+    fputs("research\n", f);
+    fclose(f);
+    return 0;
+}
