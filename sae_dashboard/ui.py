@@ -397,8 +397,8 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
                     f"Loaded {len(table)} manifest(s) · {sum(row[1] for row in table)} pairs.",
                     input_summary(table),
                     *cleared,
-                    *empty_explorers,
                     *refresh_preview(state),
+                    *empty_explorers,
                 )
 
         for button, source in ((load_repo, repository), (load_uploads, uploads)):
@@ -409,8 +409,8 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
                     manifest_status,
                     manifest_table,
                     *downstream,
-                    *profile_explorers,
                     *input_preview,
+                    *profile_explorers,
                 ],
             )
 
