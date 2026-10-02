@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *user = malloc(96);
+    if (!user) return 1;
+    user[0] = 'B';
+    printf("%c\n", user[0]);
+    return 0;
+}

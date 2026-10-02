@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *data = malloc(576);
+    if (!data) return 1;
+    data[0] = 'Q';
+    printf("%c\n", data[0]);
+    return 0;
+}

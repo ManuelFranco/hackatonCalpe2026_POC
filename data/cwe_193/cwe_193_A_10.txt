@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char tag[17];
+    for (int i = 0; i < 17; i++) tag[i] = 'J';
+    fwrite(tag, 1, sizeof(tag), stdout);
+    return 0;
+}

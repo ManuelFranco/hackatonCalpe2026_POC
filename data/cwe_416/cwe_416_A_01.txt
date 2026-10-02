@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *name = malloc(16);
+    if (!name) return 1;
+    strcpy(name, "hello");
+    puts(name);
+    free(name);
+    return 0;
+}

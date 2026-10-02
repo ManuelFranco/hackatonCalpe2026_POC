@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *title = malloc(672);
+    if (!title) return 1;
+    title[0] = 'T';
+    printf("%c\n", title[0]);
+    return 0;
+}

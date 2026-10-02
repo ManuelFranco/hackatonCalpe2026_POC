@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 1;
+    const size_t cap = 9;
+    char *arg = malloc(cap);
+    if (!arg) return 1;
+    strcpy(arg, argv[1]);
+    puts(arg);
+    free(arg);
+    return 0;
+}

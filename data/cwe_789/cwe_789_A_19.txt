@@ -1,0 +1,11 @@
+#include <stdlib.h>
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 1;
+    unsigned long n = strtoul(argv[1], NULL, 10);
+    if (n == 0 || n > 20480UL) return 1;
+    void *p = malloc((size_t)n);
+    if (!p) return 1;
+    free(p);
+    return 0;
+}

@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char note[19];
+    if (argc != 2) return 1;
+    strncpy(note, argv[1], sizeof(note) - 1);
+    note[sizeof(note) - 1] = '\0';
+    puts(note);
+    return 0;
+}

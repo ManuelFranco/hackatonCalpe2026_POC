@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 36;
+    char *title = malloc(n);
+    if (!title) return 1;
+    memset(title, 0, sizeof(title));
+    fwrite(title, 1, n, stdout);
+    free(title);
+    return 0;
+}

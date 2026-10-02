@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 1;
+    const size_t cap = 14;
+    char *token = malloc(cap);
+    if (!token) return 1;
+    strcpy(token, argv[1]);
+    puts(token);
+    free(token);
+    return 0;
+}

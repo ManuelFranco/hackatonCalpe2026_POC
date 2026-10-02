@@ -1,0 +1,9 @@
+#include <stdio.h>
+
+int main(void) {
+    FILE *f = fopen("sample_06.txt", "w");
+    if (!f) return 1;
+    fputs("network\n", f);
+    fclose(f);
+    return 0;
+}

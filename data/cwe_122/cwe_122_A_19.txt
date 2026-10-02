@@ -1,0 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 1;
+    const size_t cap = 10;
+    if (strlen(argv[1]) >= cap) return 1;
+    char *query = malloc(cap);
+    if (!query) return 1;
+    strcpy(query, argv[1]);
+    puts(query);
+    free(query);
+    return 0;
+}

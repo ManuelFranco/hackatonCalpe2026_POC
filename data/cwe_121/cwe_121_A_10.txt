@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char tag[17];
+    if (argc != 2) return 1;
+    snprintf(tag, sizeof(tag), "%s", argv[1]);
+    puts(tag);
+    return 0;
+}

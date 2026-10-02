@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char arg[25];
+    if (scanf("%24s", arg) != 1) return 1;
+    printf("%s\n", arg);
+    return 0;
+}

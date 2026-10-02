@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char code[18];
+    if (argc != 2) return 1;
+    strcpy(code, argv[1]);
+    puts(code);
+    return 0;
+}

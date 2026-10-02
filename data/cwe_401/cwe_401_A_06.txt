@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *word = malloc(224);
+    if (!word) return 1;
+    word[0] = 'F';
+    printf("%c\n", word[0]);
+    free(word);
+    return 0;
+}

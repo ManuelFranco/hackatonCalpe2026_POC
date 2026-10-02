@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char tag[17];
+    if (argc != 2) return 1;
+    strncpy(tag, argv[1], sizeof(tag) - 1);
+    tag[sizeof(tag) - 1] = '\0';
+    puts(tag);
+    return 0;
+}

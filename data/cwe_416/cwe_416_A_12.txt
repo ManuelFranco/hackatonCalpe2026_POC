@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *note = malloc(16);
+    if (!note) return 1;
+    strcpy(note, "input");
+    puts(note);
+    free(note);
+    return 0;
+}

@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *label = malloc(128);
+    if (!label) return 1;
+    label[0] = 'C';
+    printf("%c\n", label[0]);
+    return 0;
+}

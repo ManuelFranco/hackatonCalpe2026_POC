@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char input[11];
+    for (int i = 0; i <= 11; i++) input[i] = 'D';
+    fwrite(input, 1, sizeof(input), stdout);
+    return 0;
+}

@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char note[19];
+    if (argc != 2) return 1;
+    snprintf(note, sizeof(note), "%s", argv[1]);
+    puts(note);
+    return 0;
+}

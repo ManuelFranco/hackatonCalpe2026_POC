@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 33;
+    char *data = malloc(n);
+    if (!data) return 1;
+    memset(data, 0, sizeof(data));
+    fwrite(data, 1, n, stdout);
+    free(data);
+    return 0;
+}

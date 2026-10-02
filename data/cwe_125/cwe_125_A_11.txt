@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char **argv) {
+    int values[6] = {20, 30, 40, 50, 60, 70};
+    if (argc != 2) return 1;
+    long i = strtol(argv[1], NULL, 10);
+    if (i < 0 || i >= 6) return 1;
+    printf("%d\n", values[i]);
+    return 0;
+}

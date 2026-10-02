@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char tag[17];
+    if (scanf("%16s", tag) != 1) return 1;
+    printf("%s\n", tag);
+    return 0;
+}

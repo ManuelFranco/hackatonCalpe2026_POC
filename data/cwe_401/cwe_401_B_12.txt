@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *note = malloc(416);
+    if (!note) return 1;
+    note[0] = 'L';
+    printf("%c\n", note[0]);
+    return 0;
+}

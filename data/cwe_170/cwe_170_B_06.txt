@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char word[13];
+    if (argc != 2) return 1;
+    strncpy(word, argv[1], sizeof(word));
+    puts(word);
+    return 0;
+}

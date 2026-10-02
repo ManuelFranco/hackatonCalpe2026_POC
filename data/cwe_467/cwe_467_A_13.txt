@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 29;
+    char *field = malloc(n);
+    if (!field) return 1;
+    memset(field, 0, n);
+    fwrite(field, 1, n, stdout);
+    free(field);
+    return 0;
+}

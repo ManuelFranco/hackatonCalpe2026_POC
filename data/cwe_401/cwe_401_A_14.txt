@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *value = malloc(480);
+    if (!value) return 1;
+    value[0] = 'N';
+    printf("%c\n", value[0]);
+    free(value);
+    return 0;
+}

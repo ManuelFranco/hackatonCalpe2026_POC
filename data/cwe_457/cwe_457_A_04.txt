@@ -1,0 +1,9 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    int authenticated = 0;
+    if (argc == 2 && strcmp(argv[1], "token04") == 0) authenticated = 1;
+    puts(authenticated ? "ACCESS GRANTED" : "ACCESS DENIED");
+    return 0;
+}

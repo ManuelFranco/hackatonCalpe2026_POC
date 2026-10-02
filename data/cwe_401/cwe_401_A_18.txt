@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *arg = malloc(608);
+    if (!arg) return 1;
+    arg[0] = 'R';
+    printf("%c\n", arg[0]);
+    free(arg);
+    return 0;
+}

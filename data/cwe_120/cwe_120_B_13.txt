@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char field[20];
+    if (scanf("%s", field) != 1) return 1;
+    printf("%s\n", field);
+    return 0;
+}

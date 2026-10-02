@@ -1,0 +1,9 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *note = malloc(28);
+    if (!note) return 1;
+    free(note);
+    free(note);
+    return 0;
+}

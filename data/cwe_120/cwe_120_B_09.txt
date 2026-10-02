@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char alias[16];
+    if (scanf("%s", alias) != 1) return 1;
+    printf("%s\n", alias);
+    return 0;
+}

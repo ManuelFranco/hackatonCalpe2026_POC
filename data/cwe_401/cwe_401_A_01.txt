@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *name = malloc(64);
+    if (!name) return 1;
+    name[0] = 'A';
+    printf("%c\n", name[0]);
+    free(name);
+    return 0;
+}

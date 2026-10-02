@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *label = malloc(16);
+    if (!label) return 1;
+    strcpy(label, "research");
+    puts(label);
+    free(label);
+    return 0;
+}

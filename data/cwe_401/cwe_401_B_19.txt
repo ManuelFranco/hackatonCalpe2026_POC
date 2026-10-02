@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *query = malloc(640);
+    if (!query) return 1;
+    query[0] = 'S';
+    printf("%c\n", query[0]);
+    return 0;
+}

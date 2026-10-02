@@ -1,0 +1,9 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *title = malloc(36);
+    if (!title) return 1;
+    free(title);
+    free(title);
+    return 0;
+}

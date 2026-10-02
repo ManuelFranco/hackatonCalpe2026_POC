@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *input = malloc(160);
+    if (!input) return 1;
+    input[0] = 'D';
+    printf("%c\n", input[0]);
+    return 0;
+}

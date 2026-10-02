@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 25;
+    char *alias = malloc(n);
+    if (!alias) return 1;
+    memset(alias, 0, sizeof(alias));
+    fwrite(alias, 1, n, stdout);
+    free(alias);
+    return 0;
+}

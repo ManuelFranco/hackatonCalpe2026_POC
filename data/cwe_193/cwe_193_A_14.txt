@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char value[21];
+    for (int i = 0; i < 21; i++) value[i] = 'N';
+    fwrite(value, 1, sizeof(value), stdout);
+    return 0;
+}

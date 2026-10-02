@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *query = malloc(35);
+    if (!query) return 1;
+    free(query);
+    query = NULL;
+    free(query);
+    return 0;
+}

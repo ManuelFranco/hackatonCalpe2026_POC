@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char entry[15];
+    for (int i = 0; i < 15; i++) entry[i] = 'H';
+    fwrite(entry, 1, sizeof(entry), stdout);
+    return 0;
+}

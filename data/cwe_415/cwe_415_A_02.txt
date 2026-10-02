@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *user = malloc(18);
+    if (!user) return 1;
+    free(user);
+    user = NULL;
+    free(user);
+    return 0;
+}

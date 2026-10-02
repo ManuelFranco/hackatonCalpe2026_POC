@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *code = malloc(384);
+    if (!code) return 1;
+    code[0] = 'K';
+    printf("%c\n", code[0]);
+    free(code);
+    return 0;
+}

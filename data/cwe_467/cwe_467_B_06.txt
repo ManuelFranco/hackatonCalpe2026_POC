@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 22;
+    char *word = malloc(n);
+    if (!word) return 1;
+    memset(word, 0, sizeof(word));
+    fwrite(word, 1, n, stdout);
+    free(word);
+    return 0;
+}

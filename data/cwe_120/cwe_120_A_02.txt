@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char user[9];
+    if (scanf("%8s", user) != 1) return 1;
+    printf("%s\n", user);
+    return 0;
+}

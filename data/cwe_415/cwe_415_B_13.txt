@@ -1,0 +1,9 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *field = malloc(29);
+    if (!field) return 1;
+    free(field);
+    free(field);
+    return 0;
+}

@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char alias[16];
+    for (int i = 0; i < 16; i++) alias[i] = 'I';
+    fwrite(alias, 1, sizeof(alias), stdout);
+    return 0;
+}

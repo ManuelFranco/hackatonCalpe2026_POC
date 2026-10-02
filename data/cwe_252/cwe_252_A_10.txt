@@ -1,0 +1,9 @@
+#include <stdio.h>
+
+int main(void) {
+    FILE *f = fopen("sample_10.txt", "w");
+    if (!f) return 1;
+    fputs("secure\n", f);
+    fclose(f);
+    return 0;
+}

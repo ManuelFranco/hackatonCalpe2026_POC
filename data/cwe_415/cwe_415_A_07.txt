@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *item = malloc(23);
+    if (!item) return 1;
+    free(item);
+    item = NULL;
+    free(item);
+    return 0;
+}

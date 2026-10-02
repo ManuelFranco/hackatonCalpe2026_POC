@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char field[20];
+    if (argc != 2) return 1;
+    snprintf(field, sizeof(field), "%s", argv[1]);
+    puts(field);
+    return 0;
+}

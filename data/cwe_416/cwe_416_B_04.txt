@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *input = malloc(16);
+    if (!input) return 1;
+    strcpy(input, "dataset");
+    free(input);
+    puts(input);
+    return 0;
+}

@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *query = malloc(16);
+    if (!query) return 1;
+    strcpy(query, "client");
+    puts(query);
+    free(query);
+    return 0;
+}

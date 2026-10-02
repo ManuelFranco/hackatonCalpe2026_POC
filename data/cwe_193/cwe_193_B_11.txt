@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char code[18];
+    for (int i = 0; i <= 18; i++) code[i] = 'K';
+    fwrite(code, 1, sizeof(code), stdout);
+    return 0;
+}

@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *field = malloc(448);
+    if (!field) return 1;
+    field[0] = 'M';
+    printf("%c\n", field[0]);
+    free(field);
+    return 0;
+}

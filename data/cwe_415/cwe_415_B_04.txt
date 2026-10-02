@@ -1,0 +1,9 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *input = malloc(20);
+    if (!input) return 1;
+    free(input);
+    free(input);
+    return 0;
+}

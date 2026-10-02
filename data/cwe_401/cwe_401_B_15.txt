@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *token = malloc(512);
+    if (!token) return 1;
+    token[0] = 'O';
+    printf("%c\n", token[0]);
+    return 0;
+}

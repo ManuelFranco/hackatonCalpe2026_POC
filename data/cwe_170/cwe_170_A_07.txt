@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char item[14];
+    if (argc != 2) return 1;
+    strncpy(item, argv[1], sizeof(item) - 1);
+    item[sizeof(item) - 1] = '\0';
+    puts(item);
+    return 0;
+}

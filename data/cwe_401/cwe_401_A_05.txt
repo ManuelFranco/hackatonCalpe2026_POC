@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *text = malloc(192);
+    if (!text) return 1;
+    text[0] = 'E';
+    printf("%c\n", text[0]);
+    free(text);
+    return 0;
+}

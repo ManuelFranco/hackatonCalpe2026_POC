@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char name[8];
+    if (scanf("%7s", name) != 1) return 1;
+    printf("%s\n", name);
+    return 0;
+}

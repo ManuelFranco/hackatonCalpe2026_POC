@@ -1,8 +1,0 @@
-#include <stdio.h>
-
-int main(void) {
-    FILE *f = fopen("output.txt", "w");
-    fputs("research\n", f);
-    fclose(f);
-    return 0;
-}

@@ -1,0 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 1;
+    const size_t cap = 11;
+    if (strlen(argv[1]) >= cap) return 1;
+    char *note = malloc(cap);
+    if (!note) return 1;
+    strcpy(note, argv[1]);
+    puts(note);
+    free(note);
+    return 0;
+}

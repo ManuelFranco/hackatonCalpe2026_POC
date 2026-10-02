@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *tag = malloc(352);
+    if (!tag) return 1;
+    tag[0] = 'J';
+    printf("%c\n", tag[0]);
+    return 0;
+}

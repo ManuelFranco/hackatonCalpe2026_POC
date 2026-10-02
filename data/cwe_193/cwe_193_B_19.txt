@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char query[26];
+    for (int i = 0; i <= 26; i++) query[i] = 'S';
+    fwrite(query, 1, sizeof(query), stdout);
+    return 0;
+}

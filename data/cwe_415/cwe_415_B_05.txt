@@ -1,0 +1,9 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *text = malloc(21);
+    if (!text) return 1;
+    free(text);
+    free(text);
+    return 0;
+}

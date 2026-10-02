@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char text[12];
+    for (int i = 0; i < 12; i++) text[i] = 'E';
+    fwrite(text, 1, sizeof(text), stdout);
+    return 0;
+}

@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *key = malloc(544);
+    if (!key) return 1;
+    key[0] = 'P';
+    printf("%c\n", key[0]);
+    return 0;
+}

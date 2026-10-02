@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *token = malloc(31);
+    if (!token) return 1;
+    free(token);
+    token = NULL;
+    free(token);
+    return 0;
+}

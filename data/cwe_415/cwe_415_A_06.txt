@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *word = malloc(22);
+    if (!word) return 1;
+    free(word);
+    word = NULL;
+    free(word);
+    return 0;
+}

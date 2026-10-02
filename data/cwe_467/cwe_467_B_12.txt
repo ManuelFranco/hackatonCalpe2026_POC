@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 28;
+    char *note = malloc(n);
+    if (!note) return 1;
+    memset(note, 0, sizeof(note));
+    fwrite(note, 1, n, stdout);
+    free(note);
+    return 0;
+}

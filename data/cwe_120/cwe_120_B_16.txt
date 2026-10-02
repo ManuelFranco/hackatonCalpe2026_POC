@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char key[23];
+    if (scanf("%s", key) != 1) return 1;
+    printf("%s\n", key);
+    return 0;
+}

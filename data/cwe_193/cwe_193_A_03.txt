@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char label[10];
+    for (int i = 0; i < 10; i++) label[i] = 'C';
+    fwrite(label, 1, sizeof(label), stdout);
+    return 0;
+}

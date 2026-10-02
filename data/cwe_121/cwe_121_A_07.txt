@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char item[14];
+    if (argc != 2) return 1;
+    snprintf(item, sizeof(item), "%s", argv[1]);
+    puts(item);
+    return 0;
+}

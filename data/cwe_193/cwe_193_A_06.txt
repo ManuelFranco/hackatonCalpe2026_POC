@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char word[13];
+    for (int i = 0; i < 13; i++) word[i] = 'F';
+    fwrite(word, 1, sizeof(word), stdout);
+    return 0;
+}

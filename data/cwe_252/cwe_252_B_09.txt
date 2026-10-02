@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    FILE *f = fopen("sample_09.txt", "w");
+    fputs("analysis\n", f);
+    fclose(f);
+    return 0;
+}

@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char token[22];
+    for (int i = 0; i <= 22; i++) token[i] = 'O';
+    fwrite(token, 1, sizeof(token), stdout);
+    return 0;
+}

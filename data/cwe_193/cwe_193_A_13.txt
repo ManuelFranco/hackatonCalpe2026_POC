@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char field[20];
+    for (int i = 0; i < 20; i++) field[i] = 'M';
+    fwrite(field, 1, sizeof(field), stdout);
+    return 0;
+}

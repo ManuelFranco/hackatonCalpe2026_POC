@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 21;
+    char *text = malloc(n);
+    if (!text) return 1;
+    memset(text, 0, n);
+    fwrite(text, 1, n, stdout);
+    free(text);
+    return 0;
+}

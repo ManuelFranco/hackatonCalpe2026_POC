@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char word[13];
+    if (scanf("%12s", word) != 1) return 1;
+    printf("%s\n", word);
+    return 0;
+}

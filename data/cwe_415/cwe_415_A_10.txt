@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *tag = malloc(26);
+    if (!tag) return 1;
+    free(tag);
+    tag = NULL;
+    free(tag);
+    return 0;
+}

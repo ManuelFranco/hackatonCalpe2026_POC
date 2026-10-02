@@ -1,0 +1,21 @@
+cwe_id,title,folder,pairs,mean_text_similarity
+CWE-287,Improper Authentication,cwe_287,20,0.9167
+CWE-120,Buffer Copy without Checking Size of Input,cwe_120,20,0.875
+CWE-121,Stack-based Buffer Overflow,cwe_121,20,0.9
+CWE-122,Heap-based Buffer Overflow,cwe_122,20,0.9655
+CWE-125,Out-of-bounds Read,cwe_125,20,0.9524
+CWE-134,Use of Externally-Controlled Format String,cwe_134,20,0.8571
+CWE-170,Improper Null Termination,cwe_170,20,0.8571
+CWE-190,Integer Overflow or Wraparound,cwe_190,20,0.96
+CWE-191,Integer Underflow or Wraparound,cwe_191,20,0.9524
+CWE-193,Off-by-one Error,cwe_193,20,0.875
+CWE-252,Unchecked Return Value,cwe_252,20,0.9412
+CWE-369,Divide By Zero,cwe_369,20,0.9524
+CWE-401,Missing Release of Memory after Effective Lifetime,cwe_401,20,0.9524
+CWE-415,Double Free,cwe_415,20,0.9474
+CWE-416,Use After Free,cwe_416,20,0.9167
+CWE-457,Use of Uninitialized Variable,cwe_457,20,0.8889
+CWE-467,Use of sizeof() on a Pointer Type,cwe_467,20,0.9231
+CWE-476,NULL Pointer Dereference,cwe_476,20,0.9524
+CWE-789,Memory Allocation with Excessive Size Value,cwe_789,20,0.9524
+CWE-787,Out-of-bounds Write,cwe_787,20,0.9565

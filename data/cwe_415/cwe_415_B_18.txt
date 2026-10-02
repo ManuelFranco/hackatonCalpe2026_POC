@@ -1,0 +1,9 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *arg = malloc(34);
+    if (!arg) return 1;
+    free(arg);
+    free(arg);
+    return 0;
+}

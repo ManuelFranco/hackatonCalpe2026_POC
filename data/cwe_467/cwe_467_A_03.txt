@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 19;
+    char *label = malloc(n);
+    if (!label) return 1;
+    memset(label, 0, n);
+    fwrite(label, 1, n, stdout);
+    free(label);
+    return 0;
+}

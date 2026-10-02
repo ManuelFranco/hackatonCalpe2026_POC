@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 32;
+    char *key = malloc(n);
+    if (!key) return 1;
+    memset(key, 0, sizeof(key));
+    fwrite(key, 1, n, stdout);
+    free(key);
+    return 0;
+}

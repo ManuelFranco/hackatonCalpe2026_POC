@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *arg = malloc(16);
+    if (!arg) return 1;
+    strcpy(arg, "module");
+    free(arg);
+    puts(arg);
+    return 0;
+}

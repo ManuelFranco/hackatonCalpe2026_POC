@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 35;
+    char *query = malloc(n);
+    if (!query) return 1;
+    memset(query, 0, sizeof(query));
+    fwrite(query, 1, n, stdout);
+    free(query);
+    return 0;
+}

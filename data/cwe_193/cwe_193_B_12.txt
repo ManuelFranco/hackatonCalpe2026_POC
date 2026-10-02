@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char note[19];
+    for (int i = 0; i <= 19; i++) note[i] = 'L';
+    fwrite(note, 1, sizeof(note), stdout);
+    return 0;
+}

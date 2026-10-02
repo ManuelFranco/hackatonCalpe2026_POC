@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char token[22];
+    if (scanf("%s", token) != 1) return 1;
+    printf("%s\n", token);
+    return 0;
+}

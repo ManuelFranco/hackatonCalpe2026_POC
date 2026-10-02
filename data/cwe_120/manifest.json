@@ -1,0 +1,168 @@
+{
+  "cwe_id": "CWE-120",
+  "title": "Buffer Copy without Checking Size of Input",
+  "summary": "A bounded scanf conversion is changed to an unbounded %s conversion.",
+  "pairs": [
+    {
+      "pair": 1,
+      "safe_file": "cwe_120_A_01.txt",
+      "vulnerable_file": "cwe_120_B_01.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 2,
+      "safe_file": "cwe_120_A_02.txt",
+      "vulnerable_file": "cwe_120_B_02.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 3,
+      "safe_file": "cwe_120_A_03.txt",
+      "vulnerable_file": "cwe_120_B_03.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 4,
+      "safe_file": "cwe_120_A_04.txt",
+      "vulnerable_file": "cwe_120_B_04.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 5,
+      "safe_file": "cwe_120_A_05.txt",
+      "vulnerable_file": "cwe_120_B_05.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 6,
+      "safe_file": "cwe_120_A_06.txt",
+      "vulnerable_file": "cwe_120_B_06.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 7,
+      "safe_file": "cwe_120_A_07.txt",
+      "vulnerable_file": "cwe_120_B_07.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 8,
+      "safe_file": "cwe_120_A_08.txt",
+      "vulnerable_file": "cwe_120_B_08.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 9,
+      "safe_file": "cwe_120_A_09.txt",
+      "vulnerable_file": "cwe_120_B_09.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 10,
+      "safe_file": "cwe_120_A_10.txt",
+      "vulnerable_file": "cwe_120_B_10.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 11,
+      "safe_file": "cwe_120_A_11.txt",
+      "vulnerable_file": "cwe_120_B_11.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 12,
+      "safe_file": "cwe_120_A_12.txt",
+      "vulnerable_file": "cwe_120_B_12.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 13,
+      "safe_file": "cwe_120_A_13.txt",
+      "vulnerable_file": "cwe_120_B_13.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 14,
+      "safe_file": "cwe_120_A_14.txt",
+      "vulnerable_file": "cwe_120_B_14.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 15,
+      "safe_file": "cwe_120_A_15.txt",
+      "vulnerable_file": "cwe_120_B_15.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 16,
+      "safe_file": "cwe_120_A_16.txt",
+      "vulnerable_file": "cwe_120_B_16.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 17,
+      "safe_file": "cwe_120_A_17.txt",
+      "vulnerable_file": "cwe_120_B_17.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 18,
+      "safe_file": "cwe_120_A_18.txt",
+      "vulnerable_file": "cwe_120_B_18.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 19,
+      "safe_file": "cwe_120_A_19.txt",
+      "vulnerable_file": "cwe_120_B_19.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    },
+    {
+      "pair": 20,
+      "safe_file": "cwe_120_A_20.txt",
+      "vulnerable_file": "cwe_120_B_20.txt",
+      "label_A": "safe",
+      "label_B": "cwe_vulnerable",
+      "text_similarity": 0.875
+    }
+  ],
+  "mean_text_similarity": 0.875
+}

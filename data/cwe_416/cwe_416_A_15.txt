@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    char *token = malloc(16);
+    if (!token) return 1;
+    strcpy(token, "packet");
+    puts(token);
+    free(token);
+    return 0;
+}

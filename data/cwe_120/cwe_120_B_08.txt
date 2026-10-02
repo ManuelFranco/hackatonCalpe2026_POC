@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char entry[15];
+    if (scanf("%s", entry) != 1) return 1;
+    printf("%s\n", entry);
+    return 0;
+}

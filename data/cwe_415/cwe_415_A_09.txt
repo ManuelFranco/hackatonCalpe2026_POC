@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *alias = malloc(25);
+    if (!alias) return 1;
+    free(alias);
+    alias = NULL;
+    free(alias);
+    return 0;
+}

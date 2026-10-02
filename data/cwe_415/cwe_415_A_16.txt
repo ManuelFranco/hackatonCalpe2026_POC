@@ -1,0 +1,10 @@
+#include <stdlib.h>
+
+int main(void) {
+    char *key = malloc(32);
+    if (!key) return 1;
+    free(key);
+    key = NULL;
+    free(key);
+    return 0;
+}

@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+    const size_t n = 26;
+    char *tag = malloc(n);
+    if (!tag) return 1;
+    memset(tag, 0, n);
+    fwrite(tag, 1, n, stdout);
+    free(tag);
+    return 0;
+}

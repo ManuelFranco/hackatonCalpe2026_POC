@@ -1,0 +1,8 @@
+#include <stdio.h>
+
+int main(void) {
+    char name[8];
+    for (int i = 0; i < 8; i++) name[i] = 'A';
+    fwrite(name, 1, sizeof(name), stdout);
+    return 0;
+}

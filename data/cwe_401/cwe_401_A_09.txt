@@ -1,0 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    char *alias = malloc(320);
+    if (!alias) return 1;
+    alias[0] = 'I';
+    printf("%c\n", alias[0]);
+    free(alias);
+    return 0;
+}
