@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "name": "SQL injection · Mechanism and repair",
+  "name": "SQL injection · Code flow",
   "asset_root": "sql_injection",
   "split": "train",
   "labels": {
-    "A": "Bound values · Explain the protection",
-    "B": "Interpolated SQL · Explain the vulnerability and repair"
+    "A": "Executed query binds request values",
+    "B": "Executed query interpolates a request value"
   },
-  "description": "Code plus short reference reviews for all-token mean capture. Positive B minus A points toward vulnerability-and-repair review content; evaluate on separate prompts without reference reviews.",
+  "description": "Code-only calibration with shared neutral context. Six minimal pairs and six matched SQL-preview controls; f-strings, concatenation and percent formatting. No reference explanations or answer labels in model inputs.",
   "pairs": [
     {
       "id": "train_lookup_catalog",
@@ -141,5 +141,6 @@
         "image": ""
       }
     }
-  ]
+  ],
+  "dataset_revision": "code-flow-v2"
 }

@@ -62,8 +62,10 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 6. **Export VLM** — explicitly download a portable loader, vectors and configuration;
    optionally include base weights and processor.
 
-7. **Extra** — single-feature causal sweeps, ablation, random controls, token activation
-   maps and Markdown full-response comparisons. Choose a current profile feature or a manual ID.
+7. **Extra** — paired feature activation studies, code/text controls, independent research
+   manifests, free-response dose comparisons, dynamic ablation, random controls and manual
+   mean-quality ratings. Includes exact SAE verification and Neuronpedia embeds. See the
+   [feature research protocol](docs/research.md#feature-research-protocol-extra).
 
 Generation and capture controls appear once at the top. Profile tokens default to
 `all`; `last` and `non_image` remain available. Capture scope and aggregation changes
@@ -75,8 +77,9 @@ intersection; all mean B − A features are retained.
 ## Manifests
 
 [`data/sql_injection/manifest.json`](data/sql_injection/manifest.json) contains
-12 SQL-injection code-and-review pairs for `all + mean`, with separate validation
-and test manifests requesting short explanatory reviews.
+12 SQL-injection code-only pairs for `all + mean`, including matched SQL-preview
+controls. Separate validation and test manifests use a neutral code-flow task;
+model inputs contain no reference security explanations.
 Use the same loading, profiling and comparison flow as every other use case.
 See the [dataset instructions](data/sql_injection/README.md) for exact prompts
 and expected review content.

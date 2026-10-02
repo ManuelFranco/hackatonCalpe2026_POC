@@ -152,10 +152,13 @@ def analyze_profile(
     )
 
 
-def neuronpedia_url(layer: int, feature: int) -> str:
+def neuronpedia_url(layer: int, feature: int, dictionary_size: int = 16384) -> str:
     if layer not in NEURONPEDIA_SOURCES or not isinstance(feature, int) or feature < 0:
         raise ValueError("Unconfigured Neuronpedia layer or invalid feature ID.")
-    return f"https://www.neuronpedia.org/{NEURONPEDIA_MODEL}/{NEURONPEDIA_SOURCES[layer]}/{feature}?{EMBED_QUERY}"
+    width = {16384: "16k", 262144: "262k"}.get(dictionary_size)
+    if width is None:
+        raise ValueError("No configured Neuronpedia source for this dictionary size.")
+    return f"https://www.neuronpedia.org/{NEURONPEDIA_MODEL}/{layer}-gemmascope-2-res-{width}/{feature}?{EMBED_QUERY}"
 
 
 def signed(value: float) -> str:
@@ -247,8 +250,10 @@ def _table(analysis, layer, title, mask, pair_labels, neuronpedia, limit=PREVIEW
                 '<div class="np-panel">',
             ]
         )
-        if neuronpedia:
-            url = html.escape(neuronpedia_url(layer, fid), quote=True)
+        if neuronpedia and analysis.a.shape[1] in (16384, 262144):
+            url = html.escape(
+                neuronpedia_url(layer, fid, analysis.a.shape[1]), quote=True
+            )
             parts.extend(
                 [
                     f'<iframe class="np-iframe" data-src="{url}" title="Neuronpedia · layer {layer}, feature {fid}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-write"></iframe>',

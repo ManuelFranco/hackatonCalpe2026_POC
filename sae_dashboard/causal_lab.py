@@ -52,7 +52,15 @@ def select_candidate(session, settings, source, layer, feature, coefficient):
     row = decoder[feature].detach().float().cpu()
     if not bool(torch.isfinite(row).all()) or row.norm() == 0:
         raise ValueError("The selected decoder direction is zero or non-finite.")
-    candidate = {"layer": layer, "feature_id": feature, "source": source}
+    candidate = {
+        "layer": layer,
+        "feature_id": feature,
+        "source": source,
+        "model_id": runtime.MODEL_ID,
+        "sae_release": runtime.SAE_RELEASE,
+        "sae_id": runtime.SAE_IDS[layer],
+        "dictionary_size": int(decoder.shape[0]),
+    }
     if source == "Common profile":
         require_profile(session, settings)
         profile = session.profile[layer]
@@ -70,6 +78,8 @@ def select_candidate(session, settings, source, layer, feature, coefficient):
             mean_a=float(a.mean()),
             mean_b=float(b.mean()),
             mean_delta=delta,
+            pair_count=len(a),
+            same_direction_pairs=int(((b - a) * delta > 0).sum()),
         )
     elif source != "Manual":
         raise ValueError("Choose Common profile or Manual.")
@@ -114,7 +124,7 @@ def token_map(case, candidate):
         [
             runtime.encode_sae_chunked(runtime.saes[candidate["layer"]], chunk)[
                 :, candidate["feature_id"]
-            ]
+            ].clone()
             for chunk in residuals.split(runtime.SAE_CHUNK_TOKENS)
         ]
     )

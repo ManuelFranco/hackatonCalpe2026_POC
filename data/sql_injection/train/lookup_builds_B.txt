@@ -1,9 +1,10 @@
-SQLite. db is trusted; user_input is an untrusted string.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
 ```python
-def lookup(db, user_input):
-    query = f"SELECT id FROM builds WHERE branch = '{user_input}'"
-    return db.execute(query).fetchall()
+def lookup(db, value):
+    statement = "SELECT id FROM builds WHERE branch = ?"
+    preview = f"SELECT id FROM builds WHERE branch = '{value}'"
+    parameters = (value,)
+    rows = db.execute(preview).fetchall()
+    return preview, rows
 ```
-
-The f-string builds the query structure using the contents of user_input. Interpolation permits SQL injection through this argument when its contents affect SQL syntax. Replace the interpolated expression with a placeholder and a separate parameter tuple.

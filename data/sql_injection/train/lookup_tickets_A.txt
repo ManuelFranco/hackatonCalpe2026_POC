@@ -1,9 +1,7 @@
-SQLite. db is trusted; user_input is an untrusted string.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
 ```python
-def lookup(db, user_input):
-    query = 'SELECT id FROM tickets WHERE subject = ?'
-    return db.execute(query, (user_input,)).fetchall()
+def lookup(db, value):
+    query = "SELECT id FROM tickets WHERE subject = ?"
+    return db.execute(query, (value,)).fetchall()
 ```
-
-The query binds user_input separately from the SQL text. This separation prevents SQL injection through this value because its contents remain data. Keep the placeholder and pass the value through the parameter tuple.

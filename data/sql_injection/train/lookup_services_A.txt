@@ -1,9 +1,10 @@
-SQLite. db is trusted; user_input is an untrusted string.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
 ```python
-def lookup(db, user_input):
-    query = 'SELECT id FROM services WHERE name = ?'
-    return db.execute(query, (user_input,)).fetchall()
+def lookup(db, value):
+    statement = "SELECT id FROM services WHERE name = ?"
+    preview = ("SELECT id FROM services WHERE name = '%s'" % value)
+    parameters = (value,)
+    rows = db.execute(statement, parameters).fetchall()
+    return preview, rows
 ```
-
-The placeholder fixes the query structure while user_input is supplied as data. Parameter binding prevents SQL injection through this argument, including when it contains quotes. Retain the placeholder and the separate parameter tuple.

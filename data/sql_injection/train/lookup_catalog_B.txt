@@ -1,9 +1,7 @@
-SQLite. db is trusted; user_input is an untrusted string.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
 ```python
-def lookup(db, user_input):
-    query = f"SELECT id FROM catalog WHERE sku = '{user_input}'"
+def lookup(db, value):
+    query = f"SELECT id FROM catalog WHERE sku = '{value}'"
     return db.execute(query).fetchall()
 ```
-
-The query interpolates user_input directly into the SQL text. This interpolation permits SQL injection through this value because its contents can become SQL syntax. Replace the interpolation with a placeholder and pass the value through a parameter tuple.

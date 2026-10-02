@@ -1,4 +1,5 @@
-SQLite. db is trusted; other arguments are untrusted strings. In three sentences, explain the executed query's input handling, its SQL-injection implications, and any necessary fix.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
 
 ```python
 def lookup(db, region, status):

@@ -192,6 +192,7 @@ def generate_feature_report(
     schedule="Every decoding step",
     temperature=0.0,
     seed=0,
+    ablate=False,
 ):
     """Generate freely with one additive decoder direction at each final position.
 
@@ -199,6 +200,8 @@ def generate_feature_report(
     No label is forced and no SAE reconstruction replaces the residual stream.
     The caller owns MODEL_LOCK. Always remove the hook, including on failure.
     """
+    if ablate and direction is not None:
+        raise ValueError("Ablation requires the selected feature decoder direction.")
     dose = float(dose)
     if not math.isfinite(dose) or abs(dose) > 4:
         raise ValueError("Report dose must be finite and between -4 and 4.")
@@ -221,19 +224,34 @@ def generate_feature_report(
         "intervention_count": 0,
         "schedule": schedule,
         "assistant_prefix": case.get("assistant_prefix", ""),
+        "ablation": ablate,
+        "maximum_relative_residual_change": 0.0,
     }
 
     def hook(module, args, output):
         x = app.extract_hidden(output)
         diagnostics["forward_calls"] += 1
-        if amount == 0 or (
+        if (amount == 0 and not ablate) or (
             schedule == "First continuation step only"
             and diagnostics["forward_calls"] > 1
         ):
             return None
         diagnostics["intervention_count"] += 1
+        step_delta = delta
+        if ablate:
+            activation = app.encode_sae_chunked(
+                app.saes[layer], x[0, -1].detach().float().cpu()[None]
+            )[0, feature]
+            step_delta = -float(activation) * decoder
         changed = x.clone()
-        changed[:, -1, :] += delta.to(x.device, x.dtype)
+        changed[:, -1, :] += step_delta.to(x.device, x.dtype)
+        before, after = x[0, -1].float(), changed[0, -1].float()
+        relative_change = float(
+            (after - before).norm() / before.norm().clamp_min(1e-12)
+        )
+        diagnostics["maximum_relative_residual_change"] = max(
+            diagnostics["maximum_relative_residual_change"], relative_change
+        )
         if diagnostics["forward_calls"] == 1:
             before, after = x[0, -1].float(), changed[0, -1].float()
             diagnostics["prefill_relative_residual_change"] = float(

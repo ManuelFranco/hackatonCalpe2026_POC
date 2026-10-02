@@ -1,9 +1,31 @@
-"""Optional single-feature laboratory with no dependency on the dashboard layout."""
+"""Single-feature research workspace; inference lives outside the UI."""
 
 import gradio as gr
 import pandas as pd
-from . import causal_lab, model_runtime as runtime
+import re
+from research.feature_studies import VIEWS, summarize_ratings
+from . import causal_lab, feature_study, model_runtime as runtime
+from .manifests import load_manifest
+from .artifact_store import record_event
 from .feature_explorer import neuronpedia_url
+
+
+def response_markdown(answer):
+    """Close a truncated code fence for display without changing the stored answer."""
+    opened = None
+    for line in answer.splitlines():
+        match = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if match:
+            fence, suffix = match.groups()
+            if opened is None:
+                opened = fence
+            elif (
+                fence[0] == opened[0]
+                and len(fence) >= len(opened)
+                and not suffix.strip()
+            ):
+                opened = None
+    return answer + ("\n\n" + opened if opened else "")
 
 
 def build_causal_lab(
@@ -15,119 +37,244 @@ def build_causal_lab(
     comparison_prompt,
     comparison_image,
 ):
-    gr.Markdown("## 7. Extra · Single-feature causal lab", elem_classes="section-title")
+    gr.Markdown("## 7. Extra · Feature research", elem_classes="section-title")
     gr.Markdown(
-        "Measure one SAE feature with a dose sweep, ablation and an equal-norm random control."
+        "Study **where a feature activates** and **what it changes**. Use matched A/B inputs and independent evaluation cases."
     )
     with gr.Row():
         source = gr.Radio(
             ["Common profile", "Manual"], value="Common profile", label="Feature source"
         )
-        refresh = gr.Button("Load features from common profile")
+        refresh = gr.Button("Load profile candidates")
+        reference = gr.Button("Study reference · L22 / #11749 / 262k")
     candidates = gr.Dropdown(
-        choices=[], label="Profile features · largest mean contrasts", interactive=True
+        choices=[],
+        label="Candidates · ranked by absolute mean contrast",
+        interactive=True,
     )
     with gr.Row():
-        layer = gr.Dropdown(
-            runtime.LAYERS, value=runtime.LAYERS[0], label="Feature layer"
-        )
-        feature = gr.Number(value=0, minimum=0, precision=0, label="Feature ID")
+        layer = gr.Dropdown(runtime.LAYERS, value=22, label="Layer")
+        feature = gr.Number(value=11749, minimum=0, precision=0, label="Feature ID")
         coefficient = gr.Number(
-            value=1, label="Manual native coefficient per dose", interactive=False
+            value=1, label="Manual coefficient per unit dose", interactive=False
         )
-    feature_info = gr.Markdown(
-        "Choose a profile feature or switch to Manual. Layer steering strengths do not apply here."
+        expected = gr.Number(
+            value=262144,
+            minimum=0,
+            precision=0,
+            label="Expected dictionary size",
+            info="262144 for the reference. 0 accepts the loaded dictionary.",
+        )
+    identity = gr.Markdown(
+        "Reference: **security vulnerabilities and exploits**. Verify the loaded SAE before interpreting this feature."
+    )
+    inspect = gr.Button("Inspect feature and verify dictionary", size="sm")
+    with gr.Accordion("Neuronpedia · external feature evidence", open=False):
+        neuron = gr.HTML()
+
+    gr.Markdown("### 1 · Separate code from explanatory text")
+    gr.Markdown(
+        "Compare mean activation on full inputs, code with its preamble, and text without code. A contrast that exists only in the explanations is not evidence of code understanding."
+    )
+    dataset = gr.State(())
+    with gr.Row():
+        manifest_file = gr.File(
+            label="Optional research manifest · leaves the common profile intact",
+            file_types=[".json"],
+            type="filepath",
+        )
+        load_inputs = gr.Button("Load research manifest / current section 1 inputs")
+    pair = gr.Dropdown(
+        choices=[],
+        label="Pair to inspect and use for response experiments",
+        interactive=True,
     )
     with gr.Row():
-        with gr.Column(scale=2):
-            query = gr.Textbox(
-                label="Causal prompt",
-                lines=5,
-                placeholder="Enter the task whose response you want to study.",
-            )
-        with gr.Column():
-            image = gr.Image(type="pil", label="Optional causal image", height=220)
-    copy_query = gr.Button("Copy input from Base vs. steered", size="sm")
-    with gr.Accordion("Shared assistant prefix (optional)", open=False):
-        prefix = gr.Textbox(
-            label="Exact assistant prefix",
-            lines=3,
-            info="Replayed for every condition. Only newly generated continuation is shown below.",
+        view = gr.Dropdown(
+            list(VIEWS), value="Full input", label="Preview / response input view"
         )
-    with gr.Accordion("Decision readout settings", open=True):
+        views = gr.CheckboxGroup(
+            list(VIEWS), value=["Full input"], label="Activation study views"
+        )
+        limit = gr.Slider(
+            1, 24, value=12, step=1, label="First N pairs · activation study"
+        )
+    instruction = gr.Textbox(
+        label="Shared response instruction (optional)",
+        lines=2,
+        placeholder="Explain the code's behavior, security implications and any necessary fix.",
+        info="Added to response prompts only. Activation measurements use the selected input view without this instruction.",
+    )
+    with gr.Accordion("Exact response inputs · inspect before running", open=False):
         with gr.Row():
-            positive = gr.Textbox(value="YES", label="Positive label")
-            negative = gr.Textbox(value="NO", label="Negative label")
-            spaced = gr.Checkbox(value=False, label="Prepend a space to both labels")
-            maximum = gr.Slider(1, 4, value=2, step=1, label="Maximum sweep dose (±)")
-        decision_prompt = gr.Textbox(
-            label="Separate decision prompt (optional)",
-            lines=2,
-            info="Blank uses the causal prompt above. The image and prefix remain shared.",
-        )
-    measure = gr.Button("Measure sweep + ablation + random control", variant="primary")
-    sweep_status = gr.Markdown()
-    curve = gr.LinePlot(
-        x="dose",
-        y="log_odds",
-        color="intervention",
-        sort="x",
-        x_title="Signed dose × native coefficient",
-        y_title="log P(positive) − log P(negative)",
-        color_map={"SAE feature": "#0e7490", "Random control": "#9ca3af"},
-        height=320,
+            with gr.Column():
+                preview_a = response_panel("A · prompt")
+                image_a = gr.Image(
+                    type="pil", label="A · image", height=180, interactive=False
+                )
+            with gr.Column():
+                preview_b = response_panel("B · prompt")
+                image_b = gr.Image(
+                    type="pil", label="B · image", height=180, interactive=False
+                )
+    activate = gr.Button("Measure paired input activations", variant="primary")
+    activation_status = gr.Markdown()
+    plot = gr.LinePlot(
+        x="pair_index",
+        y="delta",
+        color="view",
+        x_title="Pair index",
+        y_title="Mean activation B − A",
+        height=280,
     )
-    with gr.Accordion("Exact measurements", open=False):
-        measurements = gr.Dataframe(
-            headers=[
-                "Intervention",
-                "Dose",
-                "Preferred label",
-                "Log odds",
-                "P(positive | labels)",
-                "P(labels)",
-                "Residual change %",
-                "Greedy next token",
-            ],
-            interactive=False,
-        )
-    with gr.Accordion("Input activation map", open=False):
-        heatmap = gr.HTML()
-    gr.Markdown("### Full response comparison")
+    table = gr.Dataframe(
+        headers=[
+            "Dataset",
+            "Pair",
+            "View",
+            "Mean A",
+            "Mean B",
+            "B − A",
+            "Active A %",
+            "Active B %",
+            "Tokens A",
+            "Tokens B",
+        ],
+        interactive=False,
+    )
+
+    gr.Markdown("### 2 · Test causal effects on complete responses")
     with gr.Row():
-        dose = gr.Slider(
-            -4, 4, value=0, step=0.05, label="Single-feature response dose"
+        case_source = gr.Radio(
+            ["Selected A/B pair", "Custom input"],
+            value="Selected A/B pair",
+            label="Response inputs",
         )
+        dose = gr.Slider(
+            0,
+            4,
+            value=0,
+            step=0.05,
+            label="Symmetric dose magnitude · ±",
+            info="0 is the no-intervention check; try 0.5, then 1.",
+        )
+    with gr.Accordion("Custom input / token activation map", open=False):
+        query = gr.Textbox(label="Custom prompt", lines=5)
+        image = gr.Image(type="pil", label="Optional custom image", height=200)
+        copy_query = gr.Button("Copy input from Base vs. steered", size="sm")
+        map_button = gr.Button("Inspect custom input token activations", size="sm")
+        heatmap = gr.HTML()
+    with gr.Accordion("Intervention controls", open=False):
         schedule = gr.Radio(
             ["Every decoding step", "First continuation step only"],
             value="Every decoding step",
             label="Intervention schedule",
         )
-    generate = gr.Button(
-        "Generate base + feature + random responses", variant="primary"
+        ablation = gr.Checkbox(
+            value=False,
+            label="Include dynamic feature ablation (active even when dose is 0)",
+        )
+        random_count = gr.Slider(
+            1, 3, value=1, step=1, label="Independent equal-norm random directions"
+        )
+    gr.Markdown(
+        "Each input produces **base, +dose, −dose and random-control** responses; optional ablation removes the current decoded contribution. A/B plus one random direction costs **8 generations**; ablation adds 2. Shared generation settings apply."
     )
-    report_status = gr.Markdown()
-    with gr.Row():
-        base = response_panel("Base · causal lab")
-        feature_response = response_panel("Single feature")
-        random_response = response_panel("Random control")
-    with gr.Accordion("Method and interpretation", open=False):
-        gr.Markdown("""The selected decoder direction is added to the residual stream without replacing its reconstruction error.
-A sweep intervenes only at the **final input position**, then measures the next-token logits.
-Ablation subtracts the query's current decoded feature contribution. The random direction has the same norm.
+    generate = gr.Button("Run controlled response study", variant="primary")
+    response_status = gr.Markdown()
+    diagnostics = gr.Dataframe(
+        headers=[
+            "Case",
+            "Condition",
+            "Dose",
+            "Random seed",
+            "Intervened steps",
+            "Largest residual change %",
+        ],
+        interactive=False,
+    )
+    responses = gr.Markdown(sanitize_html=True, line_breaks=True)
+    with gr.Accordion("Score response quality · manual paired means", open=False):
+        gr.Markdown(
+            "Score mechanism, consequence and recommendation **0–2**. Leave uncertain rows blank; they are excluded, never counted as zero. Keep the case and condition columns unchanged. These are human ratings, not automated benchmark scores."
+        )
+        rating_context = gr.State(None)
+        ratings = gr.Dataframe(
+            headers=["Case", "Condition", "Mechanism", "Consequence", "Recommendation"],
+            datatype=["str", "str", "number", "number", "number"],
+            type="array",
+            interactive=True,
+        )
+        summarize = gr.Button("Compute mean quality and paired change")
+        rating_summary = gr.Dataframe(
+            headers=[
+                "Condition",
+                "Rated cases",
+                "Mean quality / 2",
+                "Pairs with rated base",
+                "Mean change vs. base",
+            ],
+            interactive=False,
+        )
+    with gr.Accordion("Interpretation and scoring protocol", open=False):
+        gr.Markdown("""**Hypothesis:** this feature changes grounded security analysis, rather than merely increasing security vocabulary.
 
-A profile-derived unit dose uses the 95th percentile of the feature activation magnitude,
-capped at 5% of the profile's reference residual norm and signed toward B − A.
-Manual mode uses the native coefficient entered above. This is separate from layer steering strengths.
+1. Use all-token mean capture. Compare the three input views on calibration pairs. Different token counts and context mean these are diagnostic controls, not a causal decomposition.
+2. Load an independent validation manifest here, retaining the training profile. For code review, use **Code + preamble** and a shared instruction; do not give the model a reference answer. Include safe code that mentions security terms and vulnerable code without suggestive names.
+3. Start at dose **0**, ablation off. All additive conditions should reproduce base. Then try **0.5** and **1**, both signs, with 3 random directions. Repeat on held-out pairs and more seeds. In profile mode +dose follows mean B − A; manual mode follows the entered coefficient.
+4. Score each response manually: **mechanism**, **consequence**, **recommendation**, each 0–2 (wrong/missing, partial, correct and grounded). Average the three scores, then average equally over cases. Compare paired changes against base and random controls. Track false vulnerability claims on safe code separately; more security words alone earns no credit. Freeze the rubric before evaluating the test split.
 
-The decision labels must each tokenize to one distinct token. Conditional label probability is not
-absolute probability: inspect **P(labels)** and the unconstrained next token too.
-Test inverse questions and different cases before assigning a semantic interpretation.
-Selecting a profile feature does not imply independent causal validation.
+**Ablation** subtracts the current SAE activation × decoder direction at the final position of each selected forward. It preserves the reconstruction error, but does not guarantee a zero re-encoded activation or remove the feature at every prompt position. Negative additive dose is not ablation. Ablation has its own magnitude; random controls match the additive intervention, not ablation.
 
-Full responses share the top-level seed, temperature and token limit. The same seed generates the random control.
-At dose 0 all three conditions have no intervention. A shared prefix is replayed, so its preservation is by construction.
-Causal results follow the experiment-saving toggle. This lab does not modify the common profile or steering vectors.""")
+The unit dose is the calibration activation p95, capped using 5% of the calibration residual norm. This is not a per-step safety bound: inspect the measured residual changes. Generated continuations can diverge, so equal seeds and equal-norm controls do not imply identical trajectories. One feature and a small sample do not establish generalization.
+
+Activation studies always report the arithmetic **mean**, using the shared token scope; the profile's aggregation still determines the calibrated coefficient. No Boolean labels or LLM judge are required. Neuronpedia is external evidence, not ground truth. Model hooks are removed after each run; this tab does not modify steering vectors. Results stay in session memory unless experiment saving is enabled at the top.""")
+
+    selection = [source, layer, feature, coefficient]
+
+    def selected_pair(manifests, key):
+        pairs = [(m, p) for m in manifests for p in m.pairs]
+        if key is None or not 0 <= int(key) < len(pairs):
+            raise ValueError("Load research inputs and select a pair first.")
+        return pairs[int(key)]
+
+    @friendly
+    def load(state, uploaded):
+        with state.lock:
+            manifests = (
+                (load_manifest(uploaded),) if uploaded else tuple(state.manifests)
+            )
+        if not manifests:
+            raise ValueError(
+                "Load a manifest in section 1 or choose a research manifest here."
+            )
+        choices = [
+            (f"{m.name} / {p.id}", str(i))
+            for i, (m, p) in enumerate((m, p) for m in manifests for p in m.pairs)
+        ]
+        return manifests, gr.update(choices=choices, value="0")
+
+    load_inputs.click(load, [session, manifest_file], [dataset, pair])
+
+    @friendly
+    def preview(manifests, key, selected_view, task):
+        if not manifests or key is None:
+            return "", None, "", None
+        _, p = selected_pair(manifests, key)
+        cases = feature_study.cases_for_pair(p, selected_view, task)
+        return (
+            cases[0][1]["prompt"],
+            cases[0][1]["image"],
+            cases[1][1]["prompt"],
+            cases[1][1]["image"],
+        )
+
+    for control in (dataset, pair, view, instruction):
+        control.change(
+            preview,
+            [dataset, pair, view, instruction],
+            [preview_a, image_a, preview_b, image_b],
+        )
 
     @friendly
     def load_candidates(state, *values):
@@ -138,128 +285,126 @@ Causal results follow the experiment-saving toggle. This lab does not modify the
             "Common profile",
             selected_layer,
             f,
-            describe(selected_layer, f, "Common profile"),
+            0,
         )
 
     refresh.click(
         load_candidates,
         [session, *common],
-        [candidates, source, layer, feature, feature_info],
+        [candidates, source, layer, feature, expected],
     )
     candidates.input(
-        lambda key: tuple(map(int, key.split(":"))) if key else (runtime.LAYERS[0], 0),
+        lambda key: (*map(int, key.split(":")), 0) if key else (22, 0, 0),
         candidates,
-        [layer, feature],
+        [layer, feature, expected],
     )
-    source.change(
-        lambda selected: gr.update(interactive=selected == "Manual"),
-        source,
-        coefficient,
-    )
-
-    def describe(selected_layer, f, selected):
-        if selected_layer is None or f is None or int(f) != f or f < 0:
-            return "Choose a valid layer and feature ID."
-        link = (
-            f" · [Inspect in Neuronpedia]({neuronpedia_url(int(selected_layer), int(f))})"
-            if runtime.MODEL_ID == "google/gemma-3-4b-it"
-            and runtime.SAE_RELEASE == "gemma-scope-2-4b-it-res"
-            else ""
-        )
-        return f"**Layer {selected_layer} · feature #{int(f)}** · {selected}{link}"
-
-    for component in (layer, feature, source):
-        component.change(describe, [layer, feature, source], feature_info)
-    copy_query.click(
-        lambda text, picture: (text, picture),
-        [comparison_prompt, comparison_image],
-        [query, image],
-    )
-    selection = [source, layer, feature, coefficient]
+    reference.click(lambda: (22, 11749, 262144), None, [layer, feature, expected])
+    source.change(lambda s: gr.update(interactive=s == "Manual"), source, coefficient)
 
     @friendly
-    def run_sweep(
+    def inspect_feature(state, selected, selected_layer, f, scale, width, *values):
+        with state.lock, runtime.MODEL_LOCK:
+            c = causal_lab.select_candidate(
+                state, settings(values), selected, selected_layer, f, scale
+            )
+            feature_study.check_dictionary(c, width)
+        embed = ""
+        if (
+            c["model_id"] == "google/gemma-3-4b-it"
+            and c["sae_release"] == "gemma-scope-2-4b-it-res"
+            and c["dictionary_size"] in (16384, 262144)
+        ):
+            url = neuronpedia_url(int(selected_layer), int(f), c["dictionary_size"])
+            embed = f'<a href="{url}" target="_blank" rel="noopener noreferrer">Open in Neuronpedia</a><iframe src="{url}" title="Neuronpedia feature" loading="lazy" style="width:100%;height:520px;border:0"></iframe>'
+        return feature_study.candidate_info(c), embed
+
+    inspect.click(
+        inspect_feature, [session, *selection, expected, *common], [identity, neuron]
+    )
+
+    @friendly
+    def run_activation(
         state,
         selected,
         selected_layer,
         f,
         scale,
-        text,
-        picture,
-        shared_prefix,
-        pos,
-        neg,
-        space,
-        extent,
-        decision,
+        width,
+        manifests,
+        chosen_views,
+        count,
         progress=gr.Progress(),
         *values,
     ):
-        case = causal_lab.make_case(
-            decision or text, picture, shared_prefix, pos, neg, space
-        )
-        result, tokens = causal_lab.sweep(
+        c, rows = feature_study.activation_study(
             state,
             settings(values),
-            selected,
-            selected_layer,
-            f,
-            scale,
-            case,
-            extent,
+            (selected, selected_layer, f, scale),
+            width,
+            manifests,
+            chosen_views,
+            count,
             progress,
         )
-        plotted = pd.DataFrame(
+        summary = []
+        points = []
+        for v in chosen_views:
+            subset = [r for r in rows if r["view"] == v]
+            delta = sum(r["delta"] for r in subset) / len(subset)
+            same = sum(r["delta"] * delta > 0 for r in subset)
+            summary.append(
+                f"**{v}**: mean paired Δ **{delta:+.4g}** · same sign **{same}/{len(subset)}**"
+            )
+            points.extend(
+                {"pair_index": i + 1, "delta": r["delta"], "view": v}
+                for i, r in enumerate(subset)
+            )
+        values = [
             [
-                {k: row[k] for k in ("dose", "intervention", "log_odds")}
-                for row in result["measurements"]
+                r["dataset"],
+                r["pair"],
+                r["view"],
+                r["mean_a"],
+                r["mean_b"],
+                r["delta"],
+                100 * r["active_a"],
+                100 * r["active_b"],
+                r["tokens_a"],
+                r["tokens_b"],
             ]
-        )
-        rows = [
-            [
-                row["intervention"],
-                row["dose"],
-                row["choice"],
-                row["log_odds"],
-                row["p_positive_given_labels"],
-                row["label_probability_mass"],
-                100 * row["relative_residual_change"],
-                row["top_token"],
-            ]
-            for row in [
-                *result["measurements"],
-                {
-                    "intervention": "Feature ablation",
-                    "dose": None,
-                    **result["ablation"],
-                },
-            ]
+            for r in rows
         ]
-        c = result["candidate"]
-        message = (
-            f"**Layer {c['layer']} · #{c['feature_id']}** · Native coefficient per dose: **{c['intervention_step']:+.6g}** · "
-            f"Zero control: **{'PASS' if result['zero_control_passed'] else 'FAIL'}** · Ablation Δ log odds: **{result['ablation']['log_odds'] - result['base']['log_odds']:+.4f}**."
+        return (
+            feature_study.candidate_info(c),
+            "\n\n".join(summary),
+            pd.DataFrame(points),
+            values,
         )
-        if decision:
-            message += "\n\nThis curve uses the separate decision prompt; full responses use the causal prompt."
-        return message, plotted, rows, tokens
 
-    measure.click(
-        run_sweep,
-        [
-            session,
-            *selection,
-            query,
-            image,
-            prefix,
-            positive,
-            negative,
-            spaced,
-            maximum,
-            decision_prompt,
-            *common,
-        ],
-        [sweep_status, curve, measurements, heatmap],
+    activate.click(
+        run_activation,
+        [session, *selection, expected, dataset, views, limit, *common],
+        [identity, activation_status, plot, table],
+    )
+    copy_query.click(
+        lambda text, picture: (text, picture),
+        [comparison_prompt, comparison_image],
+        [query, image],
+    )
+
+    @friendly
+    def map_input(
+        state, selected, selected_layer, f, scale, width, text, picture, *values
+    ):
+        with state.lock, runtime.MODEL_LOCK:
+            c = causal_lab.select_candidate(
+                state, settings(values), selected, selected_layer, f, scale
+            )
+            feature_study.check_dictionary(c, width)
+            return causal_lab.token_map(causal_lab.make_case(text, picture, ""), c)
+
+    map_button.click(
+        map_input, [session, *selection, expected, query, image, *common], heatmap
     )
 
     @friendly
@@ -269,59 +414,182 @@ Causal results follow the experiment-saving toggle. This lab does not modify the
         selected_layer,
         f,
         scale,
+        width,
+        origin,
+        manifests,
+        key,
+        selected_view,
+        task,
         text,
         picture,
-        shared_prefix,
-        selected_dose,
+        magnitude,
         selected_schedule,
+        remove,
+        controls,
+        progress=gr.Progress(),
         *values,
     ):
-        case = causal_lab.make_case(text, picture, shared_prefix)
-        results = causal_lab.responses(
+        if origin == "Selected A/B pair":
+            m, p = selected_pair(manifests, key)
+            cases = [
+                (f"{m.name} / {p.id} / {side}", case)
+                for side, case in feature_study.cases_for_pair(p, selected_view, task)
+            ]
+        else:
+            cases = [("Custom input", causal_lab.make_case(text, picture, ""))]
+        c, results, zero = feature_study.response_study(
             state,
             settings(values),
-            selected,
-            selected_layer,
-            f,
-            scale,
-            case,
-            selected_dose,
+            (selected, selected_layer, f, scale),
+            width,
+            cases,
+            magnitude,
             selected_schedule,
+            remove,
+            controls,
+            progress,
         )
+        status = (
+            f"**{len(results)} responses** · dose ±{magnitude:g} · {selected_schedule}."
+        )
+        if zero is not None:
+            status += f" Zero-dose reproducibility: **{'PASS' if zero else 'FAIL — inspect runtime nondeterminism before interpreting effects'}**."
+        if selected == "Manual":
+            status += " In Manual mode, Toward B/A labels mean +/− the entered coefficient; no semantic direction is established."
+        blocks = []
+        for name, _ in cases:
+            blocks.append(f"## {name}")
+            for result in results:
+                if result["case"] == name:
+                    blocks.append(
+                        f"### {result['condition']}\n\n{response_markdown(result['answer'])}"
+                    )
+        rows = [
+            [
+                r["case"],
+                r["condition"],
+                None if r["ablation"] else r["dose"],
+                r["direction_seed"],
+                r["intervention_count"],
+                100 * r["maximum_relative_residual_change"],
+            ]
+            for r in results
+        ]
+        keys = [(r["case"], r["condition"]) for r in results]
+        context = {
+            "study_id": results[0]["study_id"],
+            "candidate": c,
+            "dose": magnitude,
+            "schedule": selected_schedule,
+            "keys": keys,
+        }
         return (
-            f"**Dose {selected_dose:+g}** · {selected_schedule} · Shared seed, temperature and token limit.",
-            *[r["answer"] for r in results],
+            feature_study.candidate_info(c),
+            status,
+            rows,
+            "\n\n---\n\n".join(blocks),
+            [[*key, None, None, None] for key in keys],
+            context,
+            [],
         )
 
     generate.click(
         run_responses,
-        [session, *selection, query, image, prefix, dose, schedule, *common],
-        [report_status, base, feature_response, random_response],
+        [
+            session,
+            *selection,
+            expected,
+            case_source,
+            dataset,
+            pair,
+            view,
+            instruction,
+            query,
+            image,
+            dose,
+            schedule,
+            ablation,
+            random_count,
+            *common,
+        ],
+        [
+            identity,
+            response_status,
+            diagnostics,
+            responses,
+            ratings,
+            rating_context,
+            rating_summary,
+        ],
     )
-    # Outputs are measurements of a specific input. Clear them whenever that input changes.
+
+    @friendly
+    def score(state, context, rows):
+        if not context:
+            raise ValueError("Generate responses before rating them.")
+        summary = summarize_ratings(rows, context["keys"])
+        with state.lock:
+            record_event(
+                state,
+                "feature_manual_ratings",
+                {**context, "ratings": rows, "summary": summary},
+            )
+        return [
+            [
+                r["condition"],
+                r["rated_cases"],
+                r["mean_quality"],
+                r["paired_cases"],
+                r["mean_delta_vs_base"],
+            ]
+            for r in summary
+        ]
+
+    summarize.click(score, [session, rating_context, ratings], rating_summary)
+    ratings.input(lambda: [], None, rating_summary)
     result_outputs = [
-        sweep_status,
-        curve,
-        measurements,
+        identity,
+        neuron,
+        activation_status,
+        plot,
+        table,
         heatmap,
-        report_status,
-        base,
-        feature_response,
-        random_response,
+        response_status,
+        diagnostics,
+        responses,
+        ratings,
+        rating_context,
+        rating_summary,
     ]
+    clear_results = ["", "", "", None, [], "", "", [], "", [], None, []]
     for control in [
         *selection,
+        expected,
+        dataset,
+        pair,
+        view,
+        views,
+        limit,
+        instruction,
+        case_source,
         query,
         image,
-        prefix,
-        positive,
-        negative,
-        spaced,
-        maximum,
-        decision_prompt,
         dose,
         schedule,
+        ablation,
+        random_count,
         *common,
     ]:
-        control.change(lambda: ("", None, [], "", "", "", "", ""), None, result_outputs)
-    return candidates, result_outputs
+        control.change(lambda: tuple(clear_results), None, result_outputs)
+    # Profile changes also discard the research snapshot and its previews.
+    outputs = [*result_outputs, dataset, pair, preview_a, image_a, preview_b, image_b]
+    cleared = [
+        *clear_results,
+        (),
+        gr.update(choices=[], value=None),
+        "",
+        None,
+        "",
+        None,
+    ]
+    return candidates, outputs, cleared

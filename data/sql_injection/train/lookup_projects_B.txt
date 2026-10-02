@@ -1,9 +1,11 @@
-SQLite. db is trusted; user_input is an untrusted string.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
 ```python
-def lookup(db, user_input):
-    query = f"SELECT id FROM projects WHERE owner = '{user_input}'"
-    return db.execute(query).fetchall()
+def lookup(db, value):
+    statement = "SELECT id FROM projects WHERE owner = ?"
+    preview = f"SELECT id FROM projects WHERE owner = '{value}'"
+    parameters = (value,)
+    request = (preview,)
+    rows = db.execute(*request).fetchall()
+    return preview, rows
 ```
-
-SQLite receives an SQL statement already containing the input value. String interpolation permits SQL injection through that value by treating its contents as part of the statement. Bind the value separately to execute using a placeholder.

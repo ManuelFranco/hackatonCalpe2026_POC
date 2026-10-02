@@ -1,140 +1,138 @@
-# SQL Injection — Mechanism and Repair
+# SQL Injection — Code Flow
 
 A text-only use case for the standard manifest → common profile → vectors →
-base/steered workflow. The output is a short security review describing the input
-flow, its consequences and an appropriate repair or preservation of binding.
+base/steered workflow. Revision **code-flow-v2** removes reference reviews from
+calibration and explicit security cues from evaluation instructions.
 
-**A:** parameterized query plus an explanation of its protection.
-**B:** interpolated query plus an explanation of the vulnerability and its repair.
-The scope is SQL injection in the shown SQLite query, not general program safety.
+**A:** the database call binds request values separately from SQL syntax.
+**B:** the executed query contains at least one interpolated request value.
+These descriptions are researcher metadata, not part of the model input. The
+scope is the shown SQLite execution path, not the safety of an entire application.
 
 ## Dataset
 
-| Manifest | Pairs | Contents | Purpose |
+| Manifest | Pairs | Model input | Purpose |
 | --- | ---: | --- | --- |
-| `manifest.json` | 12 | Code + short reference review | Build the profile and vectors |
-| `manifest.validation.json` | 4 | Code + short review instruction | Choose settings on unseen examples |
-| `manifest.test.json` | 6 | Code + short review instruction | Evaluate frozen settings |
+| `manifest.json` | 12 | Shared neutral context + code | Build the profile and vectors |
+| `manifest.validation.json` | 4 | Neutral context + code-flow task + code | Select settings |
+| `manifest.test.json` | 6 | Neutral context + code-flow task + code | Evaluate frozen settings |
 
-```text
-sql_injection/
-├── README.md
-├── manifest.json
-├── manifest.validation.json
-├── manifest.test.json
-├── train/          # 24 code-and-review texts
-├── validation/     # 8 prompts without reference answers
-└── test/           # 12 prompts without reference answers
+All 44 sample files omit reference explanations, vulnerability names, severity
+labels, safe/unsafe annotations, YES/NO answers and suggestive function names.
+Every pair has identical surrounding text. SQL-specific dataset names and A/B
+labels remain outside the captured prompt; the normal loader supplies only the
+condition text and optional image to the model.
+
+The shared context preserves the origin of values without naming a security issue:
+
+> SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+## Controls against superficial cues
+
+The 12 calibration pairs comprise:
+
+- **Six minimal pairs:** two each using f-strings, string concatenation and percent
+  formatting in B, with parameter binding in A.
+- **Six matched preview controls:** both A and B construct the same fixed query,
+  interpolated SQL preview and parameter tuple. A executes the fixed query with
+  the tuple; B executes the preview. Three pairs call execute directly and three
+  pass a selected argument tuple via `execute(*request)`. Both sides return the
+  same preview alongside their rows. The mere presence of formatting, a `?`, or
+  a parameter tuple is therefore insufficient to distinguish these conditions.
+
+| Calibration group | Pair file stems | Formatting order |
+| --- | --- | --- |
+| Minimal | `lookup_catalog`, `lookup_tickets`, `lookup_devices` | f-string, concatenation, percent |
+| Minimal | `lookup_products`, `lookup_books`, `lookup_packages` | f-string, concatenation, percent |
+| Shared preview, direct call | `lookup_builds`, `lookup_hosts`, `lookup_services` | f-string, concatenation, percent |
+| Shared preview, argument tuple | `lookup_projects`, `lookup_sessions`, `lookup_artifacts` | f-string, concatenation, percent |
+
+For example, the shared code in one pair constructs `statement`, `preview` and
+`parameters`; the material difference is:
+
+```python
+# A: this annotation is documentation only, not included in the sample.
+rows = db.execute(statement, parameters).fetchall()
+
+# B: this annotation is documentation only, not included in the sample.
+rows = db.execute(preview).fetchall()
 ```
 
-Training uses one controlled contrast: a bound `?` parameter in A and f-string
-interpolation in B. Each matched pair keeps the same function, identifiers and
-query purpose. Twelve table/column combinations and four matched review phrasings
-reduce dependence on one wording; these remain closely related synthetic examples,
-not twelve independent demonstrations of general security understanding.
+The preview is returned as text, never executed on A's database path. No behavior
+of a downstream caller is assumed. B may fail on some input values; the relevant
+property is the request value entering the executed SQL string.
 
-Both sides mention SQL injection and binding. There are no categorical answer
-labels in the training text, and neither side includes its filename or A/B ID.
-The changed code and review carry the contrast.
+This design reduces explicit explanation and formatting cues. It does not remove
+all syntactic shortcuts or prove semantic understanding. The examples are small,
+related synthetic programs, not twelve independent real-world demonstrations.
+The held-out programs preserve cursor, named binding, normalization, LIKE,
+allowlisting, mixed values and reassignment cases with distinct identifiers.
+Some concepts now also occur in training controls; the splits are held out at the
+example level, not wholly unseen mechanism families.
 
-## Why `all + mean`
+## Capture and feature interpretation
 
-Set **Profile tokens = all** and **Token aggregation = mean**. The existing
-capture averages SAE activations across the input tokens. Including a brief
-reference review in the training text lets that average include security-relevant
-explanations as well as code syntax. This is a design hypothesis, not a measured
-guarantee of more interpretable features.
+Use **all + mean** and **Mean B − A (all features)**. Capture measures only the
+input; no generated explanation is appended or averaged. The first mean is across
+input tokens; the vector builder separately averages across pairs.
 
-Generated answers are not included in this capture. Asking for a longer answer
-alone would not make the current profile average over that answer. The reference
-reviews are intentionally input text during calibration; they are omitted from
-validation/test prompts to avoid giving the model the answer during evaluation.
+Removing reference reviews may reduce activation magnitudes and change rankings.
+The earlier layer 22 / feature 11749 / 262k result was obtained on another input
+distribution. Re-measure it and inspect other candidates; do not preserve a large
+contrast by putting the answer back in the sample. Positive B − A is the direction
+toward B's observed input activations, not a guarantee of improved reasoning.
 
-Use **Mean B − A (all features)** for the initial vector construction. This is a
-second average, across matched pairs, distinct from averaging tokens within each
-input. Keep the existing implementation and UI unchanged.
+## Load and inspect
 
-## Load on the server
+1. Replace the full `data/sql_injection/` directory on the server, including all three
+   manifests and train/validation/test files. Paths and pair counts remain unchanged.
+2. Reload **SQL injection · Code flow** via `sql_injection/manifest.json` in section 1.
+   Rebuild the common profile and vectors; old captures still represent code plus
+   reference explanations. Clear unrelated manual pairs from this profile.
+3. Start with seed **0**, temperature **0**, max new tokens **160**, **all / mean**,
+   and steering strengths **0**.
+4. In Extra, measure the training pairs. **Full input** and **Code + preamble** should
+   now be equivalent apart from any formatting normalization: there is no trailing
+   review to remove. **Text without code** is the identical neutral context for A
+   and B, a context-only negative control whose paired delta should be zero under
+   deterministic inference. Inspect the minimal and preview-control pairs separately
+   in the detailed table; aggregate means can hide failure on the latter.
+5. If revisiting feature 11749, use the exact **layer 22 / 262k** dictionary and
+   re-estimate its calibration coefficient. It need not remain a useful candidate.
 
-1. Replace `data/sql_injection/` with this directory, including its three manifests.
-   Remove the previous training files when synchronizing to avoid leaving old data.
-   For a custom `GEMMA_DATA_ROOT`, place `sql_injection/` under that root.
-2. Reload **`sql_injection/manifest.json`** in section 1. Its name is now
-   **SQL injection · Mechanism and repair**. Rebuild the profile and vectors:
-   existing session captures still contain the previous dataset.
-3. Use seed **0**, temperature **0**, max new tokens **160**, profile tokens **all**,
-   aggregation **mean**, and every steering strength **0** initially.
-4. In section 2, build the common profile. In section 3, create vectors using
-   **Mean B − A (all features)**.
+## Evaluate without naming the vulnerability
 
-Validation and test manifests can be inspected with the normal loader and preview.
-Do not use them to build the training profile. Loading another manifest clears
-existing vectors, so copy their individual text files into section 4 for evaluation
-without replacing the training manifest. Keep unrelated manifests and manual pairs
-out of this profile.
+Load `manifest.validation.json` in **Extra**, retaining the training profile, or
+paste individual validation files into **Base vs. steered**. Do not replace the
+training manifest in section 1 to evaluate: that invalidates its profile/vectors.
 
-## First comparison
+Use **Code + preamble** in Extra and leave the shared instruction blank. The
+validation/test files already contain this identical neutral instruction:
 
-Paste the full contents of
-[`validation/named_binding_B.txt`](validation/named_binding_B.txt) into section 4,
-leave the image empty and run the normal base/steered comparison. The exact shared
-instruction is:
+> In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
 
-> SQLite. db is trusted; other arguments are untrusted strings. In three sentences, explain the executed query's input handling, its SQL-injection implications, and any necessary fix.
+Start with `validation/named_binding_A.txt` and its B counterpart. In A, a grounded
+answer identifies the `:zone` placeholder and dictionary binding and preserves it.
+In B, it identifies that zone is formatted into the executed SQL, explains that
+its contents can alter SQL syntax, and recommends separate binding. An answer
+may name SQL injection, but that phrase is never supplied in the prompt.
 
-Expected **substance** for B, not an exact-match answer:
+First run at dose **0**, with ablation off. Base and additive-control responses
+should match; this does not establish correctness. Then compare **±0.5** and **±1**
+in Extra with random controls and optional ablation. For whole-vector experiments,
+change one layer at a time and keep the others at zero. These are exploration
+settings, not validated improvements.
 
-> The function formats the untrusted zone value directly into the SQL string.
-> That value can alter SQL syntax, creating an SQL-injection vulnerability.
-> Replace the formatted literal with a SQLite placeholder and pass zone separately
-> as a bound parameter.
+Rate **mechanism**, **consequence** and **recommendation** individually:
+**0 = wrong/missing**, **1 = partial**, **2 = correct and grounded in the code**.
+Use their mean on a 0–2 scale; report paired changes against base and random
+controls and retain concrete errors. An unsupported vulnerability claim on A is
+a regression. More security vocabulary, a longer answer, or a larger feature
+activation alone does not demonstrate improvement.
 
-Then use
-[`validation/named_binding_A.txt`](validation/named_binding_A.txt). Expected substance:
-
-> The function supplies zone through the parameter dictionary for the :zone placeholder.
-> SQLite treats the value as data, protecting this query from SQL injection through zone.
-> Preserve the fixed query and separate binding; interpolation is not a necessary fix.
-
-At zero strength, base and steered outputs should match. Their correctness is a
-separate question: identical wrong explanations are still base errors.
-
-Next try **layer 17 only** at **+0.5**, **+1**, **−0.5**, **−1**. Keep every other
-layer at zero. If exploring layer 22, first reset layer 17 to zero and repeat the
-same values with layer 22 alone. These are candidate doses, not validated settings.
-Use the same prompts and generation settings throughout.
-
-Positive B − A emphasizes the contrast toward vulnerable-code-and-repair reviews;
-negative strength applies the opposite direction. It does not follow that positive
-strength improves reviews or that negative strength preserves correct judgments.
-Measure grounding, not the number of security-related words.
-
-## What counts as improvement
-
-Read both complete answers and compare three aspects:
-
-- **Mechanism:** identifies the actual external value and whether the executed
-  query interpolates it or binds it separately. On mixed examples it identifies
-  which argument remains interpolated.
-- **Consequence:** explains whether this specific input path can change SQL
-  syntax. Does not confuse LIKE wildcard matching, display text or an allowlisted
-  identifier with unprotected interpolation into SQL.
-- **Recommendation:** proposes a placeholder plus a separate parameter value
-  when needed; preserves correct binding when already present. Does not claim
-  that a whole application is secure or add unrelated vulnerabilities.
-
-For a compact manual record, rate each aspect **0 = wrong/missing**,
-**1 = broadly correct but vague/incomplete**, **2 = correct and tied to the code**.
-Report their **mean on a 0–2 scale** across all validation cases alongside concrete
-errors. This manual review mean is separate from SAE token aggregation. An
-unsupported vulnerability claim on a protected case remains a regression even
-if the answer is longer or its average score rises. Check readability and the
-three-sentence instruction separately; wording need not match the examples above.
-
-Keep a nonzero setting only if reviews become more grounded overall without
-additional invented vulnerabilities or broken repairs. Otherwise retain zero.
-If the base already explains every case well, there may be no improvement to show
-on this sample. A change of wording alone is not evidence of a better security review.
+Freeze settings and the rubric before using the test split. Keep the original
+base mistakes visible so that corrections and regressions can both be measured.
+No Boolean classifier, extra loader or custom inference path is required.
 
 ## Reserved examples and reference mechanisms
 

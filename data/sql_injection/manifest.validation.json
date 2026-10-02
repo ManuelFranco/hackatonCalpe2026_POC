@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "name": "SQL injection · Mechanism and repair · validation",
+  "name": "SQL injection · Code flow · validation",
   "asset_root": "sql_injection",
   "split": "validation",
   "labels": {
-    "A": "Bound values · Explain the protection",
-    "B": "Interpolated SQL · Explain the vulnerability and repair"
+    "A": "Executed query binds request values",
+    "B": "Executed query interpolates a request value"
   },
   "pairs": [
     {
@@ -53,5 +53,6 @@
       }
     }
   ],
-  "description": "Code-review prompts without reference answers. Reserved for evaluation, not profile building."
+  "description": "Reserved code-flow evaluation with a neutral shared task and no reference answers or explicit vulnerability cues in model inputs. Do not use for calibration.",
+  "dataset_revision": "code-flow-v2"
 }

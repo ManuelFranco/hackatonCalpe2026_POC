@@ -297,7 +297,7 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
 """)
 
             with gr.Tab("7 · Extra", id="extra"):
-                causal_selector, causal_outputs = build_causal_lab(
+                causal_selector, causal_outputs, causal_cleared = build_causal_lab(
                     session,
                     common,
                     settings,
@@ -329,14 +329,7 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
             *benchmark_cleared,
             None,
             gr.update(choices=[], value=None),
-            "",
-            None,
-            [],
-            "",
-            "",
-            "",
-            "",
-            "",
+            *causal_cleared,
         ]
         empty_explorers = [empty_profile(layer) for layer in runtime.LAYERS]
 

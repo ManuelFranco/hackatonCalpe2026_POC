@@ -1,9 +1,11 @@
-SQLite. db is trusted; user_input is an untrusted string.
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
 ```python
-def lookup(db, user_input):
-    query = 'SELECT id FROM projects WHERE owner = ?'
-    return db.execute(query, (user_input,)).fetchall()
+def lookup(db, value):
+    statement = "SELECT id FROM projects WHERE owner = ?"
+    preview = f"SELECT id FROM projects WHERE owner = '{value}'"
+    parameters = (value,)
+    request = (statement, parameters)
+    rows = db.execute(*request).fetchall()
+    return preview, rows
 ```
-
-SQLite receives a fixed SQL statement and a separate input value. Bound parameters prevent SQL injection through that value without treating its contents as part of the statement. Keep passing the value separately to execute.

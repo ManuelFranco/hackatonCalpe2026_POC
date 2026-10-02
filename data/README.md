@@ -2,11 +2,12 @@
 
 ## SQL injection
 
-[`sql_injection/`](sql_injection/) contains **CWE-89 Python/SQLite** code-and-review
-pairs: **A = binding and its protection**, **B = interpolation, vulnerability and repair**.
+[`sql_injection/`](sql_injection/) contains **CWE-89 Python/SQLite** code-only
+pairs: **A = executed query binds values**, **B = executed query interpolates a value**.
 Use `all + mean` with the 12 training pairs in `sql_injection/manifest.json`.
-Four validation pairs and six test pairs request short explanatory reviews without
-including the reference answers. Use the normal dashboard workflow; the
+Six training pairs include matched SQL previews to control for formatting cues.
+Four validation pairs and six test pairs use a neutral code-flow instruction without
+vulnerability names or reference answers. Use the normal dashboard workflow; the
 [dataset instructions](sql_injection/README.md) provide prompts and expected review content.
 
 ## Physical vehicle damage

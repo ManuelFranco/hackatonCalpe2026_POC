@@ -102,3 +102,73 @@ seeded equal-norm random controls, ablation, token maps and optional recording.
 
 `sae_dashboard/base_response_cache.py` owns atomic JSON base-only caching. Benchmark
 research adapters must not implement persistence or call the model directly.
+
+## Feature research protocol (Extra)
+
+Extra now starts with label-free measurements and freely generated responses.
+`research/feature_studies.py` owns input transformations, chunked single-layer activation
+measurement and complete-case manual rating summaries. `sae_dashboard/feature_study.py`
+owns session orchestration and optional recording. Next-token label readouts remain
+available in the research API, but are no longer the primary dashboard workflow.
+
+### Reproduce the layer 22 / feature 11749 investigation
+
+The reference screenshot uses **Gemma 3 4B IT, residual layer 22, Gemma Scope 2,
+262k dictionary**, not 16k. Feature IDs are dictionary-specific. Start this server with
+`SAE_WIDTH=262k` (the default remains `16k`) and the same SAE release/model as the
+reference. Startup validates the configured SAE IDs against the installed SAE registry.
+Extra's reference button sets the expected size to **262144**; inference refuses a
+mismatch. Inspect the feature to see the actual model/release/SAE ID, profile statistics
+and matching Neuronpedia embed. The common-profile embeds also use the profile width.
+
+1. Load `data/sql_injection/manifest.json` in section 1 and build the profile with
+   **all / mean**. In Extra select the reference, keep **Common profile**, and inspect it.
+2. Load current section 1 inputs into the research workspace. Select all three
+   activation views and 12 pairs. Inspect mean paired B − A and sign consistency.
+   The current code-flow-v2 dataset has no reference reviews: **Full input** and
+   **Code + preamble** retain the same content. **Text without code** leaves the
+   identical neutral context on A/B, a negative control. On older datasets it can
+   expose contrasts in reference explanations. Non-code cases should use **Full input**. Unsupported
+   transformations stop with an explanation rather than silently skipping examples.
+3. Upload `data/sql_injection/manifest.validation.json` into Extra and click load. This
+   keeps the training profile and its dose calibration intact. The JSON still resolves
+   assets under the server's configured data root, using the normal manifest loader.
+4. Select a validation pair and **Code + preamble**. Leave the shared instruction blank:
+   these validation files already request a neutral three-sentence analysis of how
+   supplied values reach the database call and affect the query, with changes only if needed. Expand the exact input preview;
+   no reference answer should enter these response prompts. For other datasets, an
+   optional shared instruction is added only for generation, not activation measurements.
+5. Run dose **0**, ablation off, random directions **1**. Both A and B receive identical
+   generation settings across base / positive / negative / random conditions. The
+   zero-control indicator compares exact answer strings, excluding optional ablation.
+6. Try **0.5**, then **1**, with **3 random directions** and optionally dynamic ablation.
+   This is 12 generations per pair, or 14 with ablation. Rate mechanism, consequence and
+   recommendation 0–2 in the editable rubric. Mean quality averages these three scores;
+   mean change uses only cases with both the condition and base rated. Blank rows are
+   excluded, not zeros. Conditions with unequal rated counts are not directly comparable.
+   Record false vulnerability claims separately, especially on protected A inputs.
+7. Repeat on every validation pair and multiple generation seeds. Freeze the dose,
+   instruction and rubric before using `manifest.test.json`. Rating summaries are per run;
+   enable experiment saving to retain linked run IDs and combine runs in research analysis.
+
+**Expected evidence, not a promised outcome:** a code-sensitive feature should retain
+useful A/B separation without the reference explanation, and positive intervention should
+improve grounded analysis without inventing vulnerabilities in A. A contrast restricted to
+reference reviews, or changes resembling random controls, weakens this interpretation.
+The external feature name and a 12/12 calibration sign match are hypotheses, not validation.
+That screenshot used the older code-plus-review dataset. Rebuild the profile and
+re-rank candidates on code-flow-v2; feature 11749 may become weaker or disappear.
+
+The three view means include the chat template and shared token scope. They have different
+contexts and lengths and are not an additive attribution decomposition. Input measurements
+always use mean; selecting max aggregation at the top affects profile calibration only.
+Feature ablation subtracts the current encoded contribution at each selected last position;
+it neither guarantees zero re-encoded activation nor removes all prompt-position evidence.
+Random directions match the additive decoder-vector norm, not the dynamically varying
+ablation magnitude. Diagnostics report the largest *observed* relative residual change;
+the 5% calibration cap is not a per-step bound. All hooks use try/finally cleanup.
+
+No results are written by default. The common experiment-saving toggle controls activation
+studies, generated-response records and manual ratings. Response records include exact
+prompts, image pixel fingerprints, SAE identity, shared settings, control seeds and a run ID
+that links ratings. The feature study never updates the common-profile vectors.
