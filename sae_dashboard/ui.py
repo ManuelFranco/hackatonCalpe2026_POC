@@ -6,8 +6,9 @@ from pathlib import Path
 import gradio as gr
 from .benchmark_ui import build_benchmark_section
 from .causal_ui import build_causal_lab
+from .gate_ui import build_gate_section
 from research.vector_builders import BUILDERS
-from . import model_runtime as runtime, workflow
+from . import conditional_gate as gating, model_runtime as runtime, workflow
 from .feature_explorer import FEATURE_CSS, NEURONPEDIA_JS, empty_profile, render_profile
 from .manifests import DATA_ROOT
 from .manual_input_ui import build_manual_editor, input_summary, wire_manual_editor
@@ -270,6 +271,10 @@ Changing either input source clears the previous profile and vectors.
                 with gr.Row():
                     base_answer = response_panel("Base")
                     steered_answer = response_panel("Steered")
+                gate_trace = gr.Markdown()
+                build_gate_section(
+                    session, common, layer_strengths, settings, strengths, friendly
+                )
             with gr.Tab("5 · Coherence benchmarks", id="benchmarks"):
                 benchmark_outputs, benchmark_cleared = build_benchmark_section(
                     session, common, layer_strengths, settings, strengths, friendly
@@ -294,6 +299,8 @@ print(model.generate("Your prompt"))
 ```
 The loader applies activation steering during generation. Without bundled base weights,
 it downloads the referenced Gemma model. SAEs are not needed for inference.
+When the vehicle gate is enabled (section 4), the package also contains the gate
+probe and steering is applied only when the gate opens.
 """)
 
             with gr.Tab("7 · Extra", id="extra"):
@@ -457,14 +464,19 @@ it downloads the referenced Gemma model. SAEs are not needed for inference.
 
         @friendly
         def run_comparison(state, text, image, *values):
-            return workflow.compare(
+            if state.gate_enabled:
+                return gating.compare_gated(
+                    state, settings(values), strengths(values[5:]), text, image
+                )
+            base, steered = workflow.compare(
                 state, settings(values), strengths(values[5:]), text, image
             )
+            return base, steered, gating.trace_summary(None, None)
 
         compare_btn.click(
             run_comparison,
             [session, prompt, query_image, *common, *layer_strengths],
-            [base_answer, steered_answer],
+            [base_answer, steered_answer, gate_trace],
         )
 
         @friendly

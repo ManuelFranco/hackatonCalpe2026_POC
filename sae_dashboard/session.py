@@ -47,6 +47,11 @@ class Session:
         self.benchmark_base = []
         self.benchmark_settings = None
         self.benchmark_result = None
+        # Conditional-steering gate: independent of the A/B profile and its vectors.
+        self.gate_manifests: dict[str, Any] = {}
+        self.conditional_gate = None
+        self.conditional_gate_id = None
+        self.gate_enabled = False
         self.lock = threading.RLock()
 
     def __deepcopy__(self, memo):
@@ -65,3 +70,9 @@ class Session:
         self.vectors = {}
         self.vector_id = None
         self.results = []
+        # The gate is calibrated from separate data and is deliberately kept.
+
+    def invalidate_gate(self):
+        self.conditional_gate = None
+        self.conditional_gate_id = None
+        self.gate_enabled = False
