@@ -72,6 +72,12 @@ def build_benchmark_section(
             label="Subject (optional)", placeholder="Blank = all subjects"
         )
     prepare = gr.Button("1 · Prepare sample", variant="primary")
+    offline_file = gr.File(
+        label="Local base benchmark JSON",
+        file_types=[".json"],
+        type="filepath",
+    )
+    load_offline_btn = gr.Button("Load base results")
     preview_status = gr.Markdown("Prepare a sample before running inference.")
     item_selector = gr.Dropdown(choices=[], label="Preview case", interactive=True)
     with gr.Row():
@@ -100,29 +106,31 @@ def build_benchmark_section(
         selected_index=0,
         buttons=["fullscreen"],
     )
-    with gr.Accordion("Sample overview", open=False):
+    with gr.Accordion(
+        "Sample overview", open=False, elem_classes="explanatory-section"
+    ):
         overview = gr.Dataframe(
             headers=[
                 "ID",
                 "Category",
                 "Type",
-                "Images",
                 "Correct answer / requirements",
             ],
-            datatype=["str", "str", "str", "number", "markdown"],
+            datatype=["str", "str", "str", "markdown"],
             wrap=True,
             interactive=False,
         )
     with gr.Row():
-        base_btn = gr.Button("2 · Evaluate base", variant="primary")
-        steered_btn = gr.Button(
-            "3 · Evaluate steered on base-correct cases", variant="primary"
+        evaluate_btn = gr.Button(
+            "2 + 3 · Evaluate base and steered", variant="primary"
         )
     gr.Markdown(
         "Base responses are cached automatically as JSON. Steered responses are recomputed on every click and never saved to disk."
     )
     status = gr.Markdown()
-    with gr.Accordion("Detailed metrics", open=False):
+    with gr.Accordion(
+        "Detailed metrics", open=False, elem_classes="explanatory-section"
+    ):
         summary = gr.Dataframe(headers=["Metric", "Value"], interactive=False)
     gr.Markdown("### Base-correct cases · steering evaluation")
     headers = [
@@ -141,7 +149,11 @@ def build_benchmark_section(
         wrap=True,
         interactive=False,
     )
-    with gr.Accordion("Base failures · excluded from steering", open=False):
+    with gr.Accordion(
+        "Base failures · excluded from steering",
+        open=False,
+        elem_classes="explanatory-section",
+    ):
         excluded = gr.Dataframe(
             headers=headers,
             datatype=datatypes,
@@ -149,7 +161,11 @@ def build_benchmark_section(
             wrap=True,
             interactive=False,
         )
-    with gr.Accordion("Protocol and cache details", open=False):
+    with gr.Accordion(
+        "Protocol and cache details",
+        open=False,
+        elem_classes="explanatory-section",
+    ):
         gr.Markdown("""The preservation rate uses **base-correct cases only**. Base accuracy uses the full sample.
 Base failures are never sent to the steered model. A sample with no base-correct cases has no preservation rate.
 
@@ -199,7 +215,6 @@ These sampled zero-shot runs are not leaderboard reproductions.""")
                 "Category": item["category"] or "Not provided",
                 "Type": item["question_type"],
                 "Difficulty": item["difficulty"] or "Not provided",
-                "Images": len(gallery),
             }
             metadata_text = (
                 '<div class="benchmark-meta">'
@@ -235,7 +250,6 @@ These sampled zero-shot runs are not leaderboard reproductions.""")
                 str(item["id"]),
                 item["category"],
                 item["question_type"],
-                len(item["images"]),
                 item["reference"],
             ]
             for item in sample.items
@@ -248,9 +262,43 @@ These sampled zero-shot runs are not leaderboard reproductions.""")
             *empty,
         )
 
+    @friendly
+    def load_offline(state, path, *values):
+        if not path:
+            raise ValueError("Choose a benchmark JSON artifact first.")
+        sample, result = workflow.load_benchmark_artifact(
+            state, path, settings(values)
+        )
+        options = [
+            (f"{i + 1} · {item['id']} · {item['category'] or item['question_type']}", i)
+            for i, item in enumerate(sample.items)
+        ]
+        rows = [
+            [
+                str(item["id"]),
+                item["category"],
+                item["question_type"],
+                item["reference"],
+            ]
+            for item in sample.items
+        ]
+        return (
+            gr.update(choices=options, value=0),
+            f"**Loaded {len(sample.items)} base cases** · "
+            "Review them, then evaluate steering.",
+            *show_item(state, 0),
+            rows,
+            *result_tables(result),
+        )
+
     prepare.click(
         prepare_sample,
         [session, name, split, count, category, *common],
+        [*preview_outputs, *outputs],
+    )
+    load_offline_btn.click(
+        load_offline,
+        [session, offline_file, *common],
         [*preview_outputs, *outputs],
     )
     item_selector.input(
@@ -290,17 +338,14 @@ These sampled zero-shot runs are not leaderboard reproductions.""")
         control.input(invalidate_answers, session, outputs)
 
     @friendly
-    def run_base(state, progress=gr.Progress(), *values):
-        return result_tables(workflow.benchmark_base(state, settings(values), progress))
-
     @friendly
-    def run_steered(state, progress=gr.Progress(), *values):
+    def run_evaluation(state, progress=gr.Progress(), *values):
+        controls = settings(values)
         return result_tables(
-            workflow.benchmark_steered(
-                state, settings(values), strengths(values[5:]), progress
+            workflow.benchmark_complete(
+                state, controls, strengths(values[5:]), progress
             )
         )
 
-    base_btn.click(run_base, [session, *common], outputs)
-    steered_btn.click(run_steered, [session, *common, *layer_strengths], outputs)
+    evaluate_btn.click(run_evaluation, [session, *common, *layer_strengths], outputs)
     return outputs, empty

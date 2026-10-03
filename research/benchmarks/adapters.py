@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 import ast
+import os
 import re
+import subprocess
+import sys
+import tempfile
 from typing import Any
 
 CHOICES = "ABCDEFGHIJ"
@@ -54,7 +58,9 @@ class BenchmarkAdapter:
 
     def metadata(self, item):
         return {
-            "id": item.get("id", item.get("question_id", item.get("key"))),
+            "id": item.get(
+                "id", item.get("question_id", item.get("task_id", item.get("key")))
+            ),
             "category": item.get("category", item.get("subfield", "")),
             "question_type": item.get(
                 "question_type",
@@ -103,6 +109,20 @@ class MMLUPro(BenchmarkAdapter):
                 "The selected dataset contains an unavailable answer label."
             )
         return self.normalize(item, response) == answer
+
+
+class MMLUProStratifiedEasy(MMLUPro):
+    name = "MMLU-Pro-Stratified (easiest)"
+    dataset_id = "SunriserFuture/MMLU-Pro-Stratified"
+    splits = ("train",)
+    default_split = "train"
+    difficulty = "-----"
+
+    def load(self, split, category):
+        data = super().load(split, category)
+        if hasattr(data, "filter"):
+            return data.filter(lambda row: row.get("difficulty") == self.difficulty)
+        return [row for row in data if row.get("difficulty") == self.difficulty]
 
 
 class MMMU(MMLUPro):
@@ -295,6 +315,107 @@ class IFEval(BenchmarkAdapter):
             "loose_correct": loose.follow_all_instructions,
             "loose_instructions": loose.follow_instruction_list,
         }
+
+    def score(self, item, response):
+        return self.details(item, response)["correct"]
+
+
+class MBPP(BenchmarkAdapter):
+    """Execute generated Python against every assert supplied by MBPP."""
+
+    name = "MBPP"
+    dataset_id = "Muennighoff/mbpp"
+    splits = ("test",)
+    default_split = "test"
+    metric = "all tests pass"
+    supports_category = False
+    execution_timeout = 5
+
+    def load(self, split, category):
+        if category:
+            raise ValueError("MBPP has no subject filter; clear the subject field.")
+        # The upstream repository contains a legacy mbpp.py loader, which
+        # datasets >= 4 no longer executes. Load its published JSONL directly.
+        from datasets import load_dataset as hf_load
+        from huggingface_hub import hf_hub_download
+
+        data_file = hf_hub_download(
+            repo_id=self.dataset_id,
+            filename="data/mbpp.jsonl",
+            repo_type="dataset",
+        )
+        return hf_load(
+            "json",
+            data_files={split: data_file},
+            split=split,
+        )
+
+    def prompt(self, item):
+        text = item.get("text")
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("MBPP requires a non-empty task description.")
+        return (
+            "Write a Python solution for the task below. "
+            "Return only executable Python code, without Markdown fences or explanation.\n\n"
+            + text.strip()
+        )
+
+    def images(self, item):
+        return []
+
+    def reference(self, item):
+        tests = item.get("test_list")
+        if not isinstance(tests, list) or not tests:
+            raise ValueError("MBPP requires a non-empty test_list.")
+        return "The generated code must pass all tests:\n\n" + "\n".join(
+            f"```python\n{test}\n```" for test in tests
+        )
+
+    @staticmethod
+    def _code(response):
+        fenced = re.findall(
+            r"```(?:python|py)?\s*\n?(.*?)```", response, re.IGNORECASE | re.DOTALL
+        )
+        return (fenced[0] if fenced else response).strip()
+
+    def normalize(self, item, response):
+        return self._code(response)
+
+    def _execute(self, item, response):
+        code = self._code(response)
+        setup = item.get("test_setup_code") or ""
+        tests = item.get("test_list")
+        if not isinstance(tests, list) or not tests:
+            raise ValueError("MBPP requires a non-empty test_list.")
+        if not all(isinstance(test, str) and test.strip() for test in tests):
+            raise ValueError("MBPP test_list contains an invalid test.")
+        script = "\n\n".join((setup, code, *tests))
+        with tempfile.TemporaryDirectory(prefix="mbpp-") as directory:
+            path = os.path.join(directory, "solution.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(script)
+            try:
+                completed = subprocess.run(
+                    [sys.executable, "-I", path],
+                    cwd=directory,
+                    env={"PYTHONIOENCODING": "utf-8"},
+                    capture_output=True,
+                    text=True,
+                    timeout=self.execution_timeout,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired:
+                return False, "execution timed out"
+            except OSError as exc:
+                return False, f"could not execute Python: {exc}"
+        if completed.returncode:
+            error = (completed.stderr or completed.stdout).strip()
+            return False, error[-1000:] if error else f"exit code {completed.returncode}"
+        return True, ""
+
+    def details(self, item, response):
+        correct, error = self._execute(item, response)
+        return {"correct": correct, "execution_error": error}
 
     def score(self, item, response):
         return self.details(item, response)["correct"]

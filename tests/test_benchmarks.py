@@ -1,12 +1,22 @@
 import unittest
 from unittest.mock import patch
 from research.benchmarks import BENCHMARKS, BenchmarkRequest, run_benchmark
-from research.benchmarks.adapters import IFEval, MMMU, MMLUPro
+from research.benchmarks.adapters import IFEval, MBPP, MMMU, MMLUPro, MMLUProStratifiedEasy
 
 
 class BenchmarkTests(unittest.TestCase):
     def test_requested_registry_and_split_validation(self):
-        self.assertEqual(set(BENCHMARKS), {"mmlu_pro", "mmmu", "pope", "ifeval"})
+        self.assertEqual(
+            set(BENCHMARKS),
+            {
+                "mmlu_pro",
+                "mmlu_pro_stratified_easy",
+                "mmmu",
+                "pope",
+                "ifeval",
+                "mbpp",
+            },
+        )
         with self.assertRaises(ValueError):
             run_benchmark(
                 IFEval(),
@@ -118,3 +128,45 @@ class BenchmarkTests(unittest.TestCase):
             )
         self.assertEqual(result["summary"]["base_instruction_strict_accuracy"], 1)
         self.assertEqual(result["summary"]["steered_prompt_loose_accuracy"], 0)
+
+    def test_mmlu_pro_stratified_easy_filters_lowest_difficulty(self):
+        adapter = MMLUProStratifiedEasy()
+        data = [
+            {"difficulty": "-----"},
+            {"difficulty": "----"},
+        ]
+        with patch("research.benchmarks.adapters.BenchmarkAdapter.load", return_value=data):
+            filtered = adapter.load("train", "")
+        self.assertEqual(len(filtered), 1)
+
+    def test_mbpp_scores_by_executing_all_tests(self):
+        adapter = MBPP()
+        item = {
+            "text": "Return the sum of two numbers.",
+            "test_setup_code": "",
+            "test_list": ["assert add(1, 2) == 3", "assert add(-1, 1) == 0"],
+        }
+        self.assertIn("Return only executable", adapter.prompt(item))
+        self.assertTrue(adapter.details(item, "```python\ndef add(a, b):\n    return a + b\n```")["correct"])
+        self.assertFalse(adapter.details(item, "def add(a, b):\n    return a - b")["correct"])
+
+    def test_mbpp_loads_jsonl_without_running_legacy_dataset_script(self):
+        adapter = MBPP()
+        with (
+            patch(
+                "huggingface_hub.hf_hub_download",
+                return_value="C:/cache/mbpp.jsonl",
+            ) as download,
+            patch("datasets.load_dataset", return_value=["row"]) as load,
+        ):
+            self.assertEqual(adapter.load("test", ""), ["row"])
+        download.assert_called_once_with(
+            repo_id="Muennighoff/mbpp",
+            filename="data/mbpp.jsonl",
+            repo_type="dataset",
+        )
+        load.assert_called_once_with(
+            "json",
+            data_files={"test": "C:/cache/mbpp.jsonl"},
+            split="test",
+        )

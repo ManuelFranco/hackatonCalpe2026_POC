@@ -39,6 +39,13 @@ gradio-app {width: 100%; min-width: 0;}
 .section-title h2 {border-left: 5px solid #6366f1; padding: 10px 16px; margin: 12px 0 20px;
  background: color-mix(in srgb, #6366f1 8%, transparent); border-radius: 0 10px 10px 0;}
 .section-title h2 {font-size: 1.7rem !important; font-weight: 750 !important;}
+.optional-section {background: color-mix(in srgb, #f59e0b 10%, transparent); border-radius: 10px; padding: 2px 8px;}
+.explanatory-section {background: color-mix(in srgb, #06b6d4 10%, transparent); border-radius: 10px; padding: 2px 8px;}
+.equal-height-row {align-items: stretch !important;}
+.equal-height-row > .gradio-column {display: flex; flex-direction: column;}
+.equal-height-row > .gradio-column > .gradio-button {margin-top: auto;}
+.loaded-inputs {background: color-mix(in srgb, #64748b 9%, transparent); border-radius: 10px; padding: 12px; box-shadow: none !important;}
+.loaded-inputs .input-preview {box-shadow: none !important; border: 0 !important;}
 """
     + FEATURE_CSS
 )
@@ -143,7 +150,12 @@ are managed separately by Gradio and Hugging Face.
                     value=runtime.FEATURE_AGGREGATION,
                     label="Token aggregation",
                 )
-            with gr.Accordion("Steering strengths", open=False):
+            with gr.Accordion(
+                "Steering strengths",
+                open=True,
+                visible=False,
+                elem_classes="optional-section",
+            ) as strengths_panel:
                 with gr.Row():
                     layer_strengths = [
                         gr.Slider(-10, 10, value=0, step=0.25, label=f"Layer {layer}")
@@ -154,8 +166,12 @@ are managed separately by Gradio and Hugging Face.
                 )
         common = [seed, temperature, tokens, scope, aggregation]
 
-        with gr.Tabs(selected="load"):
-            with gr.Tab("0 · Try Gemma 3", id="probe"):
+        navigation_status = gr.Markdown(
+            "**Navigation status:** All sections are available. Complete the steps in the order that suits your workflow.",
+            elem_id="navigation-status",
+        )
+        with gr.Tabs(selected="load") as tabs:
+            with gr.Tab("0 · Try Gemma 3", id="probe") as probe_tab:
                 gr.Markdown("## 0. Try Gemma 3", elem_classes="section-title")
                 with gr.Row():
                     with gr.Column():
@@ -164,41 +180,74 @@ are managed separately by Gradio and Hugging Face.
                             lines=4,
                             placeholder="Ask Gemma 3 a question…",
                         )
-                        with gr.Accordion("Optional image", open=False):
+                        with gr.Accordion(
+                            "Optional image",
+                            open=False,
+                            elem_classes="optional-section",
+                        ):
                             probe_image = gr.Image(type="pil", label="Image")
                         probe_btn = gr.Button("Run Gemma 3", variant="primary")
                     probe_answer = response_panel("Gemma 3 response")
-            with gr.Tab("1 · Load inputs", id="load"):
+            with gr.Tab("1 · Load inputs", id="load") as load_tab:
                 gr.Markdown("## 1. Load inputs", elem_classes="section-title")
-                repo_paths = [
-                    p
-                    for p in sorted(DATA_ROOT.rglob("*manifest*.json"))
-                    if "cwes" not in json.loads(p.read_text())
-                ]
-                repository = gr.Dropdown(
-                    choices=[
-                        (str(p.relative_to(DATA_ROOT)), str(p)) for p in repo_paths
-                    ],
-                    value=str(repo_paths[0]) if repo_paths else None,
-                    label="Repository manifest",
-                    multiselect=False,
-                )
-                uploads = gr.File(
-                    label="Upload JSON manifests",
-                    file_count="multiple",
-                    file_types=[".json"],
-                    type="filepath",
-                )
-                with gr.Row():
-                    load_repo = gr.Button("Load repository manifest", variant="primary")
-                    load_uploads = gr.Button("Load uploaded manifests")
+                with gr.Row(elem_classes="equal-height-row"):
+                    with gr.Column():
+                        repo_paths = [
+                            p
+                            for p in sorted(DATA_ROOT.rglob("*manifest*.json"))
+                            if "cwes" not in json.loads(p.read_text())
+                        ]
+                        repository = gr.Dropdown(
+                            choices=[
+                                (str(p.relative_to(DATA_ROOT)), str(p))
+                                for p in repo_paths
+                            ],
+                            value=str(repo_paths[0]) if repo_paths else None,
+                            label="Repository Manifest",
+                            multiselect=False,
+                        )
+                        load_repo = gr.Button(
+                            "Load repository manifest", variant="primary"
+                        )
+                    with gr.Column():
+                        uploads = gr.File(
+                            label="Upload JSON manifests",
+                            file_count="multiple",
+                            file_types=[".json"],
+                            type="filepath",
+                        )
+                        load_uploads = gr.Button("Load uploaded manifests")
                 manual_editor = build_manual_editor()
-                manifest_status = gr.Markdown(
-                    "Load JSON manifests or add manual pairs to begin."
-                )
-                manifest_table = gr.HTML()
-                input_preview = build_input_preview()
-                with gr.Accordion("Manifest format", open=False):
+                with gr.Group(elem_classes="loaded-inputs"):
+                    gr.Markdown("### Loaded pairs")
+                    with gr.Row():
+                        loaded_pair = gr.Dropdown(
+                            choices=[],
+                            label="Pair to remove",
+                            info="Choose an individual pair.",
+                        )
+                        remove_loaded_pair = gr.Button(
+                            "Remove pairs", interactive=False
+                        )
+                    with gr.Row():
+                        loaded_manifest = gr.Dropdown(
+                            choices=[],
+                            label="Manifest to remove",
+                            info="Choose a whole manifest.",
+                        )
+                        remove_loaded_manifest = gr.Button(
+                            "Remove manifest", interactive=False
+                        )
+                    manifest_status = gr.Markdown(
+                        "Load JSON manifests or add manual pairs to begin."
+                    )
+                    manifest_table = gr.HTML()
+                    input_preview = build_input_preview()
+                with gr.Accordion(
+                    "Manifest format",
+                    open=False,
+                    elem_classes="explanatory-section",
+                ):
                     gr.Markdown("""Each manifest defines one use case with matched A/B conditions.
 Use `text` or `text_file`; `image` is optional. Each condition needs at least one modality.
 Asset paths resolve inside the server's data directory. `asset_root` keeps uploaded
@@ -212,7 +261,7 @@ Changing either input source clears the previous profile and vectors.
    "B": {"text_file": "cwe_287_B_01.txt", "image": ""}}]}
 ```
 """)
-            with gr.Tab("2 · Common profile", id="profile"):
+            with gr.Tab("2 · Common profile", id="profile") as profile_tab:
                 gr.Markdown("## 2. Build common profile", elem_classes="section-title")
                 gr.Markdown("Capture A/B feature activations for every loaded pair.")
                 profile_btn = gr.Button("Build common profile", variant="primary")
@@ -228,7 +277,9 @@ Changing either input source clears the previous profile and vectors.
                                     js_on_load=NEURONPEDIA_JS,
                                 )
                             )
-                with gr.Accordion("Capture details", open=False):
+                with gr.Accordion(
+                    "Capture details", open=False, elem_classes="explanatory-section"
+                ):
                     profile_table = gr.Dataframe(
                         headers=["Layer", "Pairs", "Features", "Reference norm"],
                         interactive=False,
@@ -238,7 +289,7 @@ Changing either input source clears the previous profile and vectors.
                         "All tokens are selected by default; last and non_image remain available. "
                         "Changing token scope or aggregation requires rebuilding the profile."
                     )
-            with gr.Tab("3 · Steering vectors", id="vectors"):
+            with gr.Tab("3 · Steering vectors", id="vectors") as vectors_tab:
                 gr.Markdown(
                     "## 3. Create steering vectors", elem_classes="section-title"
                 )
@@ -253,28 +304,34 @@ Changing either input source clears the previous profile and vectors.
                     headers=["Layer", "Nonzero features", "Direction norm"],
                     interactive=False,
                 )
-                with gr.Accordion("Method details", open=False):
+                with gr.Accordion(
+                    "Method details", open=False, elem_classes="explanatory-section"
+                ):
                     gr.Markdown(
                         "The baseline averages B − A across pairs and retains all features. "
                         "The SAE decoder projects the result into the residual stream; scaling uses the calibration norm. "
                         "Research strategies can be added through the vector-builder interface."
                     )
-            with gr.Tab("4 · Base vs. steered", id="compare"):
+            with gr.Tab("4 · Base vs. steered", id="compare") as compare_tab:
                 gr.Markdown(
                     "## 4. Compare base and steered", elem_classes="section-title"
                 )
                 prompt = gr.Textbox(label="Prompt", lines=4)
-                with gr.Accordion("Optional image", open=False):
+                with gr.Accordion(
+                    "Optional image",
+                    open=False,
+                    elem_classes="optional-section",
+                ):
                     query_image = gr.Image(type="pil", label="Image")
                 compare_btn = gr.Button("Run base + steered", variant="primary")
                 with gr.Row():
                     base_answer = response_panel("Base")
                     steered_answer = response_panel("Steered")
-            with gr.Tab("5 · Coherence benchmarks", id="benchmarks"):
+            with gr.Tab("5 · Coherence benchmarks", id="benchmarks") as benchmarks_tab:
                 benchmark_outputs, benchmark_cleared = build_benchmark_section(
                     session, common, layer_strengths, settings, strengths, friendly
                 )
-            with gr.Tab("6 · Export VLM", id="export"):
+            with gr.Tab("6 · Export VLM", id="export") as export_tab:
                 gr.Markdown("## 6. Export steered VLM", elem_classes="section-title")
                 gr.Markdown(
                     "Download vectors, settings and a standalone inference loader."
@@ -285,7 +342,9 @@ Changing either input source clears the previous profile and vectors.
                 )
                 export_btn = gr.Button("Export steered VLM", variant="primary")
                 export_file = gr.File(label="Model package", interactive=False)
-                with gr.Accordion("Load elsewhere", open=False):
+                with gr.Accordion(
+                    "Load elsewhere", open=False, elem_classes="explanatory-section"
+                ):
                     gr.Markdown("""Extract the ZIP, install its requirements, then run:
 ```python
 from steered_model import SteeredVLM
@@ -300,7 +359,7 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
 `VSCODE.md` and `continue.example.yaml` with the connection instructions.
 """)
 
-            with gr.Tab("7 · Extra", id="extra"):
+            with gr.Tab("7 · Extra", id="extra") as extra_tab:
                 causal_selector, causal_outputs, causal_cleared = build_causal_lab(
                     session,
                     common,
@@ -337,6 +396,30 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
         ]
         empty_explorers = [empty_profile(layer) for layer in runtime.LAYERS]
 
+        def manifest_choices(state):
+            return [
+                (
+                    f"{manifest.name} ({len(manifest.pairs)} pairs)",
+                    f"manifest:{manifest_index}",
+                )
+                for manifest_index, manifest in enumerate(state.manifests)
+                if manifest.name != "Manual pairs"
+            ]
+
+        def pair_choices(state):
+            choices = []
+            for manifest_index, manifest in enumerate(state.manifests):
+                if manifest.name == "Manual pairs":
+                    continue
+                choices.extend(
+                    (
+                        f"{manifest.name} / {pair.id}",
+                        f"pair:{manifest_index}:{pair_index}",
+                    )
+                    for pair_index, pair in enumerate(manifest.pairs)
+                )
+            return choices
+
         def profile_views(state):
             labels = [
                 f"{manifest.name} / {pair.id}"
@@ -367,6 +450,13 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
             toggle_help, help_visible, [help_visible, help_panel], queue=False
         )
 
+        for tab in (probe_tab, load_tab, profile_tab, vectors_tab):
+            tab.select(lambda: gr.update(visible=False), outputs=strengths_panel)
+        for tab in (compare_tab, benchmarks_tab, export_tab, extra_tab):
+            tab.select(
+                lambda: gr.update(visible=True, open=True), outputs=strengths_panel
+            )
+
         def toggle_saving(state):
             with state.lock:
                 state.save_enabled = not state.save_enabled
@@ -396,6 +486,16 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
                     *cleared,
                     *refresh_preview(state),
                     *empty_explorers,
+                    gr.update(
+                        choices=pair_choices(state),
+                        value=None,
+                    ),
+                    gr.update(interactive=bool(pair_choices(state))),
+                    gr.update(
+                        choices=manifest_choices(state),
+                        value=None,
+                    ),
+                    gr.update(interactive=bool(manifest_choices(state))),
                 )
 
         for button, source in ((load_repo, repository), (load_uploads, uploads)):
@@ -408,13 +508,73 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
                     *downstream,
                     *input_preview,
                     *profile_explorers,
+                    loaded_pair,
+                    remove_loaded_pair,
+                    loaded_manifest,
+                    remove_loaded_manifest,
                 ],
             )
+
+        @friendly
+        def remove_loaded(state, selection):
+            table = workflow.remove_manifest_pair(state, selection)
+            removed = "manifest or pair"
+            if selection and selection.startswith("manifest:"):
+                removed = "manifest"
+            elif selection and selection.startswith("pair:"):
+                removed = "pair"
+            return (
+                f"Removed the selected {removed} · {sum(row[1] for row in table)} pairs remain.",
+                input_summary(table),
+                *cleared,
+                *refresh_preview(state),
+                *empty_explorers,
+                gr.update(choices=pair_choices(state), value=None),
+                gr.update(interactive=bool(pair_choices(state))),
+                gr.update(choices=manifest_choices(state), value=None),
+                gr.update(interactive=bool(manifest_choices(state))),
+            )
+
+        remove_loaded_pair.click(
+            remove_loaded,
+            [session, loaded_pair],
+            [
+                manifest_status,
+                manifest_table,
+                *downstream,
+                *input_preview,
+                *profile_explorers,
+                loaded_pair,
+                remove_loaded_pair,
+                loaded_manifest,
+                remove_loaded_manifest,
+            ],
+        )
+        remove_loaded_manifest.click(
+            remove_loaded,
+            [session, loaded_manifest],
+            [
+                manifest_status,
+                manifest_table,
+                *downstream,
+                *input_preview,
+                *profile_explorers,
+                loaded_pair,
+                remove_loaded_pair,
+                loaded_manifest,
+                remove_loaded_manifest,
+            ],
+        )
 
         wire_manual_editor(
             session,
             manual_editor,
-            [manifest_status, manifest_table, *downstream, *profile_explorers],
+            [
+                manifest_status,
+                manifest_table,
+                *downstream,
+                *profile_explorers,
+            ],
             [*cleared, *empty_explorers],
             friendly,
             preview_outputs=input_preview,
@@ -424,19 +584,33 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
         def invalidate(state):
             with state.lock:
                 state.invalidate_profile()
-            return [*cleared, *empty_explorers]
+            return [
+                *cleared,
+                *empty_explorers,
+            ]
 
         for control in (scope, aggregation):
-            control.input(invalidate, session, [*downstream, *profile_explorers])
+            control.input(
+                invalidate,
+                session,
+                [*downstream, *profile_explorers],
+            )
 
         @friendly
         def capture(state, progress=gr.Progress(), *values):
             with state.lock:
                 table = workflow.build_profile(state, settings(values), progress)
-                return "Profile ready.", table, *cleared[2:], *profile_views(state)
+                return (
+                    "Profile ready.",
+                    table,
+                    *cleared[2:],
+                    *profile_views(state),
+                )
 
         profile_btn.click(
-            capture, [session, *common], [*downstream, *profile_explorers]
+            capture,
+            [session, *common],
+            [*downstream, *profile_explorers],
         )
 
         @friendly
@@ -445,10 +619,20 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
                 table = workflow.create_vectors(
                     state, settings(values), selected_method
                 )
-                return "Vectors ready.", table, *cleared[4:], *profile_views(state)
+                return (
+                    "Vectors ready.",
+                    table,
+                    *cleared[4:],
+                    *profile_views(state),
+                )
 
         vector_btn.click(
-            vectors, [session, method, *common], [*downstream[2:], *profile_explorers]
+            vectors,
+            [session, method, *common],
+            [
+                *downstream[2:],
+                *profile_explorers,
+            ],
         )
 
         @friendly

@@ -51,7 +51,7 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 
 4. **Base vs. steered** — compare using the same prompt, seed, temperature and token budget.
 
-5. **Coherence benchmarks** — preview MMLU-Pro, MMMU, POPE or IFEval cases and references,
+5. **Coherence benchmarks** — preview MMLU-Pro, MMLU-Pro-Stratified (easiest), MBPP, MMMU, POPE or IFEval cases and references,
    evaluate/cache the base model, then evaluate steering only on base-correct cases.
    For simple multimodal samples, select **POPE → random**: one photograph and a
    yes/no question about whether an object is present. Start with 20 items and leave

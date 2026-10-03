@@ -37,6 +37,15 @@ A zero-sized eligible subset yields a null preservation rate. Steered accuracy o
 full sample and improvements on base failures are deliberately not reported.
 
 - MMLU-Pro uses its official Hugging Face dataset with a zero-shot letter-only prompt.
+- MMLU-Pro-Stratified (easiest) uses `SunriserFuture/MMLU-Pro-Stratified` and keeps
+  only rows whose difficulty is `-----`, the dataset's 90–100% accuracy/easiest band.
+- MBPP uses `Muennighoff/mbpp` with the `test` split. The generated response is
+  extracted as Python code (Markdown fences are accepted for display-model
+  robustness), combined with `test_setup_code`, and executed in a temporary
+  subprocess. A case is correct only when every `test_list` assertion passes;
+  the reference `code` field is not compared textually. Execution has a five-second
+  timeout and failures are reported as incorrect. Generated code is arbitrary
+  Python, so this evaluator should only be used in an isolated environment.
 - MMMU loads all subjects when the subject field is blank. It supports all image columns
   with their original numeric labels, multiple-choice and open questions. Open-answer
   parsing/scoring uses pinned upstream code. Multiple-choice scoring accepts an explicit
@@ -68,6 +77,25 @@ The shared token budget affects long-form IFEval tasks. Empty selections and inv
 splits fail before inference. Scorer exceptions fail the run instead of counting as wrong.
 Dataset revisions can evolve; record the returned fingerprint when comparing runs.
 Upstream evaluator versions and licenses are in [vendor/SOURCES.md](../research/benchmarks/vendor/SOURCES.md).
+
+### Offline base evaluation with Ollama
+
+The base model can be evaluated locally instead of through the dashboard. Start
+Ollama and pull a compatible model, then run:
+
+```powershell
+ollama serve
+ollama pull gemma3:4b
+uv run python scripts\run_local_benchmark.py --benchmark pope --split random --items 20 --output runs\pope-base.json
+```
+
+The script uses the same adapters, prompts, references and scoring rules as the
+dashboard. Its JSON artifact contains the reproducible sample (including prompt
+images), every base response, score, generation settings, Ollama timing/metadata,
+dataset fingerprint and summary. In section 5 of the dashboard, choose **Load
+local base benchmark JSON** and click **Load base results**. After loading, build
+or load the steering vectors as usual and run the evaluation; no base-model
+inference is performed.
 
 ```bash
 make benchmark-setup

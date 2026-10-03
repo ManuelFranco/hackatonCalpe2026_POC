@@ -23,12 +23,13 @@ def input_summary(rows):
 
 
 def build_manual_editor():
-    with gr.Accordion("Manual image–text pairs (optional)", open=False):
+    with gr.Accordion(
+        "Manual image–text pairs (optional)",
+        open=False,
+        elem_classes="optional-section",
+    ):
         gr.Markdown(
             "Add A/B pairs directly, on their own or alongside JSON manifests. Each side needs text, an image, or both."
-        )
-        selected = gr.Dropdown(
-            choices=[], label="Edit an existing manual pair", interactive=True
         )
         with gr.Row():
             with gr.Column():
@@ -61,6 +62,9 @@ def build_manual_editor():
             add = gr.Button("Add pair", variant="primary")
             update = gr.Button("Update selected pair", interactive=False)
             remove = gr.Button("Remove selected pair", interactive=False)
+        selected = gr.Dropdown(
+            choices=[], label="Edit an existing manual pair", interactive=True
+        )
         notice = gr.Markdown(
             "Manual pairs stay in this session. Changes require rebuilding the common profile."
         )
@@ -78,9 +82,17 @@ def build_manual_editor():
 
 
 def wire_manual_editor(
-    session, controls, data_outputs, reset_values, friendly, preview_outputs=()
+    session,
+    controls,
+    data_outputs,
+    reset_values,
+    friendly,
+    preview_outputs=(),
+    navigation_outputs=(),
+    navigation_updates=None,
 ):
     selected = controls["selected"]
+    data_outputs = [*data_outputs, *navigation_outputs]
     fields = [controls[k] for k in ("a_text", "a_image", "b_text", "b_image")]
     buttons = [controls[k] for k in ("update", "remove")]
     editor_outputs = [selected, *fields, *buttons, controls["notice"], *preview_outputs]
@@ -94,6 +106,11 @@ def wire_manual_editor(
                 f"**{total} {'pair' if total == 1 else 'pairs'} ready** · {count} manual. Build the common profile in section 2.",
                 input_summary(table),
                 *reset_values,
+                *(
+                    navigation_updates(state)
+                    if navigation_outputs and navigation_updates
+                    else []
+                ),
                 gr.update(choices=[p.id for p in state.manual_pairs], value=None),
                 "",
                 None,

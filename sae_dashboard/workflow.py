@@ -1,6 +1,8 @@
 """Session orchestration. Research algorithms are injected through registries."""
 
 from dataclasses import asdict
+import hashlib
+import json
 import math
 import uuid
 import torch
@@ -16,6 +18,7 @@ from research.benchmarks import (
 from . import base_response_cache
 from . import model_runtime as runtime
 from .artifact_store import export_model, record_event
+from .benchmark_artifact import load_base_artifact
 from .manifests import load_manifests
 from .manual_pairs import combine_inputs
 from .session import Session, Settings
@@ -27,6 +30,63 @@ def set_manifests(session: Session, paths: list[str]):
         session.manifests = combine_inputs(manifests, session.manual_pairs)
         session.invalidate_profile()
         return [[m.name, len(m.pairs), m.fingerprint[:12]] for m in session.manifests]
+
+
+def remove_manifest_pair(session: Session, selection: str):
+    """Remove one JSON manifest or one of its pairs while preserving other inputs."""
+    try:
+        parts = selection.split(":")
+        if parts[0] == "manifest":
+            manifest_index = int(parts[1])
+            pair_index = None
+        elif parts[0] == "pair":
+            manifest_index, pair_index = (int(value) for value in parts[1:])
+        else:
+            # Keep the original pair-selection format compatible with callers.
+            manifest_index, pair_index = (
+                int(value) for value in selection.split(":", 1)
+            )
+    except (AttributeError, IndexError, ValueError):
+        raise ValueError("Choose a loaded manifest pair to remove.") from None
+    with session.lock:
+        if not 0 <= manifest_index < len(session.manifests):
+            raise ValueError("The selected manifest pair is no longer loaded.")
+        manifest = session.manifests[manifest_index]
+        if manifest.name == "Manual pairs" or (
+            pair_index is not None and not 0 <= pair_index < len(manifest.pairs)
+        ):
+            raise ValueError("The selected manifest pair is no longer loaded.")
+        if pair_index is None:
+            remaining = [
+                item
+                for index, item in enumerate(session.manifests)
+                if index != manifest_index
+            ]
+            session.manifests = tuple(remaining)
+            session.invalidate_profile()
+            return [
+                [item.name, len(item.pairs), item.fingerprint[:12]]
+                for item in session.manifests
+            ]
+        pairs = manifest.pairs[:pair_index] + manifest.pairs[pair_index + 1 :]
+        remaining = list(session.manifests)
+        if pairs:
+            fingerprint = hashlib.sha256(
+                json.dumps(
+                    [pair.metadata() for pair in pairs], sort_keys=True
+                ).encode()
+            ).hexdigest()
+            remaining[manifest_index] = type(manifest)(
+                manifest.name, pairs, fingerprint
+            )
+        else:
+            remaining.pop(manifest_index)
+        session.manifests = tuple(remaining)
+        session.invalidate_profile()
+        return [
+            [item.name, len(item.pairs), item.fingerprint[:12]]
+            for item in session.manifests
+        ]
 
 
 def capture_score(residual, image_mask, sae, settings):
@@ -273,6 +333,22 @@ def prepare_evaluation(session, name, split, count, category, settings):
         return sample
 
 
+def load_benchmark_artifact(session, path, settings):
+    """Load base-only benchmark work so the next run only evaluates steering."""
+    settings.validate()
+    sample, rows, result, _ = load_base_artifact(path)
+    if result.get("summary", {}).get("sample_seed") != settings.seed:
+        raise ValueError(
+            "The artifact seed differs from the current seed. Select the matching seed."
+        )
+    with session.lock:
+        session.benchmark_sample = sample
+        session.benchmark_base = rows
+        session.benchmark_settings = generation_key(settings)
+        session.benchmark_result = result
+    return sample, result
+
+
 def require_sample(session, settings):
     settings.validate()
     sample = session.benchmark_sample
@@ -366,6 +442,12 @@ def benchmark_steered(session, settings, strengths, progress=None):
         # Steered benchmark responses stay in session memory even when saving is enabled.
         session.benchmark_result = result
         return result
+
+
+def benchmark_complete(session, settings, strengths, progress=None):
+    """Evaluate base answers, then steer only the base-correct cases."""
+    benchmark_base(session, settings, progress)
+    return benchmark_steered(session, settings, strengths, progress)
 
 
 def export(session, settings, strengths, include_weights):

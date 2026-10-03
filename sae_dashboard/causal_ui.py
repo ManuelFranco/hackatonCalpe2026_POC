@@ -69,7 +69,11 @@ def build_causal_lab(
         "Reference: **security vulnerabilities and exploits**. Verify the loaded SAE before interpreting this feature."
     )
     inspect = gr.Button("Inspect feature and verify dictionary", size="sm")
-    with gr.Accordion("Neuronpedia · external feature evidence", open=False):
+    with gr.Accordion(
+        "Neuronpedia · external feature evidence",
+        open=False,
+        elem_classes="optional-section",
+    ):
         neuron = gr.HTML()
 
     gr.Markdown("### 1 · Separate code from explanatory text")
@@ -105,7 +109,11 @@ def build_causal_lab(
         placeholder="Explain the code's behavior, security implications and any necessary fix.",
         info="Added to response prompts only. Activation measurements use the selected input view without this instruction.",
     )
-    with gr.Accordion("Exact response inputs · inspect before running", open=False):
+    with gr.Accordion(
+        "Exact response inputs · inspect before running",
+        open=False,
+        elem_classes="explanatory-section",
+    ):
         with gr.Row():
             with gr.Column():
                 preview_a = response_panel("A · prompt")
@@ -158,13 +166,19 @@ def build_causal_lab(
             label="Symmetric dose magnitude · ±",
             info="0 is the no-intervention check; try 0.5, then 1.",
         )
-    with gr.Accordion("Custom input / token activation map", open=False):
+    with gr.Accordion(
+        "Custom input / token activation map",
+        open=False,
+        elem_classes="optional-section",
+    ):
         query = gr.Textbox(label="Custom prompt", lines=5)
         image = gr.Image(type="pil", label="Optional custom image", height=200)
         copy_query = gr.Button("Copy input from Base vs. steered", size="sm")
         map_button = gr.Button("Inspect custom input token activations", size="sm")
         heatmap = gr.HTML()
-    with gr.Accordion("Intervention controls", open=False):
+    with gr.Accordion(
+        "Intervention controls", open=False, elem_classes="optional-section"
+    ):
         schedule = gr.Radio(
             ["Every decoding step", "First continuation step only"],
             value="Every decoding step",
@@ -194,7 +208,11 @@ def build_causal_lab(
         interactive=False,
     )
     responses = gr.Markdown(sanitize_html=True, line_breaks=True)
-    with gr.Accordion("Score response quality · manual paired means", open=False):
+    with gr.Accordion(
+        "Score response quality · manual paired means",
+        open=False,
+        elem_classes="optional-section",
+    ):
         gr.Markdown(
             "Score mechanism, consequence and recommendation **0–2**. Leave uncertain rows blank; they are excluded, never counted as zero. Keep the case and condition columns unchanged. These are human ratings, not automated benchmark scores."
         )
@@ -216,7 +234,11 @@ def build_causal_lab(
             ],
             interactive=False,
         )
-    with gr.Accordion("Interpretation and scoring protocol", open=False):
+    with gr.Accordion(
+        "Interpretation and scoring protocol",
+        open=False,
+        elem_classes="explanatory-section",
+    ):
         gr.Markdown("""**Hypothesis:** this feature changes grounded security analysis, rather than merely increasing security vocabulary.
 
 1. Use all-token mean capture. Compare the three input views on calibration pairs. Different token counts and context mean these are diagnostic controls, not a causal decomposition.
