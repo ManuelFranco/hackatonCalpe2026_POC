@@ -10,6 +10,13 @@ from typing import Any, Dict, List, Optional, Tuple
 import torch
 from sae_lens import SAE
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration, set_seed
+from research.conditional_steering import (
+    GateTrace,
+    LinearGate,
+    apply_gated_delta,
+    observe_gate,
+    validate_gate_layer_order,
+)
 
 MODEL_ID = os.getenv("GEMMA_MODEL_ID", "google/gemma-3-4b-it")
 MODEL_REVISION = os.getenv("GEMMA_MODEL_REVISION")
@@ -299,10 +306,13 @@ def capture_prompt_residuals(
     inputs: Any,
     steering_directions: Optional[Dict[int, torch.Tensor]] = None,
     strengths: Optional[Dict[int, float]] = None,
+    layers: Optional[List[int]] = None,
 ) -> Dict[int, torch.Tensor]:
+    """Capture [seq, hidden] outputs; `layers` defaults to the SAE layers."""
+    layers = list(LAYERS if layers is None else layers)
     captured: Dict[int, torch.Tensor] = {}
     handles = []
-    for layer_idx in LAYERS:
+    for layer_idx in layers:
         module = get_layer_module(layer_idx)
 
         def make_hook(idx: int):
@@ -344,10 +354,137 @@ def capture_prompt_residuals(
     finally:
         for handle in handles:
             handle.remove()
-    missing = [idx for idx in LAYERS if idx not in captured]
+    missing = [idx for idx in layers if idx not in captured]
     if missing:
         raise RuntimeError(f"Failed to capture layers: {missing}")
     return captured
+
+
+def register_steering_hooks(
+    steering_directions: Dict[int, torch.Tensor],
+    strengths: Dict[int, float],
+    first_step_only: bool = False,
+) -> List[Any]:
+    """Legacy global steering: h' = h + alpha * v at every configured layer."""
+    handles = []
+    for layer_idx in LAYERS:
+        module = get_layer_module(layer_idx)
+
+        def make_hook(idx: int):
+            calls = 0
+            cache: Dict[Tuple[str, str], torch.Tensor] = {}
+
+            def hook_fn(module, module_inputs, output):
+                nonlocal calls
+                calls += 1
+                if first_step_only and calls > 1:
+                    return None
+                alpha = float(strengths.get(idx, 0.0))
+                if alpha == 0.0:
+                    return None
+                x = extract_hidden(output)
+                key = (str(x.device), str(x.dtype))
+                if key not in cache:
+                    cache[key] = steering_directions[idx].to(
+                        device=x.device,
+                        dtype=x.dtype,
+                    )
+                delta = alpha * cache[key]
+                if STEER_LAST_TOKEN_ONLY:
+                    x_out = x.clone()
+                    x_out[:, -1, :] = x_out[:, -1, :] + delta
+                else:
+                    x_out = x + delta.view(1, 1, -1)
+                return replace_hidden(output, x_out)
+
+            return hook_fn
+
+        handles.append(module.register_forward_hook(make_hook(layer_idx)))
+    return handles
+
+
+def register_gated_steering_hooks(
+    steering_directions: Dict[int, torch.Tensor],
+    strengths: Dict[int, float],
+    gate: LinearGate,
+    gate_trace: GateTrace,
+    image_mask: torch.Tensor,
+    first_step_only: bool = False,
+) -> List[Any]:
+    """Conditional steering: h' = h + alpha * g * v.
+
+    The gate layer reads its *unmodified* prefill output (image tokens only) into the
+    request-local gate_trace before any steering is applied at that layer. Later
+    decoding steps reuse the stored value. No state outlives the returned handles.
+    """
+    validate_gate_layer_order(gate.layer, strengths)
+    if gate_trace.computed:
+        raise ValueError("Use a fresh GateTrace for every request.")
+    try:
+        get_layer_module(gate.layer)
+    except IndexError as error:
+        raise ValueError(f"Gate layer {gate.layer} does not exist.") from error
+    steer_layers = {idx for idx in LAYERS if float(strengths.get(idx, 0.0)) != 0.0}
+    handles = []
+
+    def make_hook(idx: int):
+        calls = 0
+
+        def hook_fn(module, module_inputs, output):
+            nonlocal calls
+            calls += 1
+            x = extract_hidden(output)
+            if idx == gate.layer and calls == 1:
+                # Read before writing: the gate never sees its own intervention.
+                observe_gate(gate, x, image_mask, gate_trace)
+            if idx not in steer_layers or (first_step_only and calls > 1):
+                return None
+            if not gate_trace.computed:
+                raise RuntimeError(
+                    f"Layer {idx} would steer before gate layer {gate.layer} ran."
+                )
+            x_out = apply_gated_delta(
+                x,
+                steering_directions[idx],
+                float(strengths[idx]),
+                float(gate_trace.value),
+                STEER_LAST_TOKEN_ONLY,
+            )
+            if x_out is None:
+                return None
+            return replace_hidden(output, x_out)
+
+        return hook_fn
+
+    try:
+        for layer_idx in sorted(set(LAYERS) | {gate.layer}):
+            module = get_layer_module(layer_idx)
+            handles.append(module.register_forward_hook(make_hook(layer_idx)))
+    except BaseException:
+        for handle in handles:
+            handle.remove()
+        raise
+    return handles
+
+
+def _install_hooks(
+    inputs: Any,
+    steering_directions: Optional[Dict[int, torch.Tensor]],
+    strengths: Optional[Dict[int, float]],
+    first_step_only: bool,
+    gate: Optional[LinearGate],
+    gate_trace: Optional[GateTrace],
+) -> List[Any]:
+    if steering_directions is None or strengths is None:
+        return []
+    if gate is None:
+        return register_steering_hooks(steering_directions, strengths, first_step_only)
+    if gate_trace is None:
+        raise ValueError("Conditional steering requires a request-local GateTrace.")
+    image_mask = get_image_mask(inputs["input_ids"][0].detach().cpu())
+    return register_gated_steering_hooks(
+        steering_directions, strengths, gate, gate_trace, image_mask, first_step_only
+    )
 
 
 def generate_answer(
@@ -359,44 +496,16 @@ def generate_answer(
     strengths: Optional[Dict[int, float]] = None,
     seed: int = 0,
     first_step_only: bool = False,
+    gate: Optional[LinearGate] = None,
+    gate_trace: Optional[GateTrace] = None,
 ) -> str:
+    """Generate with optional steering. gate=None keeps legacy global steering."""
     validate_generation_settings(max_new_tokens, temperature, seed)
     handles = []
-    if steering_directions is not None and strengths is not None:
-        for layer_idx in LAYERS:
-            module = get_layer_module(layer_idx)
-
-            def make_hook(idx: int):
-                calls = 0
-                cache: Dict[Tuple[str, str], torch.Tensor] = {}
-
-                def hook_fn(module, module_inputs, output):
-                    nonlocal calls
-                    calls += 1
-                    if first_step_only and calls > 1:
-                        return None
-                    alpha = float(strengths.get(idx, 0.0))
-                    if alpha == 0.0:
-                        return None
-                    x = extract_hidden(output)
-                    key = (str(x.device), str(x.dtype))
-                    if key not in cache:
-                        cache[key] = steering_directions[idx].to(
-                            device=x.device,
-                            dtype=x.dtype,
-                        )
-                    delta = alpha * cache[key]
-                    if STEER_LAST_TOKEN_ONLY:
-                        x_out = x.clone()
-                        x_out[:, -1, :] = x_out[:, -1, :] + delta
-                    else:
-                        x_out = x + delta.view(1, 1, -1)
-                    return replace_hidden(output, x_out)
-
-                return hook_fn
-
-            handles.append(module.register_forward_hook(make_hook(layer_idx)))
     try:
+        handles = _install_hooks(
+            inputs, steering_directions, strengths, first_step_only, gate, gate_trace
+        )
         gen_kwargs: Dict[str, Any] = {
             "max_new_tokens": int(max_new_tokens),
             "use_cache": True,
@@ -434,6 +543,27 @@ def generate_answer(
             "[No visible text: the model terminated immediately. "
             f"token_ids={ids_preview}; raw_decode={raw!r}]"
         )
+    finally:
+        for handle in handles:
+            handle.remove()
+
+
+def next_token_logits(
+    inputs: Any,
+    steering_directions: Optional[Dict[int, torch.Tensor]] = None,
+    strengths: Optional[Dict[int, float]] = None,
+    gate: Optional[LinearGate] = None,
+    gate_trace: Optional[GateTrace] = None,
+) -> torch.Tensor:
+    """One prefill forward; returns CPU float32 logits for the next token."""
+    handles = []
+    try:
+        handles = _install_hooks(
+            inputs, steering_directions, strengths, False, gate, gate_trace
+        )
+        with torch.inference_mode():
+            output = model(**inputs, use_cache=False, logits_to_keep=1)
+        return output.logits[0, -1].detach().float().cpu()
     finally:
         for handle in handles:
             handle.remove()
