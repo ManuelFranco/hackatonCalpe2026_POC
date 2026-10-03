@@ -9,6 +9,7 @@ import time
 import uuid
 import zipfile
 from safetensors.torch import save_file
+from research.conditional_steering import validate_gate_layer_order
 from . import model_runtime as runtime
 from .session import Session, Settings
 
@@ -23,6 +24,8 @@ def record_event(session: Session, kind: str, payload: dict):
         "session_id": session.id,
         "profile_id": session.profile_id,
         "vector_id": session.vector_id,
+        "conditional_gate_id": getattr(session, "conditional_gate_id", None),
+        "gate_enabled": bool(getattr(session, "gate_enabled", False)),
         "created_unix": time.time(),
         **payload,
     }
@@ -45,6 +48,11 @@ def export_model(
 ) -> str:
     if not session.vectors:
         raise ValueError("Create steering vectors before exporting the model.")
+    gate = session.conditional_gate if session.gate_enabled else None
+    if session.gate_enabled and gate is None:
+        raise ValueError("The vehicle gate is enabled but not built. Build or disable it.")
+    if gate is not None:
+        validate_gate_layer_order(gate.layer, strengths)
     root = ARTIFACT_ROOT / session.id / "exports"
     directory = root / uuid.uuid4().hex
     directory.mkdir(parents=True, exist_ok=False)
@@ -52,7 +60,8 @@ def export_model(
     try:
         metadata = runtime.runtime_metadata()
         config = {
-            "format_version": 1,
+            # Version 1 = global steering. Version 2 adds the conditional gate.
+            "format_version": 2 if gate is not None else 1,
             "model_id": runtime.MODEL_ID,
             "model_revision": metadata["model_commit"] or runtime.MODEL_REVISION,
             "profile_id": session.profile_id,
@@ -74,6 +83,14 @@ def export_model(
             ],
             "runtime": metadata,
         }
+        if gate is not None:
+            config["conditional_gate"] = {
+                **gate.config(),
+                "gate_id": session.conditional_gate_id,
+                "tensors": "conditional_gate.safetensors",
+                "formula": "h' = h + alpha * g(mean image-token h at gate layer) * v",
+            }
+            save_file(gate.tensors(), str(directory / "conditional_gate.safetensors"))
         (directory / "steering_config.json").write_text(
             json.dumps(config, indent=2), encoding="utf-8"
         )
@@ -120,6 +137,12 @@ and removes them afterwards. The vectors cannot be merged into ordinary model
 weights. Loading base_model with AutoModel alone will not apply steering.
 If base_model is absent, the pinned base model is downloaded from Hugging Face;
 its access requirements still apply. The loader does not require SAEs or this repo.
+
+If steering_config.json contains `conditional_gate` (format_version 2), steering is
+conditional: a linear probe reads the mean image-token state at the gate layer during
+prefill and multiplies every steering strength by the gate value (0 or 1 in hard
+mode). Requests without image tokens, or below the threshold, are not steered.
+`vlm.generate(..., return_gate=True)` also returns the gate score and value.
 """,
             encoding="utf-8",
         )
