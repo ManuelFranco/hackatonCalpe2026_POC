@@ -64,3 +64,11 @@ holds session profiles in CPU memory; additional browser sessions do not duplica
 weights. Reloads/restarts lose unsaved session data. Results are saved only after the user
 enables saving, and model exports only after the final export button. `runs/` is ignored
 by Git. Budget disk space before including full model weights in an export.
+
+## Use an exported model in VS Code
+
+Run `uv run --locked python serve_export.py /absolute/path/to/extracted/export`
+to expose the exported steering model at `http://127.0.0.1:8001/v1`. This works
+with existing ZIP exports after extraction. New exports also include a standalone
+server and Continue configuration. See the [Continue Chat setup](../sae_dashboard/export_chat.md)
+for SSH forwarding, startup commands, image support and API limitations.

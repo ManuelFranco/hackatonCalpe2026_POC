@@ -294,6 +294,10 @@ print(model.generate("Your prompt"))
 ```
 The loader applies activation steering during generation. Without bundled base weights,
 it downloads the referenced Gemma model. SAEs are not needed for inference.
+
+For VS Code's Continue Chat, install `requirements-server.txt` and run
+`python serve_model.py .` from the extracted folder. The package includes
+`VSCODE.md` and `continue.example.yaml` with the connection instructions.
 """)
 
             with gr.Tab("7 · Extra", id="extra"):

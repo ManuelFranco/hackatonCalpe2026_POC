@@ -1,6 +1,7 @@
 """Explicit experiment persistence and portable VLM export."""
 
 from dataclasses import asdict
+import importlib.metadata
 import json
 import os
 from pathlib import Path
@@ -88,6 +89,21 @@ def export_model(
             Path(__file__).with_name("portable_model.py"),
             directory / "steered_model.py",
         )
+        for source, target in (
+            ("portable_server.py", "serve_model.py"),
+            ("continue.example.yaml", "continue.example.yaml"),
+            ("export_chat.md", "VSCODE.md"),
+        ):
+            shutil.copyfile(Path(__file__).with_name(source), directory / target)
+        (directory / "requirements-server.txt").write_text(
+            "-r requirements.txt\n"
+            + "\n".join(
+                f"{name}=={importlib.metadata.version(name)}"
+                for name in ("fastapi", "uvicorn")
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         packages = metadata["packages"]
         (directory / "requirements.txt").write_text(
             "\n".join(
@@ -120,6 +136,9 @@ and removes them afterwards. The vectors cannot be merged into ordinary model
 weights. Loading base_model with AutoModel alone will not apply steering.
 If base_model is absent, the pinned base model is downloaded from Hugging Face;
 its access requirements still apply. The loader does not require SAEs or this repo.
+
+To use this model in VS Code's Continue Chat, see VSCODE.md. The package includes
+serve_model.py, requirements-server.txt and continue.example.yaml.
 """,
             encoding="utf-8",
         )

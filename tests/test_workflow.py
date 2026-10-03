@@ -170,6 +170,17 @@ class WorkflowTests(unittest.TestCase):
             unpack = Path(temp) / "unpacked"
             with zipfile.ZipFile(archive) as bundle:
                 self.assertIn("steered_model.py", bundle.namelist())
+                for name in (
+                    "serve_model.py",
+                    "VSCODE.md",
+                    "continue.example.yaml",
+                    "requirements-server.txt",
+                ):
+                    self.assertIn(name, bundle.namelist())
+                self.assertIn(
+                    "-r requirements.txt",
+                    bundle.read("requirements-server.txt").decode(),
+                )
                 self.assertFalse(
                     any(name.startswith("base_model") for name in bundle.namelist())
                 )

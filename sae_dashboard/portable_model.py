@@ -82,25 +82,44 @@ class SteeredVLM:
             content.append({"type": "text", "text": prompt})
         if not content:
             raise ValueError("Provide text, an image, or both.")
+        return self.chat([{"role": "user", "content": content}], **overrides)["text"]
+
+    def chat(self, messages, max_context_tokens=None, **overrides):
+        """Generate from the full Transformers chat history with exported steering."""
         settings = {**self.config["generation"], **overrides}
         temperature = float(settings["temperature"])
         with self.lock:
             inputs = self.processor.apply_chat_template(
-                [{"role": "user", "content": content}],
+                messages,
                 tokenize=True,
                 add_generation_prompt=True,
                 return_dict=True,
                 return_tensors="pt",
                 do_pan_and_scan=False,
             ).to(self.model.device)
+            prompt_tokens = inputs["input_ids"].shape[-1]
+            max_new_tokens = int(settings["max_new_tokens"])
+            if (
+                max_context_tokens
+                and prompt_tokens + max_new_tokens > max_context_tokens
+            ):
+                raise ValueError(
+                    "Conversation and requested output exceed the server context limit. "
+                    "Start a new chat or reduce the output token limit."
+                )
             set_seed(int(settings["seed"]))
             kwargs = {
-                "max_new_tokens": int(settings["max_new_tokens"]),
+                "max_new_tokens": max_new_tokens,
                 "do_sample": temperature > 0,
                 "use_cache": True,
             }
             if temperature > 0:
-                kwargs.update(temperature=temperature, top_p=0.95)
+                kwargs.update(
+                    temperature=temperature, top_p=settings.get("top_p", 0.95)
+                )
+            stop = settings.get("stop") or []
+            if stop:
+                kwargs.update(stop_strings=stop, tokenizer=self.processor.tokenizer)
             with (
                 steering_hooks(
                     self.model,
@@ -111,8 +130,27 @@ class SteeredVLM:
                 torch.inference_mode(),
             ):
                 output = self.model.generate(**inputs, **kwargs)
-            return self.processor.decode(
-                output[0, inputs["input_ids"].shape[-1] :],
+            generated = output[0, prompt_tokens:]
+            text = self.processor.decode(
+                generated,
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=False,
             ).strip()
+            eos = self.model.generation_config.eos_token_id
+            eos = eos if isinstance(eos, (list, tuple)) else [eos]
+            finish = "length" if len(generated) >= max_new_tokens else "stop"
+            if len(generated) and generated[-1].item() in eos:
+                finish = "stop"
+            positions = [text.index(s) for s in stop if s in text]
+            if positions:
+                text = text[: min(positions)]
+                finish = "stop"
+            return {
+                "text": text,
+                "finish_reason": finish,
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": len(generated),
+                    "total_tokens": prompt_tokens + len(generated),
+                },
+            }

@@ -1,0 +1,19 @@
+name: Gemma Steered
+version: 1.0.0
+schema: v1
+models:
+  - name: Gemma Steered
+    provider: openai
+    model: gemma-steered
+    apiBase: http://127.0.0.1:8001/v1
+    apiKey: local-steering
+    roles:
+      - chat
+    capabilities:
+      - image_input
+    defaultCompletionOptions:
+      contextLength: 8192
+      maxTokens: 512
+      temperature: 0
+    requestOptions:
+      timeout: 600000
