@@ -51,6 +51,12 @@ See [deployment](docs/deployment.md) for configuration and shared access.
 
 4. **Base vs. steered** — compare using the same prompt, seed, temperature and token budget.
 
+   The **Conditional steering · vehicle gate** accordion calibrates a separate linear
+   probe on image-token residuals and switches steering to `h' = h + α·g·v`. With a
+   closed gate (`g = 0`), unrelated objects receive no intervention. It also measures
+   target effect against off-target leakage. See
+   [conditional steering](docs/conditional_steering.md).
+
 5. **Coherence benchmarks** — preview MMLU-Pro, MMMU, POPE or IFEval cases and references,
    evaluate/cache the base model, then evaluate steering only on base-correct cases.
    For simple multimodal samples, select **POPE → random**: one photograph and a
@@ -60,7 +66,8 @@ See [deployment](docs/deployment.md) for configuration and shared access.
    [benchmark protocol](docs/research.md#benchmarks).
 
 6. **Export VLM** — explicitly download a portable loader, vectors and configuration;
-   optionally include base weights and processor.
+   optionally include base weights and processor. An enabled vehicle gate is exported
+   too (`format_version: 2`); ungated packages keep `format_version: 1`.
 
 7. **Extra** — paired feature activation studies, code/text controls, independent research
    manifests, free-response dose comparisons, dynamic ablation, random controls and manual
@@ -89,6 +96,10 @@ loads our eight physical-damage training pairs with A = intact and B = damaged.
 The three validation and five test pairs have separate manifests. See the
 [dataset instructions](data/physical_damage/README.md) for loading, evaluation
 and steering direction.
+
+[`data/vehicle_gate/`](data/vehicle_gate/README.md) defines the separate labelled
+format (`"kind": "binary_gate"`) for calibrating the conditional-steering gate. It
+contains only a template: real car/vehicle and non-vehicle images must be added.
 
 [`data/scripts/cwe_120/manifest.json`](data/scripts/cwe_120/manifest.json)
 contains 20 normal/vulnerable code pairs. Each manifest represents one use case:

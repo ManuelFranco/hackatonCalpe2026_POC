@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "kind": "binary_gate",
+  "template": true,
+  "name": "Vehicle gate · train (TEMPLATE — replace with real images)",
+  "target": "military_ground_vehicle",
+  "description": "Format template only. Copy to gate.train.json / gate.validation.json / gate.test.json, point every example at a real image under the data root and delete \"template\": true. label: target (1) or non_target (0). hard_negative marks visually similar non-targets.",
+  "split": "train",
+  "asset_root": "vehicle_gate",
+  "prompt": "Describe the image.",
+  "examples": [
+    {"id": "tank_001", "label": "target", "category": "tank", "image": "images/target/tank_001.png"},
+    {"id": "apc_001", "label": "target", "category": "armored personnel carrier", "image": "images/target/apc_001.png"},
+    {"id": "mil_truck_001", "label": "target", "category": "military truck", "image": "images/target/mil_truck_001.png"},
+    {"id": "civil_car_001", "label": "non_target", "category": "civilian car", "hard_negative": true, "image": "images/hard_negative/civil_car_001.png"},
+    {"id": "bus_001", "label": "non_target", "category": "bus", "hard_negative": true, "image": "images/hard_negative/bus_001.png"},
+    {"id": "tractor_001", "label": "non_target", "category": "tractor", "hard_negative": true, "image": "images/hard_negative/tractor_001.png"},
+    {"id": "excavator_001", "label": "non_target", "category": "construction machinery", "hard_negative": true, "image": "images/hard_negative/excavator_001.png"},
+    {"id": "wheel_001", "label": "non_target", "category": "wheel", "hard_negative": true, "image": "images/hard_negative/wheel_001.png"},
+    {"id": "studio_chair_001", "label": "non_target", "category": "chair (same concrete studio background)", "hard_negative": true, "image": "images/hard_negative/studio_chair_001.png"},
+    {"id": "racket_001", "label": "non_target", "category": "tennis racket", "image": "images/negative/racket_001.png"},
+    {"id": "cat_001", "label": "non_target", "category": "cat", "image": "images/negative/cat_001.png"},
+    {"id": "building_001", "label": "non_target", "category": "building", "image": "images/negative/building_001.png"}
+  ]
+}
