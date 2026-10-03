@@ -1,7 +1,7 @@
 {
   "format": "gemma-sae-benchmark-base",
   "format_version": 1,
-  "created_unix": 1791024397.072826,
+  "created_unix": 1791031705.9197266,
   "metadata": {
     "runner": "ollama",
     "ollama_url": "http://127.0.0.1:11434",
@@ -656,12 +656,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 3.86091759998817,
+        "duration_seconds": 0.33410879998700693,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 131,
         "eval_count": 4,
-        "total_duration": 3835439500
+        "total_duration": 308707600
       }
     },
     {
@@ -681,12 +681,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 1.1978170000074897,
+        "duration_seconds": 1.1689616999938153,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 181,
         "eval_count": 128,
-        "total_duration": 1196623700
+        "total_duration": 1168143600
       }
     },
     {
@@ -706,12 +706,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 1.1940039000182878,
+        "duration_seconds": 1.2111111999838613,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 229,
         "eval_count": 129,
-        "total_duration": 1192947400
+        "total_duration": 1197529400
       }
     },
     {
@@ -731,12 +731,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.11127100000157952,
+        "duration_seconds": 0.11379159998614341,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 180,
         "eval_count": 4,
-        "total_duration": 99340500
+        "total_duration": 112812800
       }
     },
     {
@@ -756,12 +756,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.08080960001097992,
+        "duration_seconds": 0.09538969999994151,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 84,
         "eval_count": 4,
-        "total_duration": 79312900
+        "total_duration": 94396700
       }
     },
     {
@@ -781,12 +781,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 1.3998492999817245,
+        "duration_seconds": 1.3529073999961838,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 107,
         "eval_count": 152,
-        "total_duration": 1377709000
+        "total_duration": 1351295900
       }
     },
     {
@@ -806,12 +806,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.12530600000172853,
+        "duration_seconds": 0.10867590000270866,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 220,
         "eval_count": 6,
-        "total_duration": 112260300
+        "total_duration": 107706700
       }
     },
     {
@@ -831,12 +831,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.10472639999352396,
+        "duration_seconds": 0.11813190000248142,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 166,
         "eval_count": 6,
-        "total_duration": 103244200
+        "total_duration": 117178800
       }
     },
     {
@@ -856,12 +856,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.1216757999791298,
+        "duration_seconds": 0.12459530000342056,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 341,
         "eval_count": 4,
-        "total_duration": 119544300
+        "total_duration": 122427100
       }
     },
     {
@@ -881,12 +881,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.10708139999769628,
+        "duration_seconds": 0.11451609997311607,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 153,
         "eval_count": 6,
-        "total_duration": 105860800
+        "total_duration": 113255900
       }
     },
     {
@@ -906,12 +906,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.10920340000302531,
+        "duration_seconds": 0.08741089998511598,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 211,
         "eval_count": 4,
-        "total_duration": 93228500
+        "total_duration": 86660700
       }
     },
     {
@@ -931,12 +931,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 1.0440535999950953,
+        "duration_seconds": 1.0620726000051945,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 131,
         "eval_count": 115,
-        "total_duration": 1043062900
+        "total_duration": 1044165600
       }
     },
     {
@@ -956,12 +956,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.08622200001263991,
+        "duration_seconds": 0.13186829999904148,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 189,
         "eval_count": 4,
-        "total_duration": 85542700
+        "total_duration": 106915000
       }
     },
     {
@@ -981,12 +981,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 1.6840207999921404,
+        "duration_seconds": 1.6930608999973629,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 506,
         "eval_count": 180,
-        "total_duration": 1682676500
+        "total_duration": 1692149800
       }
     },
     {
@@ -1006,12 +1006,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 1.3110003999900073,
+        "duration_seconds": 1.345995399984531,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 142,
         "eval_count": 144,
-        "total_duration": 1309211800
+        "total_duration": 1325675000
       }
     },
     {
@@ -1031,12 +1031,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.12145440001040697,
+        "duration_seconds": 0.13151609999476932,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 226,
         "eval_count": 6,
-        "total_duration": 110161200
+        "total_duration": 110319000
       }
     },
     {
@@ -1056,12 +1056,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.13248589998693205,
+        "duration_seconds": 0.12950790001195855,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 252,
         "eval_count": 6,
-        "total_duration": 131780900
+        "total_duration": 115769100
       }
     },
     {
@@ -1081,12 +1081,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.09765179999521933,
+        "duration_seconds": 0.10940119999577291,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 103,
         "eval_count": 6,
-        "total_duration": 96687400
+        "total_duration": 106867100
       }
     },
     {
@@ -1106,12 +1106,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 0.0800485999789089,
+        "duration_seconds": 0.07669170000008307,
         "model": "gemma2:2b",
         "done_reason": "stop",
         "prompt_eval_count": 78,
         "eval_count": 4,
-        "total_duration": 78026500
+        "total_duration": 75783100
       }
     },
     {
@@ -1131,12 +1131,12 @@
       "steered_score": null,
       "changed": null,
       "base_generation": {
-        "duration_seconds": 2.2829512000025716,
+        "duration_seconds": 2.3060533000098076,
         "model": "gemma2:2b",
         "done_reason": "length",
         "prompt_eval_count": 225,
         "eval_count": 256,
-        "total_duration": 2281064300
+        "total_duration": 2284494200
       }
     }
   ],
@@ -1178,12 +1178,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 3.86091759998817,
+          "duration_seconds": 0.33410879998700693,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 131,
           "eval_count": 4,
-          "total_duration": 3835439500
+          "total_duration": 308707600
         }
       },
       {
@@ -1203,12 +1203,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 1.1978170000074897,
+          "duration_seconds": 1.1689616999938153,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 181,
           "eval_count": 128,
-          "total_duration": 1196623700
+          "total_duration": 1168143600
         }
       },
       {
@@ -1228,12 +1228,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 1.1940039000182878,
+          "duration_seconds": 1.2111111999838613,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 229,
           "eval_count": 129,
-          "total_duration": 1192947400
+          "total_duration": 1197529400
         }
       },
       {
@@ -1253,12 +1253,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.11127100000157952,
+          "duration_seconds": 0.11379159998614341,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 180,
           "eval_count": 4,
-          "total_duration": 99340500
+          "total_duration": 112812800
         }
       },
       {
@@ -1278,12 +1278,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.08080960001097992,
+          "duration_seconds": 0.09538969999994151,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 84,
           "eval_count": 4,
-          "total_duration": 79312900
+          "total_duration": 94396700
         }
       },
       {
@@ -1303,12 +1303,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 1.3998492999817245,
+          "duration_seconds": 1.3529073999961838,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 107,
           "eval_count": 152,
-          "total_duration": 1377709000
+          "total_duration": 1351295900
         }
       },
       {
@@ -1328,12 +1328,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.12530600000172853,
+          "duration_seconds": 0.10867590000270866,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 220,
           "eval_count": 6,
-          "total_duration": 112260300
+          "total_duration": 107706700
         }
       },
       {
@@ -1353,12 +1353,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.10472639999352396,
+          "duration_seconds": 0.11813190000248142,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 166,
           "eval_count": 6,
-          "total_duration": 103244200
+          "total_duration": 117178800
         }
       },
       {
@@ -1378,12 +1378,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.1216757999791298,
+          "duration_seconds": 0.12459530000342056,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 341,
           "eval_count": 4,
-          "total_duration": 119544300
+          "total_duration": 122427100
         }
       },
       {
@@ -1403,12 +1403,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.10708139999769628,
+          "duration_seconds": 0.11451609997311607,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 153,
           "eval_count": 6,
-          "total_duration": 105860800
+          "total_duration": 113255900
         }
       },
       {
@@ -1428,12 +1428,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.10920340000302531,
+          "duration_seconds": 0.08741089998511598,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 211,
           "eval_count": 4,
-          "total_duration": 93228500
+          "total_duration": 86660700
         }
       },
       {
@@ -1453,12 +1453,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 1.0440535999950953,
+          "duration_seconds": 1.0620726000051945,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 131,
           "eval_count": 115,
-          "total_duration": 1043062900
+          "total_duration": 1044165600
         }
       },
       {
@@ -1478,12 +1478,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.08622200001263991,
+          "duration_seconds": 0.13186829999904148,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 189,
           "eval_count": 4,
-          "total_duration": 85542700
+          "total_duration": 106915000
         }
       },
       {
@@ -1503,12 +1503,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 1.6840207999921404,
+          "duration_seconds": 1.6930608999973629,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 506,
           "eval_count": 180,
-          "total_duration": 1682676500
+          "total_duration": 1692149800
         }
       },
       {
@@ -1528,12 +1528,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 1.3110003999900073,
+          "duration_seconds": 1.345995399984531,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 142,
           "eval_count": 144,
-          "total_duration": 1309211800
+          "total_duration": 1325675000
         }
       },
       {
@@ -1553,12 +1553,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.12145440001040697,
+          "duration_seconds": 0.13151609999476932,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 226,
           "eval_count": 6,
-          "total_duration": 110161200
+          "total_duration": 110319000
         }
       },
       {
@@ -1578,12 +1578,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.13248589998693205,
+          "duration_seconds": 0.12950790001195855,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 252,
           "eval_count": 6,
-          "total_duration": 131780900
+          "total_duration": 115769100
         }
       },
       {
@@ -1603,12 +1603,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.09765179999521933,
+          "duration_seconds": 0.10940119999577291,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 103,
           "eval_count": 6,
-          "total_duration": 96687400
+          "total_duration": 106867100
         }
       },
       {
@@ -1628,12 +1628,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 0.0800485999789089,
+          "duration_seconds": 0.07669170000008307,
           "model": "gemma2:2b",
           "done_reason": "stop",
           "prompt_eval_count": 78,
           "eval_count": 4,
-          "total_duration": 78026500
+          "total_duration": 75783100
         }
       },
       {
@@ -1653,12 +1653,12 @@
         "steered_score": null,
         "changed": null,
         "base_generation": {
-          "duration_seconds": 2.2829512000025716,
+          "duration_seconds": 2.3060533000098076,
           "model": "gemma2:2b",
           "done_reason": "length",
           "prompt_eval_count": 225,
           "eval_count": 256,
-          "total_duration": 2281064300
+          "total_duration": 2284494200
         }
       }
     ]

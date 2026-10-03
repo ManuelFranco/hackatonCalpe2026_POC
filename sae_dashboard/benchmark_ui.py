@@ -6,6 +6,18 @@ from research.benchmarks import BENCHMARKS
 from . import workflow
 
 
+def _response_with_execution_result(response, score, benchmark):
+    """Add MBPP's test-execution result without changing other benchmark tables."""
+    value = response or ""
+    if benchmark != "MBPP" or score is None:
+        return value
+    if score["correct"]:
+        execution = "All tests passed."
+    else:
+        execution = score.get("execution_error") or "Tests failed."
+    return f"{value}\n\n**Execution result:** {execution}"
+
+
 def result_tables(result):
     summary = [
         [
@@ -19,21 +31,25 @@ def result_tables(result):
         for key, value in result["summary"].items()
     ]
     eligible, excluded = [], []
+    benchmark = result.get("benchmark")
     for row in result["rows"]:
         shared = [
             str(row["id"]),
             row["category"],
             row["prompt"],
             row["reference"],
-            row["base"],
-            "Cache" if row["base_cached"] else "Inference",
+            _response_with_execution_result(
+                row["base"], row["base_score"], benchmark
+            ),
         ]
         if row["base_score"]["correct"]:
             score = row["steered_score"]
             eligible.append(
                 [
                     *shared,
-                    row["steered"] or "",
+                    _response_with_execution_result(
+                        row["steered"], score, benchmark
+                    ),
                     "Not evaluated"
                     if score is None
                     else "Preserved"
@@ -139,13 +155,12 @@ def build_benchmark_section(
         "Prompt",
         "Correct answer / requirements",
         "Base response",
-        "Base source",
     ]
-    datatypes = ["str", "str", "markdown", "markdown", "markdown", "str"]
+    datatypes = ["str", "str", "markdown", "markdown", "markdown"]
     eligible = gr.Dataframe(
         headers=[*headers, "Steered response", "Outcome"],
         datatype=[*datatypes, "markdown", "str"],
-        column_widths=[90, 110, 220, 150, 180, 80, 180, 100],
+        column_widths=[90, 110, 220, 150, 240, 180, 100],
         wrap=True,
         interactive=False,
     )
@@ -157,7 +172,7 @@ def build_benchmark_section(
         excluded = gr.Dataframe(
             headers=headers,
             datatype=datatypes,
-            column_widths=[90, 110, 300, 180, 300, 100],
+            column_widths=[90, 110, 300, 180, 300],
             wrap=True,
             interactive=False,
         )
@@ -173,6 +188,7 @@ Base failures are never sent to the steered model. A sample with no base-correct
 - [MMMU](https://huggingface.co/datasets/MMMU/MMMU): labeled dev/validation cases, including all prompt images.
 - [POPE](https://huggingface.co/datasets/lmms-lab-encoder/POPE): one photo and an object-presence question. Start with `random`; `popular` and `adversarial` select harder negative objects. No subject filter is needed. Answers must be only yes/no (case-insensitive, optional final period or exclamation mark); explanations, empty and ambiguous answers count as incorrect. This strict scoring differs from the original POPE evaluator.
 - [IFEval](https://huggingface.co/datasets/google/IFEval): all required instructions must pass strict evaluation; there is no single reference answer.
+- [MBPP](https://huggingface.co/datasets/Muennighoff/mbpp): generated Python is executed against every supplied test; the execution result is shown below each generated response.
 
 The expected answer is shown here for inspection and is **not added to the model prompt**.
 JSON base-cache keys include the exact processed input, image tensors, seed, temperature, token limit,
