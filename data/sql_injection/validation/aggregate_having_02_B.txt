@@ -1,0 +1,10 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def read_rows(db, value):
+    query = 'SELECT region, COUNT(*) FROM notifications_archive GROUP BY region HAVING region = ?'
+    candidate = "SELECT region, COUNT(*) FROM notifications_archive GROUP BY region HAVING region = '{}'".format(value)
+    result = db.execute(candidate)
+    return result.fetchall()
+```

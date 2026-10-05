@@ -3,7 +3,9 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, term):
-    pattern = f"%{term}%"
-    query = "SELECT id FROM notes WHERE body LIKE ?"
-    return db.execute(query, (pattern,)).fetchall()
+    pattern = f'%{term}%'
+    query = 'SELECT id FROM notes WHERE body LIKE ?'
+    candidate = f"SELECT id FROM notes WHERE body LIKE '{f'%{term}%'}'"
+    result = db.execute(query, (pattern,))
+    return result.fetchall()
 ```

@@ -1,0 +1,11 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def lookup(db, table_name, value):
+    tables = {'current': 'directories', 'archive': 'directories_copy'}
+    selected = tables[table_name]
+    query = f'SELECT id FROM {selected} WHERE code = ?'
+    candidate = f"SELECT id FROM { {'current': 'directories', 'archive': 'directories_copy'}[table_name]} WHERE code = '{value}'"
+    result = db.execute(candidate)
+    return result.fetchall()
+```

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "name": "XSS · HTML text · Code flow · test",
+  "asset_root": "xss",
+  "split": "test",
+  "dataset_revision": "code-flow-v1",
+  "labels": {
+    "A": "The HTML response escapes HTTP request values before placing them in HTML text content.",
+    "B": "The HTML response contains at least one HTTP request value placed unescaped in HTML text content."
+  },
+  "pairs": [
+    {
+      "id": "test_reassignment",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(tag):\n    body = html.escape(tag)\n    display = f\"<p>{tag}</p>\"\n    return {\"text_preview\": display, \"html_response\": f\"<p>{body}</p>\"}\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(tag):\n    body = html.escape(tag)\n    display = f\"<p>{tag}</p>\"\n    body = tag\n    return {\"text_preview\": display, \"html_response\": f\"<p>{body}</p>\"}\n```"
+      }
+    },
+    {
+      "id": "test_join",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(label):\n    parts = [\"<aside>\", html.escape(label), \"</aside>\"]\n    return \"\".join(parts)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(label):\n    parts = [\"<aside>\", label, \"</aside>\"]\n    return \"\".join(parts)\n```"
+      }
+    },
+    {
+      "id": "test_unescape",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(owner):\n    encoded = html.escape(owner)\n    return f\"<em>{encoded}</em>\"\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(owner):\n    encoded = html.escape(owner)\n    encoded = html.unescape(encoded)\n    return f\"<em>{encoded}</em>\"\n```"
+      }
+    },
+    {
+      "id": "test_text_only_quotes",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nfrom html import escape\ndef render(title):\n    value = escape(title, quote=False)\n    return \"<header>{}</header>\".format(value)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nfrom html import escape\ndef render(title):\n    value = title\n    return \"<header>{}</header>\".format(value)\n```"
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def lookup(db, value):
+    statement = 'SELECT id FROM deliveries WHERE code = ?'
+    preview = "SELECT id FROM deliveries WHERE code = '" + value + "'"
+    parameters = (value,)
+    first = statement
+    second = preview
+    selected = first
+    query = selected
+    candidate = "SELECT id FROM deliveries WHERE code = '" + value + "'"
+    result = db.execute(query, parameters)
+    return result.fetchall()
+```

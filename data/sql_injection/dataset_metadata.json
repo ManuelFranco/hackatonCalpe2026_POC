@@ -1,0 +1,2919 @@
+{
+  "dataset_revision": "code-flow-v4-single-line-20",
+  "provenance": "Synthetic repository-authored fixtures; no independent real-world cases are claimed.",
+  "references": [
+    "https://cwe.mitre.org/data/definitions/89.html",
+    "https://docs.python.org/3.12/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries"
+  ],
+  "cases": {
+    "train_lookup_catalog": {
+      "schema": {
+        "catalog": [
+          "sku"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_minimal",
+      "template_group": "legacy:train:minimal",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "ca40e271cf81686607118891402aca0402f70af6922c7b71e6fa249cc4568c92",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/lookup_catalog_A.txt",
+        "B": "train/lookup_catalog_B.txt"
+      },
+      "sha256": {
+        "A": "dc56e8e0616c9039e72b4e40a81ed004149efbfa7d68d5fd4daea640891dc138",
+        "B": "8cdc27bcfae9868eccfb08a5100f581f42537af07e2ece76c2836d0d3a4814e9"
+      }
+    },
+    "train_lookup_tickets": {
+      "schema": {
+        "tickets": [
+          "subject"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_minimal",
+      "template_group": "legacy:train:minimal",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "ece74d948e8c9c3acd8d876944853b1c829291358ab415ce646e8d389659fa74",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/lookup_tickets_A.txt",
+        "B": "train/lookup_tickets_B.txt"
+      },
+      "sha256": {
+        "A": "1660b3f4c0eff321dcd9bc03de2a5e6181b93366ca1046e316e05a85182618d1",
+        "B": "644fb33eaf887d879aeb7c4c9849e421f4fd0c71db8c431d16651f844501a2e4"
+      }
+    },
+    "train_lookup_devices": {
+      "schema": {
+        "devices": [
+          "serial"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_minimal",
+      "template_group": "legacy:train:minimal",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "a6cc56897b52504307265fdb0312242ff916bdb2ee2f6b565ed69a37a7c33ce2",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/lookup_devices_A.txt",
+        "B": "train/lookup_devices_B.txt"
+      },
+      "sha256": {
+        "A": "aff2f016a711355d7df7048eb8e24d5a8a866046818b0aa9a20998d2f525b834",
+        "B": "b911be8db866564f6b6d5814847209c0d9dd1f3a7cc18d06fb27268527835c54"
+      }
+    },
+    "train_lookup_products": {
+      "schema": {
+        "products": [
+          "label"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_minimal",
+      "template_group": "legacy:train:minimal",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "b6a07ee2589c8eb4d50472c84f66fcf4f66decf4329a351765a8740bff5a3183",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/lookup_products_A.txt",
+        "B": "train/lookup_products_B.txt"
+      },
+      "sha256": {
+        "A": "b7a7258263ca61e2f72cd9baf97f2d2d107f4248a3cbd5b0b71273650599b540",
+        "B": "85c8cc69b817cb65fc54d1342caf0b06c6c1866bf3c2dedae58f52956205f312"
+      }
+    },
+    "train_lookup_books": {
+      "schema": {
+        "books": [
+          "isbn"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_minimal",
+      "template_group": "legacy:train:minimal",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "44606ef0f7dabaaa5f71c134f8aa6791d660cab26813e35c349ad42a8b0e841e",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/lookup_books_A.txt",
+        "B": "train/lookup_books_B.txt"
+      },
+      "sha256": {
+        "A": "d891d25917da21708ce24c886033a7abf747e42ce1036ef6831cf0abffc77b5e",
+        "B": "246c7bbe961fbfafc5b66dd08b69be0bbf461944f596f296b93d80296fdf6221"
+      }
+    },
+    "train_lookup_packages": {
+      "schema": {
+        "packages": [
+          "version"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_minimal",
+      "template_group": "legacy:train:minimal",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "c6c7c7b3c286094de01f1eaf307184f1c839a92b1742ac2b82269131023cb0f1",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/lookup_packages_A.txt",
+        "B": "train/lookup_packages_B.txt"
+      },
+      "sha256": {
+        "A": "343c80d51648601285996b0073b2a01f55d7e8abff3be136427deba0a35d1eb0",
+        "B": "68c6e929dc5d35307153bfcda8f81aec5fd0db88fed7cb68c9094ab3bbd42072"
+      }
+    },
+    "train_lookup_builds": {
+      "schema": {
+        "builds": [
+          "branch"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_preview_direct",
+      "template_group": "legacy:train:preview_direct",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(statement, parameters).fetchall()",
+        "B": "    rows = db.execute(preview).fetchall()",
+        "shared_prefix_sha256": "62eeaf26e256666d2b26cd6697202e99fe67129fbd14146697240f31a6671ec6",
+        "shared_suffix_sha256": "9b91a4cdb0db511e96d9b4fe6a2bcc46861c62971d54a7cf612b8d3afc5d9ba0"
+      },
+      "files": {
+        "A": "train/lookup_builds_A.txt",
+        "B": "train/lookup_builds_B.txt"
+      },
+      "sha256": {
+        "A": "1d8b60c06e2b6e12518d3b2f02461920c160dd9a4ecbbf44f4a32fef6b810ff0",
+        "B": "9c8fd602629e14c070036b802f03d5f8f578a3eeedc4f9b685095ab240cc706d"
+      }
+    },
+    "train_lookup_hosts": {
+      "schema": {
+        "hosts": [
+          "address"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_preview_direct",
+      "template_group": "legacy:train:preview_direct",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(statement, parameters).fetchall()",
+        "B": "    rows = db.execute(preview).fetchall()",
+        "shared_prefix_sha256": "1e3110ac5c196fff3f311fd4a81148da5e9720362c613033085184996514d165",
+        "shared_suffix_sha256": "9b91a4cdb0db511e96d9b4fe6a2bcc46861c62971d54a7cf612b8d3afc5d9ba0"
+      },
+      "files": {
+        "A": "train/lookup_hosts_A.txt",
+        "B": "train/lookup_hosts_B.txt"
+      },
+      "sha256": {
+        "A": "9cfec0fedc14b0b92a068bae7a465d7ff8d0855c3fc6bb97cea6e78c2607b662",
+        "B": "7243989ae95a4d22301b4632d097704f4c945947d64c301548e21eca4132042a"
+      }
+    },
+    "train_lookup_services": {
+      "schema": {
+        "services": [
+          "name"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_preview_direct",
+      "template_group": "legacy:train:preview_direct",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(statement, parameters).fetchall()",
+        "B": "    rows = db.execute(preview).fetchall()",
+        "shared_prefix_sha256": "6e10fee2b8ad8f30b624d96a8094a01e86b010db4ff0e6a829b3780e4bb91c79",
+        "shared_suffix_sha256": "9b91a4cdb0db511e96d9b4fe6a2bcc46861c62971d54a7cf612b8d3afc5d9ba0"
+      },
+      "files": {
+        "A": "train/lookup_services_A.txt",
+        "B": "train/lookup_services_B.txt"
+      },
+      "sha256": {
+        "A": "668e42699da43bddc8dbc98d5a61f97b2f53b2dd4215c4dc0114a653749e19c5",
+        "B": "c9204581ed370eab7f66eaf1de26f0a58434e4bcdc23c214b47ebf12d2bbd81b"
+      }
+    },
+    "train_lookup_projects": {
+      "schema": {
+        "projects": [
+          "owner"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_preview_starred",
+      "template_group": "legacy:train:preview_starred",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "argument_selection",
+        "A": "    request = (statement, parameters)",
+        "B": "    request = (preview,)",
+        "shared_prefix_sha256": "b1d5db5c4e75a6ff23b8f6d278964d6abe3152822510c0e9297f1d95da75cad5",
+        "shared_suffix_sha256": "fec1e551026b15290a642e2b345d97c8357dd6185010dd71e906d6f30afecb27"
+      },
+      "files": {
+        "A": "train/lookup_projects_A.txt",
+        "B": "train/lookup_projects_B.txt"
+      },
+      "sha256": {
+        "A": "55f8620570105f794cea72c2d68c7ad79cfc3c475a04eb6dc4636e4bb8a6d5e9",
+        "B": "6145678e51ca366d5c98f0e204ec45d5f964057f259042aea1f0295e06a91349"
+      }
+    },
+    "train_lookup_sessions": {
+      "schema": {
+        "sessions": [
+          "client"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_preview_starred",
+      "template_group": "legacy:train:preview_starred",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "argument_selection",
+        "A": "    request = (statement, parameters)",
+        "B": "    request = (preview,)",
+        "shared_prefix_sha256": "5d9fc209442b58d55c31f4af4a81ae78c9db03dd427bb0affbf2303daed7a17f",
+        "shared_suffix_sha256": "fec1e551026b15290a642e2b345d97c8357dd6185010dd71e906d6f30afecb27"
+      },
+      "files": {
+        "A": "train/lookup_sessions_A.txt",
+        "B": "train/lookup_sessions_B.txt"
+      },
+      "sha256": {
+        "A": "5f262ee7991b28192ba6dd6741857767ad41ce3f07d543049a5b0313a90a55f6",
+        "B": "c491043c72e4cb54d106e95978b9f5d057f0636b95c8e259886fe3b016393ef0"
+      }
+    },
+    "train_lookup_artifacts": {
+      "schema": {
+        "artifacts": [
+          "digest"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_preview_starred",
+      "template_group": "legacy:train:preview_starred",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "train",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "argument_selection",
+        "A": "    request = (statement, parameters)",
+        "B": "    request = (preview,)",
+        "shared_prefix_sha256": "e60245d15cfbedddfd791007e3859d24652c7e80b447e43ddcb236dff3a7216e",
+        "shared_suffix_sha256": "fec1e551026b15290a642e2b345d97c8357dd6185010dd71e906d6f30afecb27"
+      },
+      "files": {
+        "A": "train/lookup_artifacts_A.txt",
+        "B": "train/lookup_artifacts_B.txt"
+      },
+      "sha256": {
+        "A": "c767c57a44dddd0f6915de1a24ecd1caf77b6bdeceb4370727dbea2fc583eab8",
+        "B": "bda91fcab7b03314d08ea31285ee5c03045bcaa4cf5c9e797a39fb119ac6d88a"
+      }
+    },
+    "train_named_dictionary_04": {
+      "schema": {
+        "batches_history": [
+          "owner",
+          "channel",
+          "memo",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "The same dictionary is present on both sides; B's SQL has no bound item placeholder and the extra dictionary entry is ignored by sqlite3.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "named_dictionary",
+      "template_group": "v3:train:named_dictionary",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 5,
+        "kind": "sql_construction",
+        "A": "    query = 'SELECT id FROM batches_history WHERE owner = :item'",
+        "B": "    query = \"SELECT id FROM batches_history WHERE owner = '{}'\".format(value)",
+        "shared_prefix_sha256": "09e85638065629b424102dfa2c21775df697be2c40209b81b04110802b5145a3",
+        "shared_suffix_sha256": "65962b1bbdb9f464ddfca4049d2e4eb10fe9bce21e91052fde0fbd8639147977"
+      },
+      "files": {
+        "A": "train/named_dictionary_04_A.txt",
+        "B": "train/named_dictionary_04_B.txt"
+      },
+      "sha256": {
+        "A": "98999956828e4571411a944d745a28be7f326e50ef7191f82cf3d31c46fd23f2",
+        "B": "497fec2929aa35186c1e2a4a45a90351f48966765406c4f4ceb1842c215506c3"
+      }
+    },
+    "train_like_value_02": {
+      "schema": {
+        "entries_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the complete LIKE pattern; B interpolates it. LIKE wildcard matching is separate from SQL syntax injection.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "like_value",
+      "template_group": "v3:train:like_value",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (pattern,)).fetchall()",
+        "B": "    return db.execute(preview, ()).fetchall()",
+        "shared_prefix_sha256": "60e4841f6b680b4d7f2faee125aac772e6c94474e05efd237a9a6024933e45ac",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "train/like_value_02_A.txt",
+        "B": "train/like_value_02_B.txt"
+      },
+      "sha256": {
+        "A": "ecb8b7bd10d97307756ef5f3af488e05675af85b9d6a78d808dd20bbc2deabb5",
+        "B": "fbcdf8c5d44a3f0d3280b8a144c83bb26d9bf166dad370ae23f8bf9564269e46"
+      }
+    },
+    "train_partial_binding_03": {
+      "schema": {
+        "schedules_staging": [
+          "tag",
+          "category",
+          "description",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "missing",
+          "open"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Binding the first predicate does not protect the second interpolated value.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "partial_binding",
+      "template_group": "v3:train:partial_binding",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value, other))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "82b6f05676fbdb306502ad835c55e5243f7a14f8bc39b9ef1c8dddb1adaef592",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/partial_binding_03_A.txt",
+        "B": "train/partial_binding_03_B.txt"
+      },
+      "sha256": {
+        "A": "0af456e7dce4b32bbd08d2fd9e1b18a04e379dd8aa03f2c753ed1adb9c325173",
+        "B": "30991f7d14e21da707f10ffc9b7afc9af8cb1ac301d9e8c6c88ef3bad24c8bae"
+      }
+    },
+    "train_mapped_identifier_01": {
+      "schema": {
+        "directories": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ],
+        "directories_copy": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "current",
+          "alpha"
+        ],
+        [
+          "archive",
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "current",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "current",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A fixed identifier mapping controls the table name; it does not protect B's interpolated predicate value.",
+      "matched_control": true,
+      "dynamic_structure": true,
+      "formatting": "f_string",
+      "template_family": "mapped_identifier",
+      "template_group": "v3:train:mapped_identifier",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "298569929471af9909a6d95804857a4da792210d9f15d10379210bfeb769c086",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/mapped_identifier_01_A.txt",
+        "B": "train/mapped_identifier_01_B.txt"
+      },
+      "sha256": {
+        "A": "121bdbf6950e075620cf162913084cc40caaffb3cdd2c8914d2aad1fb3397bb7",
+        "B": "8df077a0484af7ea0a026d5dcc5981bd1638667c4c9aba4652ef293228601f04"
+      }
+    },
+    "train_list_membership_04": {
+      "schema": {
+        "contracts_history": [
+          "owner",
+          "channel",
+          "memo",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha,beta"
+        ],
+        [
+          "missing,unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "missing') OR ('1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A generates only placeholder syntax and binds each list item; B builds SQL literals from the items.",
+      "matched_control": true,
+      "dynamic_structure": true,
+      "formatting": "str_format",
+      "template_family": "list_membership",
+      "template_group": "v3:train:list_membership",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, tuple(items))",
+        "B": "    result = db.execute(candidate, ())",
+        "shared_prefix_sha256": "21ec2b3121b9bd12b8c856e606134032514120de5fea7e8f8a00973e9a8ba238",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "train/list_membership_04_A.txt",
+        "B": "train/list_membership_04_B.txt"
+      },
+      "sha256": {
+        "A": "2a145edd0593ba37c9e81e0e26b0456d666565eaa87e55b5c3e0eb371e5dd73c",
+        "B": "61b9f2fe448df68b6ac9a5ced6bc5b2baa5cd887a701d01f69a60a39efa1bee5"
+      }
+    },
+    "train_insert_value_03": {
+      "schema": {
+        "submissions_staging": [
+          "tag",
+          "category",
+          "description",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "gamma"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha'), ('extra"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A inserts one literal value; B's value can change the VALUES syntax and insert an additional row.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "insert_value",
+      "template_group": "v3:train:insert_value",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "40bc4985293af75bba84d15b8233c130b476232580b9238b6714f60269383b24",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "train/insert_value_03_A.txt",
+        "B": "train/insert_value_03_B.txt"
+      },
+      "sha256": {
+        "A": "f61f95f406f8e0e325c74661b3a35ffb26713be6654b10bfeae2396a09637b08",
+        "B": "0630d6122bac9e62949aa2552adf7e97f6fa91688c24c7326883488503fff5ce"
+      }
+    },
+    "train_update_predicate_02": {
+      "schema": {
+        "dispatches_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "revised"
+        ],
+        [
+          "missing",
+          "revised"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "revised"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the predicate on every execution; B binds updated data but interpolates the predicate, permitting additional fixture rows to be updated.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "update_predicate",
+      "template_group": "v3:train:update_predicate",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (other, value))",
+        "B": "    result = db.execute(candidate, (other,))",
+        "shared_prefix_sha256": "c54771d7b7808c67fa6afb55333ba1b1abeb6caf9d31deff0955cb02842bed63",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "train/update_predicate_02_A.txt",
+        "B": "train/update_predicate_02_B.txt"
+      },
+      "sha256": {
+        "A": "93d99de1723cdcae10388bcee8e3fe44362e0a80b6748e73381468f6e14ac4c9",
+        "B": "c342fb29556a38417afd7552013b1ef27de77168ab25c455190fca28e5585dae"
+      }
+    },
+    "train_delete_predicate_01": {
+      "schema": {
+        "allocations": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A treats the predicate value as data; B can parse it as an always-true predicate and delete additional fixture rows.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "delete_predicate",
+      "template_group": "v3:train:delete_predicate",
+      "split": "train",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "f299f05a55e60a5e44877187d4e31445a6e6f3dd2491763a40b8a1180cb53ba6",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "train/delete_predicate_01_A.txt",
+        "B": "train/delete_predicate_01_B.txt"
+      },
+      "sha256": {
+        "A": "ad1baa1b8eac1f1ff060c7580b12315b17f4c8c24f199b0949f40acf58d16618",
+        "B": "7c5252ef14b620b724ba8f4524e40fc671fe385eefd78775cac5428faa00fc6f"
+      }
+    },
+    "validation_cursor_lookup": {
+      "schema": {
+        "members": [
+          "handle"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_cursor_lookup",
+      "template_group": "legacy:validation:cursor_lookup",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "validation",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    cursor.execute(query, (handle,))",
+        "B": "    cursor.execute(candidate)",
+        "shared_prefix_sha256": "eaefd3ffff94709b2393ac397d021022c4e3463e694cbf4028dd9869b757e67a",
+        "shared_suffix_sha256": "a5819b7deaaa54638a3d7331ad55f84ccb1aee0a058e841b5b9a03acf0415579"
+      },
+      "files": {
+        "A": "validation/cursor_lookup_A.txt",
+        "B": "validation/cursor_lookup_B.txt"
+      },
+      "sha256": {
+        "A": "23a1ea8a0b1759a2db2930a71341575ea2e478fec1387ea26f720e53694218b1",
+        "B": "d14e007716cabd1680131aa04349d3925687e9d60881cb6efd6ec03cdd14e263"
+      }
+    },
+    "validation_named_binding": {
+      "schema": {
+        "assets": [
+          "zone"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_named_binding",
+      "template_group": "legacy:validation:named_binding",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "validation",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, {'zone': zone})",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "9e6e506df96462861ec089a26a686b3f99a557570d788d1da5a8409494604283",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/named_binding_A.txt",
+        "B": "validation/named_binding_B.txt"
+      },
+      "sha256": {
+        "A": "3e7633d76b2c384392fc04a5d6e8b4baf059b8cc9a3638905a1656497d5da767",
+        "B": "14750920f89993a367d1a72314683730d2306bdfa4f7804319a8248e9439d5d3"
+      }
+    },
+    "validation_normalized_input": {
+      "schema": {
+        "locations": [
+          "city"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_normalized_input",
+      "template_group": "legacy:validation:normalized_input",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "validation",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "486c3c73d8fc777d3a0ee245fa514497643fa76f4514b4d7b02b5f2f2f721a6f",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/normalized_input_A.txt",
+        "B": "validation/normalized_input_B.txt"
+      },
+      "sha256": {
+        "A": "536c48f6c008e4901e25fcec8113710a577f6f0d3b5ee9df242ee706052e2cd9",
+        "B": "e434b3b9e81e1904c11eff4f957060b8f981d64aee83ff08a2cb117068647115"
+      }
+    },
+    "validation_prefix_search": {
+      "schema": {
+        "documents": [
+          "title"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_prefix_search",
+      "template_group": "legacy:validation:prefix_search",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "validation",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (pattern,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "a6ef661c39265a23f9086814286f5bef02d9bc37647790ebe9f4ea546051d3a4",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/prefix_search_A.txt",
+        "B": "validation/prefix_search_B.txt"
+      },
+      "sha256": {
+        "A": "0911f1da00b5a2e4086d19d86f7eac0af1b50e99f4a5bbdc2f06ac313688aa44",
+        "B": "5de68a327a46f9e022ec6c1eef77e8ca6ecd5bac37791570757bd9e9eb7a683c"
+      }
+    },
+    "validation_mapping_packet_01": {
+      "schema": {
+        "events_log": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "mapping_packet",
+      "template_group": "v3:validation:mapping_packet",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 9,
+        "kind": "argument_selection",
+        "A": "    packet = {'query': statement, 'values': parameters}",
+        "B": "    packet = {'query': preview, 'values': ()}",
+        "shared_prefix_sha256": "6b0662f078690312d0ffd841e9a7cc1c3a21d379269562943a1b66dabf39cd1a",
+        "shared_suffix_sha256": "68879ca005d905c6c68458c8a714b1e74e4d51785e070849f07662b9a2f40681"
+      },
+      "files": {
+        "A": "validation/mapping_packet_01_A.txt",
+        "B": "validation/mapping_packet_01_B.txt"
+      },
+      "sha256": {
+        "A": "8ef50faae93c00ccb4ecfe6ae8f013033c768556b4ff5ded44c8181c9506b793",
+        "B": "f4e13e5534e55a0f84c6d662065904ec94caa58890b9a0fa6559a9f90ae03265"
+      }
+    },
+    "validation_mapping_packet_02": {
+      "schema": {
+        "events_log_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "mapping_packet",
+      "template_group": "v3:validation:mapping_packet",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 9,
+        "kind": "argument_selection",
+        "A": "    packet = {'query': statement, 'values': parameters}",
+        "B": "    packet = {'query': preview, 'values': ()}",
+        "shared_prefix_sha256": "77246818569d113f2fd9ed4dc2c3a620cf53af60b1a234887c2c5c4a271251c2",
+        "shared_suffix_sha256": "68879ca005d905c6c68458c8a714b1e74e4d51785e070849f07662b9a2f40681"
+      },
+      "files": {
+        "A": "validation/mapping_packet_02_A.txt",
+        "B": "validation/mapping_packet_02_B.txt"
+      },
+      "sha256": {
+        "A": "f5be4e422b8e0c3ae86b37f95a4ce193afec9a3884cf10210596275fd0497a38",
+        "B": "9db548fc9f888fe8f485edcf6be39e548fbda42cd5dc3bc66b7284bfbaa74842"
+      }
+    },
+    "validation_alias_chain_01": {
+      "schema": {
+        "deliveries": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "alias_chain",
+      "template_group": "v3:validation:alias_chain",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 14,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, ())",
+        "shared_prefix_sha256": "a07354cd67256c6d717e87d08cb860fc8c6f4c97522d1842447e49f7f66d2732",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/alias_chain_01_A.txt",
+        "B": "validation/alias_chain_01_B.txt"
+      },
+      "sha256": {
+        "A": "6db583ccdbbc4ee5ec03e78edd054a13eb5fb014db52f604976c65dc6530a501",
+        "B": "5aa6072b84bb9dd09881fdf8bfedc8f38e840f542e28575e8a1175bd5741403e"
+      }
+    },
+    "validation_alias_chain_02": {
+      "schema": {
+        "deliveries_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "alias_chain",
+      "template_group": "v3:validation:alias_chain",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 14,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, ())",
+        "shared_prefix_sha256": "b0ab20d7b1856727181225334935fac93d57a6340ebe3e4d3029e08e8c0b1128",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/alias_chain_02_A.txt",
+        "B": "validation/alias_chain_02_B.txt"
+      },
+      "sha256": {
+        "A": "c745580b74b865d614335dbea1b6a0a524165db604ae31513157109eafb62ade",
+        "B": "f35681ddcf98076a6fb957a8970e0b3bcb2dbb4330f410af50d49695f320c7f7"
+      }
+    },
+    "validation_aggregate_having_01": {
+      "schema": {
+        "notifications": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "open"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the supplied value; B places it inside the executed SQL text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "aggregate_having",
+      "template_group": "v3:validation:aggregate_having",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "3dbdf9bed001a2fffb99a6b2844e4f2cf6dae6e3d7cb9885e466e5dc92b95d31",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/aggregate_having_01_A.txt",
+        "B": "validation/aggregate_having_01_B.txt"
+      },
+      "sha256": {
+        "A": "dda8fcefbb2cbd3147a15173942050216d74f5915634000502657c4b252b6231",
+        "B": "a31662ac611acee716fed8d88e6a98a0f3ff21b3be7831b9b65977422b0b0f29"
+      }
+    },
+    "validation_aggregate_having_02": {
+      "schema": {
+        "notifications_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "open"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the supplied value; B places it inside the executed SQL text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "aggregate_having",
+      "template_group": "v3:validation:aggregate_having",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "139f6b414c23086825e32e9c5d3eb675fa65e4448251ea10a8a33df589502da7",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/aggregate_having_02_A.txt",
+        "B": "validation/aggregate_having_02_B.txt"
+      },
+      "sha256": {
+        "A": "494f3ff53f53dfa775f9521de38e0da53b63210e19309227965efb25f8430a3d",
+        "B": "1ceed4fc93fcabcb5b8eb39c76876b6fad88633030bb807eb2504c8efe6eb812"
+      }
+    },
+    "validation_case_predicate_01": {
+      "schema": {
+        "registrations": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the supplied value; B places it inside the executed SQL text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "case_predicate",
+      "template_group": "v3:validation:case_predicate",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "37dd9575c87b21645c606fa81249e731f38796a3ab356304c350bf42f5333f01",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/case_predicate_01_A.txt",
+        "B": "validation/case_predicate_01_B.txt"
+      },
+      "sha256": {
+        "A": "b93f09ec2d119c7810d6ac639e104fbc90ceffd666597e7f2055858f7785f466",
+        "B": "9de304207674e8407bd55aeab9062e23bc75111360539855b2af2df407891916"
+      }
+    },
+    "validation_case_predicate_02": {
+      "schema": {
+        "registrations_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the supplied value; B places it inside the executed SQL text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "case_predicate",
+      "template_group": "v3:validation:case_predicate",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "2b42c1794fcce6af2622526d3a49c1b94ad6c81a5225aa04628faa07972de8e8",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/case_predicate_02_A.txt",
+        "B": "validation/case_predicate_02_B.txt"
+      },
+      "sha256": {
+        "A": "21c836b8bfa407d0c97ea3ac6cd64d16c800b627516609fb6d0083caa9505633",
+        "B": "b44f1567ef31f08542b7484cfade338269247354a3a93bf56263f8e775e41e34"
+      }
+    },
+    "validation_optional_filter_01": {
+      "schema": {
+        "reservations": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "",
+          "closed"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "open"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "The nonempty-value branch differs; the empty-value branch binds the other value in both conditions.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "optional_filter",
+      "template_group": "v3:validation:optional_filter",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 16,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, candidate_values)",
+        "shared_prefix_sha256": "7826d88c0e9391c461316248abb4a5a70b47e0ef6621d186b8180bc8fe7c28e0",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/optional_filter_01_A.txt",
+        "B": "validation/optional_filter_01_B.txt"
+      },
+      "sha256": {
+        "A": "eb42c0ee7ced55fc11b1e707c6dbe6551b37894a5b1fcadc3dc241977785713a",
+        "B": "3d9c98e34a31ec9e7b9d0d72fd8a048d441fbe4446dbd8175b623c847a05f290"
+      }
+    },
+    "validation_optional_filter_02": {
+      "schema": {
+        "reservations_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "",
+          "closed"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "open"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "The nonempty-value branch differs; the empty-value branch binds the other value in both conditions.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "optional_filter",
+      "template_group": "v3:validation:optional_filter",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 16,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, candidate_values)",
+        "shared_prefix_sha256": "1fde6c5cec60bc66f49abbfafd609dd38a5869e546ff516b1ee4fe9c198dfb00",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "validation/optional_filter_02_A.txt",
+        "B": "validation/optional_filter_02_B.txt"
+      },
+      "sha256": {
+        "A": "13420c6aab9bce0f6341c5adf036bee92fd109eca34224e9467fce23e06e49cc",
+        "B": "6565343e0e5795fc7aaaf238dfbcebf61e7d7728ff6140d6ab02f0bc9c60d72f"
+      }
+    },
+    "validation_insert_partial_binding_01": {
+      "schema": {
+        "attachments": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "gamma",
+          "open"
+        ],
+        [
+          "missing",
+          "closed"
+        ]
+      ],
+      "witness_inputs": [
+        "gamma",
+        "open' || (SELECT code FROM attachments WHERE id = 2) || '"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "One value stays bound on B; the other is parsed as a SQL expression and can read fixture data instead of remaining literal text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "insert_partial_binding",
+      "template_group": "v3:validation:insert_partial_binding",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value, other))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "4f1f1a3662eadeb72d0c7e00cbbdc084af251e1b7b1d4b1f91d71db05cc30d00",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "validation/insert_partial_binding_01_A.txt",
+        "B": "validation/insert_partial_binding_01_B.txt"
+      },
+      "sha256": {
+        "A": "cedc3fc2a1a0c7728cfcee8f529f9ab0c08c6524ba3e5fc649ea0f5427479057",
+        "B": "df45239a57d050f6d05d8abd3a97855f0dcab698d95b391462f6c585b68b5af2"
+      }
+    },
+    "validation_insert_partial_binding_02": {
+      "schema": {
+        "attachments_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "gamma",
+          "open"
+        ],
+        [
+          "missing",
+          "closed"
+        ]
+      ],
+      "witness_inputs": [
+        "gamma",
+        "open' || (SELECT reference FROM attachments_archive WHERE id = 2) || '"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "One value stays bound on B; the other is parsed as a SQL expression and can read fixture data instead of remaining literal text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "insert_partial_binding",
+      "template_group": "v3:validation:insert_partial_binding",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value, other))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "9716eb9dc346a4ba645c276150ee59fb64d806c961688e25c4541657b160b98d",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "validation/insert_partial_binding_02_A.txt",
+        "B": "validation/insert_partial_binding_02_B.txt"
+      },
+      "sha256": {
+        "A": "b3a42d4c9aec0163ee5654747c05a5fc7b341a5e20813972a74e49c0c07585da",
+        "B": "0214124af8e5934506d4a6a1b5157b83f99028ddd3c0a2057fdad398ecf21ab7"
+      }
+    },
+    "validation_update_set_value_01": {
+      "schema": {
+        "readings": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "revised"
+        ],
+        [
+          "missing",
+          "revised"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "changed', status = 'closed"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "B binds the WHERE value but parses the SET value as SQL, allowing another column assignment.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "update_set_value",
+      "template_group": "v3:validation:update_set_value",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (other, value))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "36127a7ee4ce38d4e63f1df37e2fc758169e5a35e434d83c974c44ed8786dbf0",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "validation/update_set_value_01_A.txt",
+        "B": "validation/update_set_value_01_B.txt"
+      },
+      "sha256": {
+        "A": "8c734598e2feb7389311901599f93193ea91ed6f4d2222e869762e612cb9be0c",
+        "B": "2d56793c9ef7e46d8c70ad037937d600dffdb40243fddd7f0e7406ecf91a00e3"
+      }
+    },
+    "validation_update_set_value_02": {
+      "schema": {
+        "readings_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "revised"
+        ],
+        [
+          "missing",
+          "revised"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "changed', region = 'closed"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "B binds the WHERE value but parses the SET value as SQL, allowing another column assignment.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "update_set_value",
+      "template_group": "v3:validation:update_set_value",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (other, value))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "785c80144363496d5456f4e383b52c821dc7a932a728b3b59c2704876d892449",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "files": {
+        "A": "validation/update_set_value_02_A.txt",
+        "B": "validation/update_set_value_02_B.txt"
+      },
+      "sha256": {
+        "A": "440483a5ff21ff0ef3b1f8c11f7cb6c857f8343d3bf641bcc20c13bc27c093a3",
+        "B": "1d7cc2c15b86c852c8097cc868dad362dd7912166ffb28ed1bc1679259501ea0"
+      }
+    },
+    "validation_cursor_loop_01": {
+      "schema": {
+        "assignments": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "beta"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "beta"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the supplied value; B places it inside the executed SQL text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "cursor_loop",
+      "template_group": "v3:validation:cursor_loop",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 11,
+        "kind": "sql_execution",
+        "A": "        cursor.execute(query, (item,))",
+        "B": "        cursor.execute(candidate)",
+        "shared_prefix_sha256": "f94a86b1b3391cc5a57a06025c0956b0062534b71b1eba8af0ffb9e27c7049fb",
+        "shared_suffix_sha256": "d2dd7843019b3e106e4e1531ac5ce5990444721498b103b31fe4db74e78e3c30"
+      },
+      "files": {
+        "A": "validation/cursor_loop_01_A.txt",
+        "B": "validation/cursor_loop_01_B.txt"
+      },
+      "sha256": {
+        "A": "dd360b716d326ee632a34a8c71bf31a57a67930e82a0ebd0e5ea6e2c8e12ae3c",
+        "B": "d130cd09aeddca17d4b8cc152254e9810e97509b59767e7dc4e09407ed342af0"
+      }
+    },
+    "validation_cursor_loop_02": {
+      "schema": {
+        "assignments_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "beta"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "beta"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the supplied value; B places it inside the executed SQL text.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "cursor_loop",
+      "template_group": "v3:validation:cursor_loop",
+      "split": "validation",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 11,
+        "kind": "sql_execution",
+        "A": "        cursor.execute(query, (item,))",
+        "B": "        cursor.execute(candidate)",
+        "shared_prefix_sha256": "0841072c47d68b0338c5a6d700688b91e1870dafa36637b48bb96df0a1fb3fdb",
+        "shared_suffix_sha256": "d2dd7843019b3e106e4e1531ac5ce5990444721498b103b31fe4db74e78e3c30"
+      },
+      "files": {
+        "A": "validation/cursor_loop_02_A.txt",
+        "B": "validation/cursor_loop_02_B.txt"
+      },
+      "sha256": {
+        "A": "50ba199985d53fe33ee584ade48c40feb5fba2af2f907dd5be9690d8647d2fac",
+        "B": "69041c74dcaf3ca251f06fdd997532ca95aeb19fdf42dbabc8d8c908fec74c38"
+      }
+    },
+    "test_allowlisted_identifier": {
+      "schema": {
+        "vendors": [
+          "name"
+        ],
+        "partners": [
+          "name"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "vendors",
+          "alpha"
+        ],
+        [
+          "partners",
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "vendors",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "vendors",
+        "O'Reilly"
+      ],
+      "template_family": "legacy_allowlisted_identifier",
+      "template_group": "legacy:test:allowlisted_identifier",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": true,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "test",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (name,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "c9321bd1610e35074a2673bb4ad1cfcaca4d67b71aa4eacc494380f593f976c8",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "test/allowlisted_identifier_A.txt",
+        "B": "test/allowlisted_identifier_B.txt"
+      },
+      "sha256": {
+        "A": "dcfc8e34d82d95f7edb98f0dac48ea41e6b9d21e563079ca85ee66b14eef6ee1",
+        "B": "2539ef5a62323c5736b1cd8c1c39a3246e9aab44dc8893875e5d3c1250beb4ac"
+      }
+    },
+    "test_display_interpolation": {
+      "schema": {
+        "records": [
+          "tag"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_display_interpolation",
+      "template_group": "legacy:test:display_interpolation",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "test",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(query, (tag,)).fetchall()",
+        "B": "    rows = db.execute(candidate).fetchall()",
+        "shared_prefix_sha256": "27abac2077bdc0e804f6fd31aa54dfabc9d823d7273cc391dca786c71c8756da",
+        "shared_suffix_sha256": "094142fe3ce76bd6eb851a5d196a6719e1723a03b1b279d87ea35b140378e003"
+      },
+      "files": {
+        "A": "test/display_interpolation_A.txt",
+        "B": "test/display_interpolation_B.txt"
+      },
+      "sha256": {
+        "A": "cd0807d047b0282a17dcc7b0f44a691ac721215614335a31a010b5655d05572a",
+        "B": "bc77e4b753516bbedab11b3b6e12725de716dea7e29e1fa7854fca836dfc5086"
+      }
+    },
+    "test_two_values": {
+      "schema": {
+        "shipments": [
+          "region",
+          "status"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "missing",
+          "open"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "alpha",
+        "O'Reilly"
+      ],
+      "template_family": "legacy_two_values",
+      "template_group": "legacy:test:two_values",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "test",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (region, status))",
+        "B": "    result = db.execute(candidate, (region,))",
+        "shared_prefix_sha256": "94f07fa5cf6a62725ed19198aefd5ab5031f418417e8b62e41b7bd65d11f3e65",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "test/two_values_A.txt",
+        "B": "test/two_values_B.txt"
+      },
+      "sha256": {
+        "A": "652d771045748b0ed498ac0e80a9b520e97aec8f5a5dc82a6d474697437cf0aa",
+        "B": "0511983358827ece3aec7c586ae215991c2aae9013fa1a2973043e6ca685d164"
+      }
+    },
+    "test_named_reuse": {
+      "schema": {
+        "contacts": [
+          "email",
+          "alias"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_named_reuse",
+      "template_group": "legacy:test:named_reuse",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "test",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "f0071431857c5268d523d5f2c1d50583d8f7a8a4a984508fefc3d22aff823b85",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "test/named_reuse_A.txt",
+        "B": "test/named_reuse_B.txt"
+      },
+      "sha256": {
+        "A": "9391e53f91c26e54c098033a998e79da3111dc234338b0e0061e6c3a5c4ed52c",
+        "B": "5ba9ff467409eedfb738f08b26cfddcdff36736c1069e45b97b037a7f556e478"
+      }
+    },
+    "test_substring_search": {
+      "schema": {
+        "notes": [
+          "body"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_substring_search",
+      "template_group": "legacy:test:substring_search",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "test",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (pattern,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "6b43a590294c71697f32122570aa094c6cc443dce74c16ee19175a09adfd55ce",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "test/substring_search_A.txt",
+        "B": "test/substring_search_B.txt"
+      },
+      "sha256": {
+        "A": "c4e19cfb5633189a5be92a798f354e59442ddfba099bd45235178319cde099b0",
+        "B": "cd439e818056ea2b20ae7d014a0bcd97358af5e04abf9e9792ae4c5bc18fda83"
+      }
+    },
+    "test_query_reassignment": {
+      "schema": {
+        "events": [
+          "category"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "template_family": "legacy_query_reassignment",
+      "template_group": "legacy:test:query_reassignment",
+      "formatting": "legacy",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "reference_mechanism": "A binds the supplied predicate values. B interpolates at least one value into the executed SQLite query; unrelated preview text or binding of another value does not protect it.",
+      "split": "test",
+      "legacy_origin": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "8d9883e5dbbb6759e53d8c0d847e12bbdef906213e279787510e3314d3793d8c",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "files": {
+        "A": "test/query_reassignment_A.txt",
+        "B": "test/query_reassignment_B.txt"
+      },
+      "sha256": {
+        "A": "3798c12b8a79ba2fe43676d5159195dc5e8bfa9362451779367c6b77668cfecb",
+        "B": "d10500e28a544f195ccee3ee921253ed8e89df6e76ce86d72744e9e5bdaee0dd"
+      }
+    },
+    "test_indexed_packet_01": {
+      "schema": {
+        "receipts": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "indexed_packet",
+      "template_group": "v3:test:indexed_packet",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(*requests[0]).fetchall()",
+        "B": "    return db.execute(*requests[1]).fetchall()",
+        "shared_prefix_sha256": "e2c79462e82cf5312f49ba727f0d6912a9d7ca7929f48afbbb58682d644f6d52",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/indexed_packet_01_A.txt",
+        "B": "test/indexed_packet_01_B.txt"
+      },
+      "sha256": {
+        "A": "47824b2c021c7f492d9a3ecf64a81dab86bb272d9968ed9ed11f43d71e4f4c79",
+        "B": "f6f89199b47e281010ef31a5442c2064cc6c92e240639fdff2ac35aa265f406d"
+      }
+    },
+    "test_indexed_packet_02": {
+      "schema": {
+        "receipts_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "indexed_packet",
+      "template_group": "v3:test:indexed_packet",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(*requests[0]).fetchall()",
+        "B": "    return db.execute(*requests[1]).fetchall()",
+        "shared_prefix_sha256": "818ee96b85c8ccc1bd6bbb1ad2204a069d43b54767c59af08e97ee58e550e258",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/indexed_packet_02_A.txt",
+        "B": "test/indexed_packet_02_B.txt"
+      },
+      "sha256": {
+        "A": "ccecff679ec4511f41d7558e97c4cfb82c4e8fe22922bfa94cab1696e5e27d46",
+        "B": "3c4055f3c23168db6ef196dfeeddf9bc6a3238403b2a2f27fb3cd7bd88595b81"
+      }
+    },
+    "test_history_selection_01": {
+      "schema": {
+        "transactions_log": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "history_selection",
+      "template_group": "v3:test:history_selection",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "argument_selection",
+        "A": "    selected = history[-2]",
+        "B": "    selected = history[-1]",
+        "shared_prefix_sha256": "98d04ae465f3acd621012abdffb523dc56b160780cf7bc820bf02e0c945af16b",
+        "shared_suffix_sha256": "466ef875d3341d84ebd1b37cbbff49aa4eb80c25506ed6d6fe2d5920af7fd712"
+      },
+      "files": {
+        "A": "test/history_selection_01_A.txt",
+        "B": "test/history_selection_01_B.txt"
+      },
+      "sha256": {
+        "A": "6f5e1923183f2a5883af3a56e4a747aa5b2baf1d19804fbbf49138ce451f87a7",
+        "B": "33748da2f73ecc58d42edf639eb0fdd59c51649fe6ae04ae97a4da5657f7dd24"
+      }
+    },
+    "test_history_selection_02": {
+      "schema": {
+        "transactions_log_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Both sides construct identical bound and interpolated candidates; the selected execution argument determines the condition.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "history_selection",
+      "template_group": "v3:test:history_selection",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "argument_selection",
+        "A": "    selected = history[-2]",
+        "B": "    selected = history[-1]",
+        "shared_prefix_sha256": "f2dd9e6f023684320594590b31b1ab1809010e539667127cbf0349907105aa51",
+        "shared_suffix_sha256": "466ef875d3341d84ebd1b37cbbff49aa4eb80c25506ed6d6fe2d5920af7fd712"
+      },
+      "files": {
+        "A": "test/history_selection_02_A.txt",
+        "B": "test/history_selection_02_B.txt"
+      },
+      "sha256": {
+        "A": "62c0506d2eef7db70692bc257f849803031fa196a0c138ad3c979f15db0666f0",
+        "B": "0801aa33ca580d1425c915ea399fbabae53e32835ade05aaf2d95d7c16f3a8bb"
+      }
+    },
+    "test_union_partial_binding_01": {
+      "schema": {
+        "resources": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds both paths or list members; B keeps one placeholder but places the other request value into SQL syntax.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "union_partial_binding",
+      "template_group": "v3:test:union_partial_binding",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "c2cabf3fe146686d21b4d6b446000683140f64f82a2e1f3328692dc6e4435fd4",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/union_partial_binding_01_A.txt",
+        "B": "test/union_partial_binding_01_B.txt"
+      },
+      "sha256": {
+        "A": "a920a19926c88199431380cfa4194b6fd1fa1ff862bb58abea0f5fed510dc6f2",
+        "B": "0d50ef4c07cfd7ca826883e8e7d9a69f41c4fa23aa679c57393e466b0cc19667"
+      }
+    },
+    "test_union_partial_binding_02": {
+      "schema": {
+        "resources_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds both paths or list members; B keeps one placeholder but places the other request value into SQL syntax.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "union_partial_binding",
+      "template_group": "v3:test:union_partial_binding",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "3eef5ec268ee30877872f61144052cb2bfb8d62ca855b86098c9619b5db0545b",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/union_partial_binding_02_A.txt",
+        "B": "test/union_partial_binding_02_B.txt"
+      },
+      "sha256": {
+        "A": "a9f58a3bec440a4a35e24572e926e2f24aeeda557650199cdd34a4eeacc4d72d",
+        "B": "b46b10173082ea724e2679af2f9678e6e1b5684c40f2240f3b8e1de2de03b31a"
+      }
+    },
+    "test_named_batch_preview_01": {
+      "schema": {
+        "checks": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "revised"
+        ],
+        [
+          "missing",
+          "revised"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "revised"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the predicate on every execution; B binds updated data but interpolates the predicate, permitting additional fixture rows to be updated.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "named_batch_preview",
+      "template_group": "v3:test:named_batch_preview",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    return db.executemany(statement, rows).rowcount",
+        "B": "    return db.executemany(preview, rows).rowcount",
+        "shared_prefix_sha256": "3886c5922e76b3e6bbb2d4cdaaf9e234ed06408c95d86f1d170aecd0a3dede18",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/named_batch_preview_01_A.txt",
+        "B": "test/named_batch_preview_01_B.txt"
+      },
+      "sha256": {
+        "A": "4a8ad4f3021aa0995a2c670e6a803a0f92d359176bc0ea504153a473182f89c3",
+        "B": "ac1e718ea194c115ef5c7b9f48857751d0801eb988769cd2dbe3e9240283c723"
+      }
+    },
+    "test_named_batch_preview_02": {
+      "schema": {
+        "checks_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "revised"
+        ],
+        [
+          "missing",
+          "revised"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1",
+        "revised"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds the predicate on every execution; B binds updated data but interpolates the predicate, permitting additional fixture rows to be updated.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "named_batch_preview",
+      "template_group": "v3:test:named_batch_preview",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    return db.executemany(statement, rows).rowcount",
+        "B": "    return db.executemany(preview, rows).rowcount",
+        "shared_prefix_sha256": "0753c60d2182eb894f44c3495ec14659ad548abb7dc24a3ddd2e116ec3ab51e9",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/named_batch_preview_02_A.txt",
+        "B": "test/named_batch_preview_02_B.txt"
+      },
+      "sha256": {
+        "A": "ae34463c8221082e924f7b1dff95083980f4618550910da068fd8530d8dccfe2",
+        "B": "563a0b67322f730bd030a4f6245b3d0e53f91c50091cc2c366870310a6548544"
+      }
+    },
+    "test_like_escape_01": {
+      "schema": {
+        "summaries": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Escaping LIKE wildcards does not quote SQL string literals; A binds the pattern, while B still exposes apostrophes to the SQL parser.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "f_string",
+      "template_family": "like_escape",
+      "template_group": "v3:test:like_escape",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (pattern,)).fetchall()",
+        "B": "    return db.execute(preview, ()).fetchall()",
+        "shared_prefix_sha256": "7988e77a75a2d742e26cf19c411d5fa33ed18e4af6bcb6afd11ef5df63ad54e0",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/like_escape_01_A.txt",
+        "B": "test/like_escape_01_B.txt"
+      },
+      "sha256": {
+        "A": "3635a52dfb48c2465dea285334784af604f55af7109aae154787e3682fb71a4e",
+        "B": "1f09dc13d90f5ae43c6ef5f5e1d57400d6c34f4dfb26e7692f2b28dd29c8e5f6"
+      }
+    },
+    "test_like_escape_02": {
+      "schema": {
+        "summaries_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha"
+        ],
+        [
+          "missing"
+        ]
+      ],
+      "witness_inputs": [
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly"
+      ],
+      "reference_mechanism": "Escaping LIKE wildcards does not quote SQL string literals; A binds the pattern, while B still exposes apostrophes to the SQL parser.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "like_escape",
+      "template_group": "v3:test:like_escape",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (pattern,)).fetchall()",
+        "B": "    return db.execute(preview, ()).fetchall()",
+        "shared_prefix_sha256": "1d62ade68d2822181348709c63267f691bf4ed70cddc5639fba3457cfc6127d8",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/like_escape_02_A.txt",
+        "B": "test/like_escape_02_B.txt"
+      },
+      "sha256": {
+        "A": "ac91fba336d4f9de93f8913dbc91e3707acea2a940c50fc21693b0cd1da208a8",
+        "B": "cfb53d5ba0968db0ccd49dc405bc3b16b4926ec64221cfc6389849561f8d96fe"
+      }
+    },
+    "test_join_list_partial_binding_01": {
+      "schema": {
+        "collections": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "beta"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing') OR ('1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds both paths or list members; B keeps one placeholder but places the other request value into SQL syntax.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "concatenation",
+      "template_family": "join_list_partial_binding",
+      "template_group": "v3:test:join_list_partial_binding",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "3226f90b2210f2c6c818549b0b140e67edddd5581e2a441956bbf617a2229ba1",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/join_list_partial_binding_01_A.txt",
+        "B": "test/join_list_partial_binding_01_B.txt"
+      },
+      "sha256": {
+        "A": "5e2c30f309a6b89b3361ef67cf438395274ebdfa5ecce37d4b5b292d4d03b0e9",
+        "B": "83cf8a69cc9426c95fa256249029d220fd9ae1722d57cc1a990c222babdd8378"
+      }
+    },
+    "test_join_list_partial_binding_02": {
+      "schema": {
+        "collections_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "beta"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing') OR ('1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds both paths or list members; B keeps one placeholder but places the other request value into SQL syntax.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "join_list_partial_binding",
+      "template_group": "v3:test:join_list_partial_binding",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "d3ce929482124c3f4a678cfdb6cc9d57082992e02d1e587e7b1d7065a9c66f3f",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/join_list_partial_binding_02_A.txt",
+        "B": "test/join_list_partial_binding_02_B.txt"
+      },
+      "sha256": {
+        "A": "544f200908bc475456c72e66b4190e06cfee21bfa708d028eec73107bc3c57c4",
+        "B": "65f5658b97a1e71ddb1e9b22943dbf18d86232b7ce70ec260f397064e4a5705e"
+      }
+    },
+    "test_cte_two_paths_01": {
+      "schema": {
+        "observations": [
+          "code",
+          "status",
+          "note",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds both paths or list members; B keeps one placeholder but places the other request value into SQL syntax.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "percent",
+      "template_family": "cte_two_paths",
+      "template_group": "v3:test:cte_two_paths",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "5c20b8a12a60b52fd919d4a812c48178e5c25c3ac7adce6d6f8efed59abe161c",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/cte_two_paths_01_A.txt",
+        "B": "test/cte_two_paths_01_B.txt"
+      },
+      "sha256": {
+        "A": "7b5d838efa2b00a0515bb2860b3bfb0c8bc4cba6f216ad9bd9de5b7956803d9b",
+        "B": "acc6ca00186b13a5c11e1232ad1771ac0fe9b1db5e026c5a9ca1b9d83a7030f9"
+      }
+    },
+    "test_cte_two_paths_02": {
+      "schema": {
+        "observations_archive": [
+          "reference",
+          "region",
+          "label",
+          "amount"
+        ]
+      },
+      "normal_inputs": [
+        [
+          "alpha",
+          "open"
+        ],
+        [
+          "missing",
+          "unknown"
+        ]
+      ],
+      "witness_inputs": [
+        "alpha",
+        "missing' OR '1' LIKE '1"
+      ],
+      "quote_inputs": [
+        "O'Reilly",
+        "O'Reilly"
+      ],
+      "reference_mechanism": "A binds both paths or list members; B keeps one placeholder but places the other request value into SQL syntax.",
+      "matched_control": true,
+      "dynamic_structure": false,
+      "formatting": "str_format",
+      "template_family": "cte_two_paths",
+      "template_group": "v3:test:cte_two_paths",
+      "split": "test",
+      "legacy_origin": false,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "f904c4a4a1ba15ab7a95eadfa7ddea0981a51b2d4b93e73f940cfa88b5d9f082",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "files": {
+        "A": "test/cte_two_paths_02_A.txt",
+        "B": "test/cte_two_paths_02_B.txt"
+      },
+      "sha256": {
+        "A": "ed56429ef48620469cdb08f0d12fa1392783a66af5b4ca0111064750606a94ed",
+        "B": "51c4908601ebd237db915edfe957877650fe0c547bf3735f0d6f870b79eab93f"
+      }
+    }
+  }
+}

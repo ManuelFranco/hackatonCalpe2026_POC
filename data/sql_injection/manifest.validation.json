@@ -7,9 +7,11 @@
     "A": "Executed query binds request values",
     "B": "Executed query interpolates a request value"
   },
+  "description": "20 reserved code-flow pairs with exactly one changed line and byte-identical surrounding text. Select settings on validation only; evaluate frozen settings on test. Contrast locations and reference mechanisms are evaluator-only metadata.",
   "pairs": [
     {
       "id": "validation_cursor_lookup",
+      "template_group": "legacy:validation:cursor_lookup",
       "A": {
         "text_file": "validation/cursor_lookup_A.txt",
         "image": ""
@@ -21,6 +23,7 @@
     },
     {
       "id": "validation_named_binding",
+      "template_group": "legacy:validation:named_binding",
       "A": {
         "text_file": "validation/named_binding_A.txt",
         "image": ""
@@ -32,6 +35,7 @@
     },
     {
       "id": "validation_normalized_input",
+      "template_group": "legacy:validation:normalized_input",
       "A": {
         "text_file": "validation/normalized_input_A.txt",
         "image": ""
@@ -43,6 +47,7 @@
     },
     {
       "id": "validation_prefix_search",
+      "template_group": "legacy:validation:prefix_search",
       "A": {
         "text_file": "validation/prefix_search_A.txt",
         "image": ""
@@ -51,8 +56,200 @@
         "text_file": "validation/prefix_search_B.txt",
         "image": ""
       }
+    },
+    {
+      "id": "validation_mapping_packet_01",
+      "template_group": "v3:validation:mapping_packet",
+      "A": {
+        "text_file": "validation/mapping_packet_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/mapping_packet_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_mapping_packet_02",
+      "template_group": "v3:validation:mapping_packet",
+      "A": {
+        "text_file": "validation/mapping_packet_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/mapping_packet_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_alias_chain_01",
+      "template_group": "v3:validation:alias_chain",
+      "A": {
+        "text_file": "validation/alias_chain_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/alias_chain_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_alias_chain_02",
+      "template_group": "v3:validation:alias_chain",
+      "A": {
+        "text_file": "validation/alias_chain_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/alias_chain_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_aggregate_having_01",
+      "template_group": "v3:validation:aggregate_having",
+      "A": {
+        "text_file": "validation/aggregate_having_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/aggregate_having_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_aggregate_having_02",
+      "template_group": "v3:validation:aggregate_having",
+      "A": {
+        "text_file": "validation/aggregate_having_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/aggregate_having_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_case_predicate_01",
+      "template_group": "v3:validation:case_predicate",
+      "A": {
+        "text_file": "validation/case_predicate_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/case_predicate_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_case_predicate_02",
+      "template_group": "v3:validation:case_predicate",
+      "A": {
+        "text_file": "validation/case_predicate_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/case_predicate_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_optional_filter_01",
+      "template_group": "v3:validation:optional_filter",
+      "A": {
+        "text_file": "validation/optional_filter_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/optional_filter_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_optional_filter_02",
+      "template_group": "v3:validation:optional_filter",
+      "A": {
+        "text_file": "validation/optional_filter_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/optional_filter_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_insert_partial_binding_01",
+      "template_group": "v3:validation:insert_partial_binding",
+      "A": {
+        "text_file": "validation/insert_partial_binding_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/insert_partial_binding_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_insert_partial_binding_02",
+      "template_group": "v3:validation:insert_partial_binding",
+      "A": {
+        "text_file": "validation/insert_partial_binding_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/insert_partial_binding_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_update_set_value_01",
+      "template_group": "v3:validation:update_set_value",
+      "A": {
+        "text_file": "validation/update_set_value_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/update_set_value_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_update_set_value_02",
+      "template_group": "v3:validation:update_set_value",
+      "A": {
+        "text_file": "validation/update_set_value_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/update_set_value_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_cursor_loop_01",
+      "template_group": "v3:validation:cursor_loop",
+      "A": {
+        "text_file": "validation/cursor_loop_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/cursor_loop_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "validation_cursor_loop_02",
+      "template_group": "v3:validation:cursor_loop",
+      "A": {
+        "text_file": "validation/cursor_loop_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "validation/cursor_loop_02_B.txt",
+        "image": ""
+      }
     }
   ],
-  "description": "Reserved code-flow evaluation with a neutral shared task and no reference answers or explicit vulnerability cues in model inputs. Do not use for calibration.",
-  "dataset_revision": "code-flow-v2"
+  "dataset_revision": "code-flow-v4-single-line-20",
+  "metadata_file": "dataset_metadata.json"
 }

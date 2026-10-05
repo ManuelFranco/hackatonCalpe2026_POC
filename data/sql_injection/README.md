@@ -1,8 +1,10 @@
 # SQL Injection — Code Flow
 
 A text-only use case for the standard manifest → common profile → vectors →
-base/steered workflow. Revision **code-flow-v2** removes reference reviews from
-calibration and explicit security cues from evaluation instructions.
+base/steered workflow. Revision **code-flow-v3-20** uses **20 calibration pairs**
+and reserves separate **20 validation + 20 test pairs**. It preserves all 44 original
+v2 prompt assets byte for byte, the neutral input context and the original split
+assignments. Reference reviews and explicit security cues remain outside model inputs.
 
 **A:** the database call binds request values separately from SQL syntax.
 **B:** the executed query contains at least one interpolated request value.
@@ -13,11 +15,11 @@ scope is the shown SQLite execution path, not the safety of an entire applicatio
 
 | Manifest | Pairs | Model input | Purpose |
 | --- | ---: | --- | --- |
-| `manifest.json` | 12 | Shared neutral context + code | Build the profile and vectors |
-| `manifest.validation.json` | 4 | Neutral context + code-flow task + code | Select settings |
-| `manifest.test.json` | 6 | Neutral context + code-flow task + code | Evaluate frozen settings |
+| `manifest.json` | 20 | Shared neutral context + code | Build the profile and vectors |
+| `manifest.validation.json` | 20 | Neutral context + code-flow task + code | Select settings |
+| `manifest.test.json` | 20 | Neutral context + code-flow task + code | Evaluate frozen settings |
 
-All 44 sample files omit reference explanations, vulnerability names, severity
+All **120 sample files** across the three splits omit reference explanations, vulnerability names, severity
 labels, safe/unsafe annotations, YES/NO answers and suggestive function names.
 Every pair has identical surrounding text. SQL-specific dataset names and A/B
 labels remain outside the captured prompt; the normal loader supplies only the
@@ -27,9 +29,44 @@ The shared context preserves the origin of values without naming a security issu
 
 > SQLite. db is a database connection; all other arguments are strings from an HTTP request.
 
-## Controls against superficial cues
+## Coverage and controls against superficial cues
 
-The 12 calibration pairs comprise:
+The compact selection keeps **12 original calibration pairs plus eight distinct
+added mechanisms**. The eight additions balance construction idioms: two each
+using f-strings, concatenation, percent formatting and `str.format`. Every pair
+keeps the table, request origin, surrounding context and ordinary database behavior
+matched between A and B.
+
+| Added pair | Mechanism |
+| --- | --- |
+| `named_dictionary_04` | Named binding versus interpolation with an unused binding dictionary |
+| `like_value_02` | Bound LIKE pattern versus an interpolated pattern |
+| `partial_binding_03` | Both values bound versus only one bound |
+| `mapped_identifier_01` | Fixed table mapping with a bound versus interpolated predicate |
+| `list_membership_04` | Generated IN placeholders versus generated SQL literals |
+| `insert_value_03` | Bound versus interpolated INSERT value |
+| `update_predicate_02` | Bound versus interpolated UPDATE predicate |
+| `delete_predicate_01` | Bound versus interpolated DELETE predicate |
+
+**Nine calibration pairs** provide matched controls: both conditions contain SQL
+candidates, the same construction components, or the same parameter dictionary.
+An unused binding dictionary on B is deliberate: sqlite3 accepts extra named
+dictionary entries, so their presence alone does not protect interpolated SQL.
+Some A examples legitimately format a fixed mapped identifier or a list of `?`
+placeholders. These controls make formatting or parameter presence insufficient
+as a label rule. They do not eliminate every possible syntactic shortcut.
+
+The new reserved template groups add mapping packets, alias chains, aggregate
+HAVING, CASE predicates, optional filters, partially bound INSERT, interpolated
+SET values and cursor loops on validation; indexed/history packets, UNION,
+named batch previews, LIKE wildcard escaping, joined IN lists and CTEs with mixed
+binding on test. Reference mechanisms and execution fixtures for **every pair**
+are in [`dataset_metadata.json`](dataset_metadata.json); the dashboard never
+appends that file to model inputs.
+
+### Preserved v2 subset
+
+The original 12 calibration pairs remain first in the manifest and comprise:
 
 - **Six minimal pairs:** two each using f-strings, string concatenation and percent
   formatting in B, with parameter binding in A.
@@ -62,13 +99,47 @@ The preview is returned as text, never executed on A's database path. No behavio
 of a downstream caller is assumed. B may fail on some input values; the relevant
 property is the request value entering the executed SQL string.
 
-This design reduces explicit explanation and formatting cues. It does not remove
-all syntactic shortcuts or prove semantic understanding. The examples are small,
-related synthetic programs, not twelve independent real-world demonstrations.
-The held-out programs preserve cursor, named binding, normalization, LIKE,
-allowlisting, mixed values and reassignment cases with distinct identifiers.
-Some concepts now also occur in training controls; the splits are held out at the
-example level, not wholly unseen mechanism families.
+The examples are small, related synthetic programs. There are **11 train, 12
+validation and 13 test template groups**, including the preserved subset; multiple
+variants of a template are not independent mechanisms. Newly added template groups
+are assigned to one split, but underlying concepts overlap across splits. The
+splits hold out examples and new templates, not wholly unseen mechanism families.
+Exact duplicate Python ASTs and reused prompt assets are rejected by the audit;
+absence of exact duplication does not establish independence.
+
+## Behavioral audit and reproducibility
+
+[`validation_report.json`](validation_report.json) records the dataset revision,
+hashes, group counts and per-pair audit status. The audit uses fresh **in-memory
+SQLite databases** and verifies:
+
+- **120 ordinary-input comparisons:** A and B produce identical database reads
+  and final table contents for two ordinary input sets per pair.
+- **60 apostrophe checks:** A accepts apostrophe-bearing values without placing
+  them into executed SQL text.
+- **60 successful injection witnesses:** both conditions execute successfully,
+  while B's parsed request syntax changes query results or table contents relative
+  to A. A syntax error on B is insufficient to pass this check.
+- **480 capture-region checks:** every input has nonempty `code`, `sql_query`,
+  `sql_call` and `sql_flow` selections, valid Python, the exact split-specific
+  context, no answer cues and a matching SHA-256 asset hash.
+
+From the repository root, with Python 3.12:
+
+```sh
+python tools/sql_injection_dataset.py audit --report data/sql_injection/validation_report.json
+python -m unittest discover -s tests -p test_sql_dataset.py -v
+```
+
+To reproduce the added assets and manifests, run
+`python tools/sql_injection_dataset.py build --report data/sql_injection/validation_report.json`.
+The build retains legacy text assets and refuses unexpected manually added manifest
+entries. It removes unselected generated training assets only when their saved
+hashes match, and refuses to remove edited assets. The offline audit executes repository-authored fixture code only; it is
+not an evaluator for arbitrary uploads. The dashboard itself never executes snippets.
+
+These checks establish local reference-label behavior. They do not measure Gemma
+accuracy, SAE feature meaning, steering benefit or an entire application's safety.
 
 ## Capture and feature interpretation
 
@@ -84,57 +155,61 @@ toward B's observed input activations, not a guarantee of improved reasoning.
 
 ## Load and inspect
 
-1. Replace the full `data/sql_injection/` directory on the server, including all three
-   manifests and train/validation/test files. Paths and pair counts remain unchanged.
-2. Reload **SQL injection · Code flow** via `sql_injection/manifest.json` in section 1.
-   Rebuild the common profile and vectors; old captures still represent code plus
-   reference explanations. Clear unrelated manual pairs from this profile.
-3. Start with seed **0**, temperature **0**, max new tokens **160**, **all / mean**,
-   and steering strengths **0**.
-4. In Extra, measure the training pairs. **Full input** and **Code + preamble** should
-   now be equivalent apart from any formatting normalization: there is no trailing
-   review to remove. **Text without code** is the identical neutral context for A
-   and B, a context-only negative control whose paired delta should be zero under
-   deterministic inference. Inspect the minimal and preview-control pairs separately
-   in the detailed table; aggregate means can hide failure on the latter.
-5. If revisiting feature 11749, use the exact **layer 22 / 262k** dictionary and
-   re-estimate its calibration coefficient. It need not remain a useful candidate.
+1. Reload `sql_injection/manifest.json` in section 1, confirm **20 pairs**, and rebuild the common profile
+   with the intended model, layer dictionaries and `all / mean` capture.
+2. For focused calibration, optionally rebuild with **SQL construction**, **SQL
+   execution calls**, or **SQL construction + calls**. Open **Capture details** to
+   inspect the selected token counts and highlighted code. The complete model input
+   remains unchanged; only the SAE measurement positions differ.
+3. Create vectors, set strengths, then open **5 → Transfer across vulnerabilities**
+   and **Freeze current vectors** under a distinct source name. Frozen vectors
+   survive loading or profiling another family.
+4. Select SQL validation and, optionally, command-injection/XSS validation manifests.
+   Set **pairs per evaluation set to 20** to include the full SQL split (40 prompts).
+   Prepare the sample, inspect its exact prompts, then run the matrix. All inputs,
+   including BASE mistakes, contribute to accuracy, corrections, regressions,
+   false alarms and misses.
+5. Freeze settings before selecting test manifests. Export the HTML matrix and full
+   JSON measurements. Use **Code only** when comparing calibration across families.
 
-## Evaluate without naming the vulnerability
+The transfer matrix measures a fixed next-token decision, including baseline failures.
+It reports hits, false alarms, discrimination and response criterion. This does not
+reproduce the former free-response rubric or prove vulnerability understanding.
+Both descriptions appear in the prompt; the expected answer remains evaluator-only.
+Check **Changed inputs** and measured residual changes before interpreting accuracy.
+The matrix applies frozen layer vectors, rather than rescaling individual features.
+The neutral three-sentence instructions embedded in validation/test material are
+quoted as data inside the classification prompt, not used as the response task.
 
-Load `manifest.validation.json` in **Extra**, retaining the training profile, or
-paste individual validation files into **Base vs. steered**. Do not replace the
-training manifest in section 1 to evaluate: that invalidates its profile/vectors.
+For a generated-code audit with per-token observations, use **7 · Extra**.
+Its feature selection observes activations; it does not select individual interventions.
+For full explanations, paste a validation/test input into **Base vs. steered** and
+inspect mechanism, consequence and recommendation. A larger activation, more
+security vocabulary, or a longer answer is not evidence of improved analysis.
 
-Use **Code + preamble** in Extra and leave the shared instruction blank. The
-validation/test files already contain this identical neutral instruction:
+See the [capture and transfer guide](../../docs/code_regions_transfer.md) for the exact
+selection, intervention, denominators and limitations. The former A/B diagnostic
+has been removed from Extra; its research API still supports legacy experiments.
 
-> In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+## Evaluation protocol and preserved reference examples
 
-Start with `validation/named_binding_A.txt` and its B counterpart. In A, a grounded
-answer identifies the `:zone` placeholder and dictionary binding and preserves it.
-In B, it identifies that zone is formatted into the executed SQL, explains that
-its contents can alter SQL syntax, and recommends separate binding. An answer
-may name SQL injection, but that phrase is never supplied in the prompt.
+Use only the 20 training pairs to select features or build vectors. Use validation
+to select capture scope, layer, vector builder, intervention strength and direction.
+Freeze those choices before model evaluation on test. Reloading the reduced
+manifest changes its fingerprint; vectors built from an earlier selection must be
+rebuilt and compared under a distinct calibration name.
 
-First run at dose **0**, with ablation off. Base and additive-control responses
-should match; this does not establish correctness. Then compare **±0.5** and **±1**
-in Extra with random controls and optional ablation. For whole-vector experiments,
-change one layer at a time and keep the others at zero. These are exploration
-settings, not validated improvements.
+Report BASE and STEERED on the same full 40 test prompts, including baseline
+mistakes, corrections, regressions, false alarms and misses. Also inspect paired
+outcomes and results by `template_group`; treat the pair as the smallest sampling
+unit and the template group as a dependence cluster for uncertainty estimates.
+Do not split A/B conditions or distribute variants of a new group across splits.
+Predeclare further model evaluations on new data if test observations lead to
+another tuning round. The six-pair feature-evidence panel is a sampled diagnostic;
+the transfer matrix can include all 20 pairs per split.
 
-Rate **mechanism**, **consequence** and **recommendation** individually:
-**0 = wrong/missing**, **1 = partial**, **2 = correct and grounded in the code**.
-Use their mean on a 0–2 scale; report paired changes against base and random
-controls and retain concrete errors. An unsupported vulnerability claim on A is
-a regression. More security vocabulary, a longer answer, or a larger feature
-activation alone does not demonstrate improvement.
-
-Freeze settings and the rubric before using the test split. Keep the original
-base mistakes visible so that corrections and regressions can both be measured.
-No Boolean classifier, extra loader or custom inference path is required.
-
-## Reserved examples and reference mechanisms
+The tables below document the preserved v2 reserved examples. References for the
+added examples are available for researchers in `dataset_metadata.json`.
 
 | Validation pair | A: expected explanation | B: expected explanation |
 | --- | --- | --- |
@@ -143,9 +218,9 @@ No Boolean classifier, extra loader or custom inference path is required.
 | `normalized_input` | Normalized city remains bound | Trimming/lowercasing does not neutralize SQL syntax; bind it |
 | `prefix_search` | LIKE pattern is bound data | Pattern is placed inside SQL text; bind it |
 
-Choose settings on these eight prompts, then freeze the layer and strength before
-opening the twelve test prompts below. Keep base mistakes in the review so that
-both corrections and regressions remain visible.
+Choose settings on the full **40 validation prompts**, then freeze the layer and
+strength before evaluating the **40 test prompts**. Keep baseline mistakes in the
+review so that both corrections and regressions remain visible.
 
 | Test pair | A: expected explanation | B: expected explanation |
 | --- | --- | --- |
@@ -158,7 +233,8 @@ both corrections and regressions remain visible.
 
 Held-out improvements need replication on more independently written cases.
 Coherence can be assessed separately through the existing section 5 benchmarks.
-No new interface, runner, scorer or model export is required by this dataset.
+The Extra generation report contains observations; section 6 exports the current
+live vectors/model.
 
 ## References
 

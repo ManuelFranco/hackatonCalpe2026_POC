@@ -1,0 +1,9 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def lookup(db, value):
+    query = 'DELETE FROM allocations WHERE code = ?'
+    candidate = f"DELETE FROM allocations WHERE code = '{value}'"
+    result = db.execute(candidate)
+    return result.rowcount
+```

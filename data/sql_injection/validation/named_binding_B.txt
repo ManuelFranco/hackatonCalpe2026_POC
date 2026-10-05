@@ -3,6 +3,8 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, zone):
-    query = "SELECT id FROM assets WHERE zone = '{}'".format(zone)
-    return db.execute(query).fetchall()
+    query = 'SELECT id FROM assets WHERE zone = :zone'
+    candidate = "SELECT id FROM assets WHERE zone = '{}'".format(zone)
+    result = db.execute(candidate)
+    return result.fetchall()
 ```

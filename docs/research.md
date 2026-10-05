@@ -76,6 +76,91 @@ uv run python -m unittest discover -s tests -p 'test_benchmarks.py' -v
 
 ## Integration boundaries
 
+### Automatic profile discovery
+
+`research/profile_discovery.py` ranks input features before vector construction.
+For paired differences `d = B - A`, the score is
+`abs(mean(d)) * abs(mean(d)) / RMS(d) * coverage(d)`, with a `1e-6` denominator
+floor and contrast-presence threshold. A candidate must have nonzero mean and
+score above that threshold. Ties use feature ID. This is a ranking heuristic in
+native activation units; it is not calibrated confidence, a statistical test or
+causal evidence. Coverage and same-direction counts use all calibration pairs.
+No discovery ranking changes the profile or vector builder.
+
+`sae_dashboard/profile_discovery_lab.py` recaptures just one selected A/B pair,
+without generation or steering, under the existing session/model locks. Only the
+selected layer's SAE is encoded, in batches of at most 16 positions; retained
+activations are `[tokens, candidates]`. Their profile-scope aggregation must match
+the original profile. Source offsets require retokenization of the complete chat
+with identical token IDs. Unavailable alignment falls back to an explicit token
+strip. Overlapping source offsets use the maximum activity among contributing
+tokens. Image positions are counted but never presented as pixel attribution.
+The mixed map compares per-feature normalized activities, with one scale across
+A/B; hover values preserve raw magnitudes. Input/source changes clear discovery
+results. Explicitly following the top three updates Extra's layer/IDs and clears
+its previous result, without changing steering strengths or generating a response.
+
+### Generated SQL intervention experiments
+
+**Test candidates on generated SQL** is an optional Common profile panel. It
+filters candidate polarity before the limit (default B higher, at most six), then
+generates SQLite lookup-function continuations from the same exact assistant
+prefix. Labels and evaluation probes are never appended to the model input.
+The target is a behavioral result in a synthetic fixture, not an A/B label token.
+
+Search covers individual decoder directions, the three possible pairs of the best
+three singles, and first-token/continuous alternatives for the best initial
+intervention. Directions sum equal unit decoder contributions and are normalized
+as a whole. The budget defaults to 2% of the current final-position residual norm,
+with a 5% maximum; actual changes after dtype rounding are recorded and reduced
+when necessary to remain within budget. Residuals are never SAE reconstructions.
+Only the chosen layer is observed, using the existing next-token trace and bounded
+SAE encoding. Other SAE features can also change under a decoder intervention.
+
+Selection minimizes known and unknown functional regressions, then maximizes
+comparable cases, new goal hits, total target hits and functional/assessed cases,
+with ties favoring fewer features and a shorter window. A choice without a complete
+positive search gain is explicitly exploratory. All
+selection uses search tasks only. Reserved continuations compare the frozen
+direction/schedule with Base, its reverse and two seeded random directions at the
+same budget. A separate full-generation check removes the function prefix and
+applies the frozen direction continuously, including its two random controls;
+this is a different schedule, not proof of automatic query-region detection.
+A repeated baseline checks token-ID replay. Confirmation requires new reserved
+goal hits, no functional regressions, more reserved hits than either random
+control, a passing baseline replay, and complete baseline/candidate/random-control
+assessments on the reserved tasks. New and lost hits count only task pairs where
+both outputs were assessed. It is an observation on this small sample,
+not a statistical significance claim.
+
+`research/sql_generation_checks.py` parses generated Python and interprets a small
+whitelist: one lookup function, local assignments/unpacking/returns, conditionals,
+short-circuit booleans, equality/identity comparisons, row indices, basic
+conversions, scalar strings, f-strings, simple formatting,
+cursor/execute/fetchone/close, bound parameters and bounded error handling. It does
+not use exec/eval or import generated code. SQL runs in a fresh two-row memory
+fixture with a read-only authorizer and an instruction budget. Three ordinary
+lookups must pass before the SQL probe can count toward the goal. Syntax errors,
+unsupported operations and failed ordinary lookups cannot establish the goal.
+Unsupported functionality is unknown (JSON null), distinct from a demonstrated
+failure or runtime error. Unsupported operations and interpreter limits cannot be
+swallowed by generated exception handlers. One blocked
+probe does not establish general security. Pair gains at equal total norm do not
+establish feature synergy. Reserved tasks are excluded from this experiment's
+search; independence from arbitrary user-provided profile inputs is not proven.
+
+Session job IDs invalidate an in-flight experiment when its profile or parameters
+change; Stop / clear stops at a generation boundary. Model locks are released
+between generations. Failed/cancelled runs do not publish a completed report.
+Existing vectors remain independent. Opt-in experiment saving and explicit
+HTML/JSON export follow the existing artifact policy. JSON includes prompts,
+input/output token IDs, settings, traces, checks, actual per-step intervention
+norms, the frozen unit direction and random seeds.
+**Re-evaluate displayed code** updates behavioral checks and summaries without
+loading a model or generating new tokens. It retains the originally frozen
+candidate and records the source report ID and evaluator version; it never uses
+reserved results to select a different candidate.
+
 - `sae_dashboard/model_runtime.py`: model lifecycle, input preparation, capture and hooks.
 - `sae_dashboard/workflow.py`: session operations, research interfaces and model locking.
 - `sae_dashboard/manifests.py`: validated JSON input and asset resolution.
@@ -88,87 +173,154 @@ Keep model calls under `MODEL_LOCK` and session mutations under the session lock
 Acquire the session lock before the model lock. Never put per-user values into runtime
 globals. New vector methods or benchmark adapters should not need UI edits.
 
-## Single-feature causal lab
+## Causal evidence lab (Extra)
 
-`research/causal_interventions.py` contains additive decoder interventions and next-token
-readouts, injected with a model runtime. Callers own the model lock. Hooks are removed on
-success and failure. Zero dose leaves hidden states untouched; first-step and every-step
-schedules are available for generation. Shared prefixes extend masks and the continuation
-boundary, so displayed output contains newly generated tokens only.
+Extra contains the full-response observation audit. The former A/B diagnostic UI
+has been removed; its research APIs are retained below for existing callers.
+Code-region capture and frozen-vector transfer are documented in the
+[step-by-step guide](code_regions_transfer.md). The transfer matrix is in section 5,
+separate from the existing base-gated coherence protocol.
 
-`sae_dashboard/causal_lab.py` handles current-profile/manual selection, coefficient scaling,
-seeded equal-norm random controls, ablation, token maps and optional recording.
-`causal_ui.py` renders the Extra tab. No common-profile vector is mutated by the lab.
+### Full generation
 
-`sae_dashboard/base_response_cache.py` owns atomic JSON base-only caching. Benchmark
-research adapters must not implement persistence or call the model directly.
+Choose **Base only** (no profile required) or **Base + current steering** (section 3
+vectors and shared layer strengths). Select one observed layer and optionally up to
+three comma-separated feature IDs. Blank IDs select the largest `max(z_j) - min(z_j)`
+over the baseline generation; ties use peak activity then feature ID. The same IDs
+are observed in both runs. This ranking measures variation, not causal importance.
+The map starts near the largest observed activation and reports active-token counts
+and peak positions. Sparse features can be inactive throughout the initial window.
 
-## Feature research protocol (Extra)
+Generation uses the existing `generate_answer` path and shared seed, temperature and
+token limit. The observer copies the last residual at each forward, before and after
+the local vector addition. The first state predicts the first output token; subsequent
+states predict subsequent tokens. EOS is retained in the trace. Counts and cached
+forward lengths are checked before displaying any alignment. This is **every step**,
+not just the final input position once. `STEER_LAST_TOKEN_ONLY=0` still affects all
+prefill positions; cached decoding has one position. No new steering policy is added.
 
-Extra now starts with label-free measurements and freely generated responses.
-`research/feature_studies.py` owns input transformations, chunked single-layer activation
-measurement and complete-case manual rating summaries. `sae_dashboard/feature_study.py`
-owns session orchestration and optional recording. Next-token label readouts remain
-available in the research API, but are no longer the primary dashboard workflow.
+SAEs are encoded after generation in batches of at most 16 positions. Only selected
+activation columns are retained; automatic selection uses a streaming range pass.
+Only the observed SAE is loaded if missing, including with `SAE_WIDTH=262k`. Before/after
+isolates the local addition; upstream steering is already present in “before”. After
+outputs diverge, matching token indices across runs is not a matched-context causal test.
 
-### Reproduce the layer 22 / feature 11749 investigation
+The static review parses Python blocks and classifies direct `execute`, `executemany`
+and `executescript` arguments as literal, dynamically constructed or unresolved.
+Version 3 also resolves an immediately preceding, single-name assignment in the same
+statement block, recording its source line. Aliases, earlier assignments, cross-branch
+values and receiver types remain unresolved. It does not trace input taint, execute
+code or test functionality. Zero findings does not establish security. Token-limit
+stops and unclosed code fences are flagged as potentially incomplete.
 
-The reference screenshot uses **Gemma 3 4B IT, residual layer 22, Gemma Scope 2,
-262k dictionary**, not 16k. Feature IDs are dictionary-specific. Start this server with
-`SAE_WIDTH=262k` (the default remains `16k`) and the same SAE release/model as the
-reference. Startup validates the configured SAE IDs against the installed SAE registry.
-Extra's reference button sets the expected size to **262144**; inference refuses a
-mismatch. Inspect the feature to see the actual model/release/SAE ID, profile statistics
-and matching Neuronpedia embed. The common-profile embeds also use the profile width.
+The code shading selector offers SQL review (red dynamic construction, amber unresolved,
+teal literal SQL) or an observed feature. SQL review marks the query expression and its
+call, including multiline expressions; interpolated display-only strings are not marked.
+Click a finding to jump to its code line. Feature shading uses the maximum measured
+post-intervention activity among tokens contributing to each line, with one scale per
+feature across both responses. It is observation, not causal attribution.
+Character spans come from exact, append-only incremental decoding using the generation
+decoder settings. Stripped whitespace and skipped special tokens have empty/clipped spans.
+If decoded prefixes are rewritten or text does not match, feature line shading is unavailable;
+token spellings and re-tokenization are never used to guess an alignment. The selector also
+works in exported HTML without JavaScript or further model calls.
 
-1. Load `data/sql_injection/manifest.json` in section 1 and build the profile with
-   **all / mean**. In Extra select the reference, keep **Common profile**, and inspect it.
-2. Load current section 1 inputs into the research workspace. Select all three
-   activation views and 12 pairs. Inspect mean paired B − A and sign consistency.
-   The current code-flow-v2 dataset has no reference reviews: **Full input** and
-   **Code + preamble** retain the same content. **Text without code** leaves the
-   identical neutral context on A/B, a negative control. On older datasets it can
-   expose contrasts in reference explanations. Non-code cases should use **Full input**. Unsupported
-   transformations stop with an explanation rather than silently skipping examples.
-3. Upload `data/sql_injection/manifest.validation.json` into Extra and click load. This
-   keeps the training profile and its dose calibration intact. The JSON still resolves
-   assets under the server's configured data root, using the normal manifest loader.
-4. Select a validation pair and **Code + preamble**. Leave the shared instruction blank:
-   these validation files already request a neutral three-sentence analysis of how
-   supplied values reach the database call and affect the query, with changes only if needed. Expand the exact input preview;
-   no reference answer should enter these response prompts. For other datasets, an
-   optional shared instruction is added only for generation, not activation measurements.
-5. Run dose **0**, ablation off, random directions **1**. Both A and B receive identical
-   generation settings across base / positive / negative / random conditions. The
-   zero-control indicator compares exact answer strings, excluding optional ablation.
-6. Try **0.5**, then **1**, with **3 random directions** and optionally dynamic ablation.
-   This is 12 generations per pair, or 14 with ablation. Rate mechanism, consequence and
-   recommendation 0–2 in the editable rubric. Mean quality averages these three scores;
-   mean change uses only cases with both the condition and base rated. Blank rows are
-   excluded, not zeros. Conditions with unequal rated counts are not directly comparable.
-   Record false vulnerability claims separately, especially on protected A inputs.
-7. Repeat on every validation pair and multiple generation seeds. Freeze the dose,
-   instruction and rubric before using `manifest.test.json`. Rating summaries are per run;
-   enable experiment saving to retain linked run IDs and combine runs in research analysis.
+HTML/JSON exports include the exact prompt, input/output token IDs, selected features,
+activations, generation settings, dictionary identity and current vector metadata.
+Changing controls clears the displayed run. Observing IDs does not select a new
+intervention; use the auxiliary diagnostic below for individual-feature experiments.
 
-**Expected evidence, not a promised outcome:** a code-sensitive feature should retain
-useful A/B separation without the reference explanation, and positive intervention should
-improve grounded analysis without inventing vulnerabilities in A. A contrast restricted to
-reference reviews, or changes resembling random controls, weakens this interpretation.
-The external feature name and a 12/12 calibration sign match are hypotheses, not validation.
-That screenshot used the older code-plus-review dataset. Rebuild the profile and
-re-rank candidates on code-flow-v2; feature 11749 may become weaker or disappear.
+### Legacy A/B diagnostic API (not in the dashboard)
 
-The three view means include the chat template and shared token scope. They have different
-contexts and lengths and are not an additive attribution decomposition. Input measurements
-always use mean; selecting max aggregation at the top affects profile calibration only.
-Feature ablation subtracts the current encoded contribution at each selected last position;
-it neither guarantees zero re-encoded activation nor removes all prompt-position evidence.
-Random directions match the additive decoder-vector norm, not the dynamically varying
-ablation magnitude. Diagnostics report the largest *observed* relative residual change;
-the 5% calibration cap is not a per-step bound. All hooks use try/finally cleanup.
+This study does not apply persistent steering, generate full answers, or optimize
+for incorrect decisions.
 
-No results are written by default. The common experiment-saving toggle controls activation
-studies, generated-response records and manual ratings. Response records include exact
-prompts, image pixel fingerprints, SAE identity, shared settings, control seeds and a run ID
-that links ratings. The feature study never updates the common-profile vectors.
+1. Build a common profile in section 2. Choose a study layer and evaluation source
+   through `evidence_lab.prepare_study`. SQL validation/test presets supply A/B
+   descriptions. Uploaded manifests may contain `labels.A` and `labels.B`; otherwise
+   enter both descriptions. Check that they match the actual pair semantics.
+2. Select one to three features and **Compare features**. The shortlist uses
+   calibration stability, not a claimed causal effect. Whole pairs are sampled
+   reproducibly using the shared seed. Both sides are always evaluated.
+3. Inspect an intervention and an example. The report separates correctness,
+   false alarms, discrimination, response criterion and local activation spread.
+   **Export presentation & data** writes a standalone HTML report and full JSON.
+
+The study reuses the loaded model and SAE; `SAE_WIDTH=262k` works without a separate
+runtime. IDs are checked against the actual profile/loaded dictionary width. Model,
+release, SAE ID, profile ID, prompts, sample identities and control seeds are recorded.
+The layer-wide vectors and strengths are not used or changed by this lab.
+The report counts target inputs with an actual residual change. Runs with no such
+change are not ranked above effective interventions and are explicitly unassessed
+for causal relevance. An inactive feature at the decision position cannot be tested
+by multiplying its zero activation, even if it varied in the common profile.
+
+### Intervention and controls
+
+`research/feature_evidence.py` owns the model-independent measurement functions.
+For a candidate j, it measures its current encoded activity z_j at the final input
+position and requests a +/-25–100% change in its decoded contribution (50% default).
+Zero percent is an identity control. The residual delta is capped to an intended
+2% of that position's residual norm. It adds one decoder direction to the original
+residual, preserving the SAE reconstruction error. This is not exact latent clamping:
+re-encoding may move the candidate differently, and may move other features too.
+An inactive feature produces no perturbation, including in its random controls.
+
+Each input/feature/sign gets two seeded random directions with the same intended
+perturbation norm. Actual norms are recorded after model-dtype rounding. The lab
+re-encodes the actual modified residual and reports other features crossing
+`abs(after-before) > 0.001*max(abs(before),abs(after)) + 1e-6`. The target's share of
+squared latent change and the six largest other changes are recorded. Neither
+this threshold nor this coordinate-dependent energy share proves semantic isolation.
+No dense 262k-by-262k matrix is constructed.
+
+Hooks touch only the final input position of one layer during one forward. Earlier
+prompt positions, downstream activations and generated continuations are not
+controlled. Hooks are removed on failure and success. A final replay of the first
+baseline case checks decision-margin reproducibility with relative tolerance 1e-4.
+
+### Decision readout and interpretation
+
+The prompt contains both condition descriptions and the supplied material. Case
+names and expected labels are never inserted into the model prompt. Evaluation
+compares the next-token logits of single-token A and B; ties are explicit errors.
+`P(B | A or B)` is a constrained preference, not calibrated vulnerability confidence.
+The total probability mass assigned to A/B is also displayed; low mass is flagged.
+Shared temperature and generation length do not affect this one-forward readout.
+
+B is the positive class. All target inputs are scored, including baseline failures.
+Hit rate and false-alarm rate use their own class denominators. d-prime and criterion
+use the equal-variance Gaussian signal-detection model with loglinear half-count
+correction: H=(TP+0.5)/(N_B+1), F=(FP+0.5)/(N_A+1),
+d'=Phi^-1(H)-Phi^-1(F), c=-0.5*(Phi^-1(H)+Phi^-1(F)). Ties leave these estimates
+undefined. These are descriptive estimates on small samples, not proof that a
+model knows or has forgotten a concept. Response wording and generation behavior
+need separate experiments.
+
+Four fixed, balanced synthetic controls check simple unrelated A/B tasks. The
+control regression denominator includes only controls the baseline answered
+correctly; all raw control decisions and flips are retained. These controls are
+not a substitute for broader capability evaluation or a same-task control corpus.
+
+Results are ranked by evaluation correctness, then control regressions, then the
+mean change in log-odds of the correct choice. This ranking is exploratory. Two
+random directions and a small sample do not justify significance or generalization
+claims. Freeze feature, layer, descriptions and intervention strength before the
+reserved test set; this convention is not enforced by the UI. Calibration overlap
+is flagged using exact stripped code blocks (or full text) plus image hashes; absence
+of exact overlap does not establish independent program families.
+
+`sae_dashboard/evidence_lab.py` orchestrates session/model locks, paired samples,
+optional persistence and explicit exports. `evidence_view.py` renders escaped HTML
+and `causal_ui.py` supplies the compact interface. Changed study inputs clear stale
+results; changed profiles also clear the prepared study. Automatic writes still
+require the shared experiment-saving toggle. An explicit export writes files even
+when that toggle is off.
+
+The earlier `causal_interventions.py`, `causal_lab.py`, `feature_study.py` and
+`feature_studies.py` APIs remain available to existing research callers, but their
+old controls and manual scoring screens have been removed from Extra.
+
+```bash
+uv run python -m unittest discover -s tests -p 'test_feature_evidence.py' -v
+```

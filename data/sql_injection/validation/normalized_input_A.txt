@@ -4,6 +4,8 @@ In three sentences, explain how the supplied values reach the database call and 
 ```python
 def lookup(db, city):
     value = city.strip().lower()
-    query = "SELECT id FROM locations WHERE city = ?"
-    return db.execute(query, (value,)).fetchall()
+    query = 'SELECT id FROM locations WHERE city = ?'
+    candidate = "SELECT id FROM locations WHERE city = '%s'" % city.strip().lower()
+    result = db.execute(query, (value,))
+    return result.fetchall()
 ```

@@ -3,7 +3,9 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, category):
-    query = "SELECT id FROM events WHERE category = ?"
+    query = 'SELECT id FROM events WHERE category = ?'
     parameters = (category,)
-    return db.execute(query, parameters).fetchall()
+    candidate = f"SELECT id FROM events WHERE category = '{category}'"
+    result = db.execute(query, parameters)
+    return result.fetchall()
 ```

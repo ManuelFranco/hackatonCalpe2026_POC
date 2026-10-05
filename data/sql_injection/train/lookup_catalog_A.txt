@@ -2,6 +2,8 @@ SQLite. db is a database connection; all other arguments are strings from an HTT
 
 ```python
 def lookup(db, value):
-    query = "SELECT id FROM catalog WHERE sku = ?"
-    return db.execute(query, (value,)).fetchall()
+    query = 'SELECT id FROM catalog WHERE sku = ?'
+    candidate = f"SELECT id FROM catalog WHERE sku = '{value}'"
+    result = db.execute(query, (value,))
+    return result.fetchall()
 ```

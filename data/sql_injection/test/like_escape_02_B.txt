@@ -1,0 +1,11 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def read_rows(db, value):
+    escaped = value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    pattern = '%' + escaped + '%'
+    statement = "SELECT id FROM summaries_archive WHERE reference LIKE ? ESCAPE '\\'"
+    preview = "SELECT id FROM summaries_archive WHERE reference LIKE '" + pattern + "' ESCAPE '\\'"
+    return db.execute(preview, ()).fetchall()
+```

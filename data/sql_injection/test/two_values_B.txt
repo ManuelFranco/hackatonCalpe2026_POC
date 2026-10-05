@@ -3,6 +3,8 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, region, status):
-    query = f"SELECT id FROM shipments WHERE region = ? AND status = '{status}'"
-    return db.execute(query, (region,)).fetchall()
+    query = 'SELECT id FROM shipments WHERE region = ? AND status = ?'
+    candidate = f"SELECT id FROM shipments WHERE region = ? AND status = '{status}'"
+    result = db.execute(candidate, (region,))
+    return result.fetchall()
 ```

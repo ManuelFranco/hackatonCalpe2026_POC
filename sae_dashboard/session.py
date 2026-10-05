@@ -18,10 +18,11 @@ class Settings:
 
     def validate(self):
         from .model_runtime import validate_generation_settings
+        from research.code_regions import TOKEN_SCOPES
 
         validate_generation_settings(self.max_new_tokens, self.temperature, self.seed)
-        if self.token_scope not in {"all", "last", "non_image"}:
-            raise ValueError("Choose all, last, or non_image for token capture.")
+        if self.token_scope not in TOKEN_SCOPES:
+            raise ValueError("Choose a supported profile-token scope.")
         if self.aggregation not in {"mean", "max"}:
             raise ValueError("Choose mean or max for aggregation.")
 
@@ -40,6 +41,7 @@ class Session:
         self.profile: dict[int, Any] = {}
         self.profile_id = None
         self.capture_key = None
+        self.capture_details: list[dict] = []
         self.vectors: dict[int, Any] = {}
         self.vector_id = None
         self.results: list[dict] = []
@@ -47,6 +49,10 @@ class Session:
         self.benchmark_base = []
         self.benchmark_settings = None
         self.benchmark_result = None
+        self.transfer_sources: dict[str, Any] = {}
+        self.transfer_plan = None
+        self.transfer_result = None
+        self.code_experiment_job = None
         self.lock = threading.RLock()
 
     def __deepcopy__(self, memo):
@@ -59,9 +65,14 @@ class Session:
         return clone
 
     def invalidate_profile(self):
+        self.code_experiment_job = None
         self.profile = {}
         self.profile_id = None
         self.capture_key = None
+        self.capture_details = []
         self.vectors = {}
         self.vector_id = None
         self.results = []
+        # Frozen transfer vectors survive loading another calibration family.
+        self.transfer_plan = None
+        self.transfer_result = None

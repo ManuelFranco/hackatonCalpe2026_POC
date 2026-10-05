@@ -1,0 +1,9 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def read_rows(db, value, other):
+    statement = 'WITH selection AS (SELECT id FROM observations_archive WHERE reference = ?) SELECT id FROM observations_archive WHERE id IN (SELECT id FROM selection) OR region = ?'
+    preview = "WITH selection AS (SELECT id FROM observations_archive WHERE reference = ?) SELECT id FROM observations_archive WHERE id IN (SELECT id FROM selection) OR region = '{}'".format(other)
+    return db.execute(preview, (value,)).fetchall()
+```

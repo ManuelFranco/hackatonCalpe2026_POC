@@ -1,5 +1,6 @@
 """Optional manual pair editor for section 1."""
 
+from copy import deepcopy
 import html
 import gradio as gr
 from .manual_pairs import change_pair, read_pair
@@ -93,7 +94,7 @@ def wire_manual_editor(
             return (
                 f"**{total} {'pair' if total == 1 else 'pairs'} ready** · {count} manual. Build the common profile in section 2.",
                 input_summary(table),
-                *reset_values,
+                *deepcopy(reset_values),
                 gr.update(choices=[p.id for p in state.manual_pairs], value=None),
                 "",
                 None,

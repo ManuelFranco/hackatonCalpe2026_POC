@@ -3,7 +3,9 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, contact):
-    query = "SELECT id FROM contacts WHERE email = :value OR alias = :value"
-    parameters = {"value": contact}
-    return db.execute(query, parameters).fetchall()
+    query = 'SELECT id FROM contacts WHERE email = :value OR alias = :value'
+    parameters = {'value': contact}
+    candidate = "SELECT id FROM contacts WHERE email = '{v}' OR alias = '{v}'".format(v=contact)
+    result = db.execute(query, parameters)
+    return result.fetchall()
 ```

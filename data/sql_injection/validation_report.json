@@ -1,0 +1,947 @@
+{
+  "dataset_revision": "code-flow-v4-single-line-20",
+  "status": "passed",
+  "pairs_by_split": {
+    "train": 20,
+    "validation": 20,
+    "test": 20
+  },
+  "total_pairs": 60,
+  "total_prompt_assets": 120,
+  "template_groups_by_split": {
+    "train": 11,
+    "validation": 12,
+    "test": 13
+  },
+  "formatting_pairs": {
+    "legacy": 22,
+    "str_format": 9,
+    "concatenation": 10,
+    "percent": 10,
+    "f_string": 9
+  },
+  "matched_control_pairs": 60,
+  "legacy_pair_ids_preserved": 22,
+  "contrast_kinds": {
+    "sql_execution": 52,
+    "argument_selection": 7,
+    "sql_construction": 1
+  },
+  "checks": {
+    "capture_regions": 480,
+    "single_line_contrasts": 60,
+    "ordinary_equivalence": 120,
+    "A_quote_inputs": 60,
+    "successful_B_witnesses": 60
+  },
+  "sqlite_version": "3.53.1",
+  "dataset_sha256": "bf08bf1033b7c625a4ef9bf53ce0c873134ee5eb7acad3a517d0719d6851188d",
+  "method": "Exactly one changed physical line per pair, with byte-identical prefix/suffix. Fresh in-memory SQLite fixtures verify ordinary-input equivalence, A apostrophe handling, and successful A/B witness executions with different query results or table contents. No model inference.",
+  "limitations": [
+    "Synthetic variants share templates; pair count is not the number of independent real-world mechanisms.",
+    "Mechanism families overlap across splits; only examples and newly added template groups are held out.",
+    "A successful witness verifies a local execution path, not the security of an entire application or the model's reasoning."
+  ],
+  "pairs": [
+    {
+      "pair_id": "train_lookup_catalog",
+      "split": "train",
+      "template_group": "legacy:train:minimal",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "ca40e271cf81686607118891402aca0402f70af6922c7b71e6fa249cc4568c92",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_tickets",
+      "split": "train",
+      "template_group": "legacy:train:minimal",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "ece74d948e8c9c3acd8d876944853b1c829291358ab415ce646e8d389659fa74",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_devices",
+      "split": "train",
+      "template_group": "legacy:train:minimal",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "a6cc56897b52504307265fdb0312242ff916bdb2ee2f6b565ed69a37a7c33ce2",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_products",
+      "split": "train",
+      "template_group": "legacy:train:minimal",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "b6a07ee2589c8eb4d50472c84f66fcf4f66decf4329a351765a8740bff5a3183",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_books",
+      "split": "train",
+      "template_group": "legacy:train:minimal",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "44606ef0f7dabaaa5f71c134f8aa6791d660cab26813e35c349ad42a8b0e841e",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_packages",
+      "split": "train",
+      "template_group": "legacy:train:minimal",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "c6c7c7b3c286094de01f1eaf307184f1c839a92b1742ac2b82269131023cb0f1",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_builds",
+      "split": "train",
+      "template_group": "legacy:train:preview_direct",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(statement, parameters).fetchall()",
+        "B": "    rows = db.execute(preview).fetchall()",
+        "shared_prefix_sha256": "62eeaf26e256666d2b26cd6697202e99fe67129fbd14146697240f31a6671ec6",
+        "shared_suffix_sha256": "9b91a4cdb0db511e96d9b4fe6a2bcc46861c62971d54a7cf612b8d3afc5d9ba0"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_hosts",
+      "split": "train",
+      "template_group": "legacy:train:preview_direct",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(statement, parameters).fetchall()",
+        "B": "    rows = db.execute(preview).fetchall()",
+        "shared_prefix_sha256": "1e3110ac5c196fff3f311fd4a81148da5e9720362c613033085184996514d165",
+        "shared_suffix_sha256": "9b91a4cdb0db511e96d9b4fe6a2bcc46861c62971d54a7cf612b8d3afc5d9ba0"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_services",
+      "split": "train",
+      "template_group": "legacy:train:preview_direct",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(statement, parameters).fetchall()",
+        "B": "    rows = db.execute(preview).fetchall()",
+        "shared_prefix_sha256": "6e10fee2b8ad8f30b624d96a8094a01e86b010db4ff0e6a829b3780e4bb91c79",
+        "shared_suffix_sha256": "9b91a4cdb0db511e96d9b4fe6a2bcc46861c62971d54a7cf612b8d3afc5d9ba0"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_projects",
+      "split": "train",
+      "template_group": "legacy:train:preview_starred",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "argument_selection",
+        "A": "    request = (statement, parameters)",
+        "B": "    request = (preview,)",
+        "shared_prefix_sha256": "b1d5db5c4e75a6ff23b8f6d278964d6abe3152822510c0e9297f1d95da75cad5",
+        "shared_suffix_sha256": "fec1e551026b15290a642e2b345d97c8357dd6185010dd71e906d6f30afecb27"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_sessions",
+      "split": "train",
+      "template_group": "legacy:train:preview_starred",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "argument_selection",
+        "A": "    request = (statement, parameters)",
+        "B": "    request = (preview,)",
+        "shared_prefix_sha256": "5d9fc209442b58d55c31f4af4a81ae78c9db03dd427bb0affbf2303daed7a17f",
+        "shared_suffix_sha256": "fec1e551026b15290a642e2b345d97c8357dd6185010dd71e906d6f30afecb27"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_lookup_artifacts",
+      "split": "train",
+      "template_group": "legacy:train:preview_starred",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "argument_selection",
+        "A": "    request = (statement, parameters)",
+        "B": "    request = (preview,)",
+        "shared_prefix_sha256": "e60245d15cfbedddfd791007e3859d24652c7e80b447e43ddcb236dff3a7216e",
+        "shared_suffix_sha256": "fec1e551026b15290a642e2b345d97c8357dd6185010dd71e906d6f30afecb27"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_named_dictionary_04",
+      "split": "train",
+      "template_group": "v3:train:named_dictionary",
+      "matched_control": true,
+      "contrast": {
+        "line": 5,
+        "kind": "sql_construction",
+        "A": "    query = 'SELECT id FROM batches_history WHERE owner = :item'",
+        "B": "    query = \"SELECT id FROM batches_history WHERE owner = '{}'\".format(value)",
+        "shared_prefix_sha256": "09e85638065629b424102dfa2c21775df697be2c40209b81b04110802b5145a3",
+        "shared_suffix_sha256": "65962b1bbdb9f464ddfca4049d2e4eb10fe9bce21e91052fde0fbd8639147977"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_like_value_02",
+      "split": "train",
+      "template_group": "v3:train:like_value",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (pattern,)).fetchall()",
+        "B": "    return db.execute(preview, ()).fetchall()",
+        "shared_prefix_sha256": "60e4841f6b680b4d7f2faee125aac772e6c94474e05efd237a9a6024933e45ac",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_partial_binding_03",
+      "split": "train",
+      "template_group": "v3:train:partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value, other))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "82b6f05676fbdb306502ad835c55e5243f7a14f8bc39b9ef1c8dddb1adaef592",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_mapped_identifier_01",
+      "split": "train",
+      "template_group": "v3:train:mapped_identifier",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "298569929471af9909a6d95804857a4da792210d9f15d10379210bfeb769c086",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_list_membership_04",
+      "split": "train",
+      "template_group": "v3:train:list_membership",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, tuple(items))",
+        "B": "    result = db.execute(candidate, ())",
+        "shared_prefix_sha256": "21ec2b3121b9bd12b8c856e606134032514120de5fea7e8f8a00973e9a8ba238",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_insert_value_03",
+      "split": "train",
+      "template_group": "v3:train:insert_value",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "40bc4985293af75bba84d15b8233c130b476232580b9238b6714f60269383b24",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_update_predicate_02",
+      "split": "train",
+      "template_group": "v3:train:update_predicate",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (other, value))",
+        "B": "    result = db.execute(candidate, (other,))",
+        "shared_prefix_sha256": "c54771d7b7808c67fa6afb55333ba1b1abeb6caf9d31deff0955cb02842bed63",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "train_delete_predicate_01",
+      "split": "train",
+      "template_group": "v3:train:delete_predicate",
+      "matched_control": true,
+      "contrast": {
+        "line": 7,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "f299f05a55e60a5e44877187d4e31445a6e6f3dd2491763a40b8a1180cb53ba6",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_cursor_lookup",
+      "split": "validation",
+      "template_group": "legacy:validation:cursor_lookup",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    cursor.execute(query, (handle,))",
+        "B": "    cursor.execute(candidate)",
+        "shared_prefix_sha256": "eaefd3ffff94709b2393ac397d021022c4e3463e694cbf4028dd9869b757e67a",
+        "shared_suffix_sha256": "a5819b7deaaa54638a3d7331ad55f84ccb1aee0a058e841b5b9a03acf0415579"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_named_binding",
+      "split": "validation",
+      "template_group": "legacy:validation:named_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, {'zone': zone})",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "9e6e506df96462861ec089a26a686b3f99a557570d788d1da5a8409494604283",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_normalized_input",
+      "split": "validation",
+      "template_group": "legacy:validation:normalized_input",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "486c3c73d8fc777d3a0ee245fa514497643fa76f4514b4d7b02b5f2f2f721a6f",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_prefix_search",
+      "split": "validation",
+      "template_group": "legacy:validation:prefix_search",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (pattern,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "a6ef661c39265a23f9086814286f5bef02d9bc37647790ebe9f4ea546051d3a4",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_mapping_packet_01",
+      "split": "validation",
+      "template_group": "v3:validation:mapping_packet",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "argument_selection",
+        "A": "    packet = {'query': statement, 'values': parameters}",
+        "B": "    packet = {'query': preview, 'values': ()}",
+        "shared_prefix_sha256": "6b0662f078690312d0ffd841e9a7cc1c3a21d379269562943a1b66dabf39cd1a",
+        "shared_suffix_sha256": "68879ca005d905c6c68458c8a714b1e74e4d51785e070849f07662b9a2f40681"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_mapping_packet_02",
+      "split": "validation",
+      "template_group": "v3:validation:mapping_packet",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "argument_selection",
+        "A": "    packet = {'query': statement, 'values': parameters}",
+        "B": "    packet = {'query': preview, 'values': ()}",
+        "shared_prefix_sha256": "77246818569d113f2fd9ed4dc2c3a620cf53af60b1a234887c2c5c4a271251c2",
+        "shared_suffix_sha256": "68879ca005d905c6c68458c8a714b1e74e4d51785e070849f07662b9a2f40681"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_alias_chain_01",
+      "split": "validation",
+      "template_group": "v3:validation:alias_chain",
+      "matched_control": true,
+      "contrast": {
+        "line": 14,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, ())",
+        "shared_prefix_sha256": "a07354cd67256c6d717e87d08cb860fc8c6f4c97522d1842447e49f7f66d2732",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_alias_chain_02",
+      "split": "validation",
+      "template_group": "v3:validation:alias_chain",
+      "matched_control": true,
+      "contrast": {
+        "line": 14,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, ())",
+        "shared_prefix_sha256": "b0ab20d7b1856727181225334935fac93d57a6340ebe3e4d3029e08e8c0b1128",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_aggregate_having_01",
+      "split": "validation",
+      "template_group": "v3:validation:aggregate_having",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "3dbdf9bed001a2fffb99a6b2844e4f2cf6dae6e3d7cb9885e466e5dc92b95d31",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_aggregate_having_02",
+      "split": "validation",
+      "template_group": "v3:validation:aggregate_having",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "139f6b414c23086825e32e9c5d3eb675fa65e4448251ea10a8a33df589502da7",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_case_predicate_01",
+      "split": "validation",
+      "template_group": "v3:validation:case_predicate",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "37dd9575c87b21645c606fa81249e731f38796a3ab356304c350bf42f5333f01",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_case_predicate_02",
+      "split": "validation",
+      "template_group": "v3:validation:case_predicate",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "2b42c1794fcce6af2622526d3a49c1b94ad6c81a5225aa04628faa07972de8e8",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_optional_filter_01",
+      "split": "validation",
+      "template_group": "v3:validation:optional_filter",
+      "matched_control": true,
+      "contrast": {
+        "line": 16,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, candidate_values)",
+        "shared_prefix_sha256": "7826d88c0e9391c461316248abb4a5a70b47e0ef6621d186b8180bc8fe7c28e0",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_optional_filter_02",
+      "split": "validation",
+      "template_group": "v3:validation:optional_filter",
+      "matched_control": true,
+      "contrast": {
+        "line": 16,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate, candidate_values)",
+        "shared_prefix_sha256": "1fde6c5cec60bc66f49abbfafd609dd38a5869e546ff516b1ee4fe9c198dfb00",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_insert_partial_binding_01",
+      "split": "validation",
+      "template_group": "v3:validation:insert_partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value, other))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "4f1f1a3662eadeb72d0c7e00cbbdc084af251e1b7b1d4b1f91d71db05cc30d00",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_insert_partial_binding_02",
+      "split": "validation",
+      "template_group": "v3:validation:insert_partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (value, other))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "9716eb9dc346a4ba645c276150ee59fb64d806c961688e25c4541657b160b98d",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_update_set_value_01",
+      "split": "validation",
+      "template_group": "v3:validation:update_set_value",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (other, value))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "36127a7ee4ce38d4e63f1df37e2fc758169e5a35e434d83c974c44ed8786dbf0",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_update_set_value_02",
+      "split": "validation",
+      "template_group": "v3:validation:update_set_value",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (other, value))",
+        "B": "    result = db.execute(candidate, (value,))",
+        "shared_prefix_sha256": "785c80144363496d5456f4e383b52c821dc7a932a728b3b59c2704876d892449",
+        "shared_suffix_sha256": "897bcd480fd18d5a908c6d0df8ea843c97a313c4f31f8f2b4efe587f38729ba6"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_cursor_loop_01",
+      "split": "validation",
+      "template_group": "v3:validation:cursor_loop",
+      "matched_control": true,
+      "contrast": {
+        "line": 11,
+        "kind": "sql_execution",
+        "A": "        cursor.execute(query, (item,))",
+        "B": "        cursor.execute(candidate)",
+        "shared_prefix_sha256": "f94a86b1b3391cc5a57a06025c0956b0062534b71b1eba8af0ffb9e27c7049fb",
+        "shared_suffix_sha256": "d2dd7843019b3e106e4e1531ac5ce5990444721498b103b31fe4db74e78e3c30"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "validation_cursor_loop_02",
+      "split": "validation",
+      "template_group": "v3:validation:cursor_loop",
+      "matched_control": true,
+      "contrast": {
+        "line": 11,
+        "kind": "sql_execution",
+        "A": "        cursor.execute(query, (item,))",
+        "B": "        cursor.execute(candidate)",
+        "shared_prefix_sha256": "0841072c47d68b0338c5a6d700688b91e1870dafa36637b48bb96df0a1fb3fdb",
+        "shared_suffix_sha256": "d2dd7843019b3e106e4e1531ac5ce5990444721498b103b31fe4db74e78e3c30"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_allowlisted_identifier",
+      "split": "test",
+      "template_group": "legacy:test:allowlisted_identifier",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (name,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "c9321bd1610e35074a2673bb4ad1cfcaca4d67b71aa4eacc494380f593f976c8",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_display_interpolation",
+      "split": "test",
+      "template_group": "legacy:test:display_interpolation",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    rows = db.execute(query, (tag,)).fetchall()",
+        "B": "    rows = db.execute(candidate).fetchall()",
+        "shared_prefix_sha256": "27abac2077bdc0e804f6fd31aa54dfabc9d823d7273cc391dca786c71c8756da",
+        "shared_suffix_sha256": "094142fe3ce76bd6eb851a5d196a6719e1723a03b1b279d87ea35b140378e003"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_two_values",
+      "split": "test",
+      "template_group": "legacy:test:two_values",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (region, status))",
+        "B": "    result = db.execute(candidate, (region,))",
+        "shared_prefix_sha256": "94f07fa5cf6a62725ed19198aefd5ab5031f418417e8b62e41b7bd65d11f3e65",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_named_reuse",
+      "split": "test",
+      "template_group": "legacy:test:named_reuse",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "f0071431857c5268d523d5f2c1d50583d8f7a8a4a984508fefc3d22aff823b85",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_substring_search",
+      "split": "test",
+      "template_group": "legacy:test:substring_search",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, (pattern,))",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "6b43a590294c71697f32122570aa094c6cc443dce74c16ee19175a09adfd55ce",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_query_reassignment",
+      "split": "test",
+      "template_group": "legacy:test:query_reassignment",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    result = db.execute(query, parameters)",
+        "B": "    result = db.execute(candidate)",
+        "shared_prefix_sha256": "8d9883e5dbbb6759e53d8c0d847e12bbdef906213e279787510e3314d3793d8c",
+        "shared_suffix_sha256": "bce8d681da7e75300962798062220f91172ed640cbbc9a8c1ca991621a04a25c"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_indexed_packet_01",
+      "split": "test",
+      "template_group": "v3:test:indexed_packet",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(*requests[0]).fetchall()",
+        "B": "    return db.execute(*requests[1]).fetchall()",
+        "shared_prefix_sha256": "e2c79462e82cf5312f49ba727f0d6912a9d7ca7929f48afbbb58682d644f6d52",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_indexed_packet_02",
+      "split": "test",
+      "template_group": "v3:test:indexed_packet",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(*requests[0]).fetchall()",
+        "B": "    return db.execute(*requests[1]).fetchall()",
+        "shared_prefix_sha256": "818ee96b85c8ccc1bd6bbb1ad2204a069d43b54767c59af08e97ee58e550e258",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_history_selection_01",
+      "split": "test",
+      "template_group": "v3:test:history_selection",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "argument_selection",
+        "A": "    selected = history[-2]",
+        "B": "    selected = history[-1]",
+        "shared_prefix_sha256": "98d04ae465f3acd621012abdffb523dc56b160780cf7bc820bf02e0c945af16b",
+        "shared_suffix_sha256": "466ef875d3341d84ebd1b37cbbff49aa4eb80c25506ed6d6fe2d5920af7fd712"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_history_selection_02",
+      "split": "test",
+      "template_group": "v3:test:history_selection",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "argument_selection",
+        "A": "    selected = history[-2]",
+        "B": "    selected = history[-1]",
+        "shared_prefix_sha256": "f2dd9e6f023684320594590b31b1ab1809010e539667127cbf0349907105aa51",
+        "shared_suffix_sha256": "466ef875d3341d84ebd1b37cbbff49aa4eb80c25506ed6d6fe2d5920af7fd712"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_union_partial_binding_01",
+      "split": "test",
+      "template_group": "v3:test:union_partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "c2cabf3fe146686d21b4d6b446000683140f64f82a2e1f3328692dc6e4435fd4",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_union_partial_binding_02",
+      "split": "test",
+      "template_group": "v3:test:union_partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "3eef5ec268ee30877872f61144052cb2bfb8d62ca855b86098c9619b5db0545b",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_named_batch_preview_01",
+      "split": "test",
+      "template_group": "v3:test:named_batch_preview",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    return db.executemany(statement, rows).rowcount",
+        "B": "    return db.executemany(preview, rows).rowcount",
+        "shared_prefix_sha256": "3886c5922e76b3e6bbb2d4cdaaf9e234ed06408c95d86f1d170aecd0a3dede18",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_named_batch_preview_02",
+      "split": "test",
+      "template_group": "v3:test:named_batch_preview",
+      "matched_control": true,
+      "contrast": {
+        "line": 9,
+        "kind": "sql_execution",
+        "A": "    return db.executemany(statement, rows).rowcount",
+        "B": "    return db.executemany(preview, rows).rowcount",
+        "shared_prefix_sha256": "0753c60d2182eb894f44c3495ec14659ad548abb7dc24a3ddd2e116ec3ab51e9",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_like_escape_01",
+      "split": "test",
+      "template_group": "v3:test:like_escape",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (pattern,)).fetchall()",
+        "B": "    return db.execute(preview, ()).fetchall()",
+        "shared_prefix_sha256": "7988e77a75a2d742e26cf19c411d5fa33ed18e4af6bcb6afd11ef5df63ad54e0",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_like_escape_02",
+      "split": "test",
+      "template_group": "v3:test:like_escape",
+      "matched_control": true,
+      "contrast": {
+        "line": 10,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (pattern,)).fetchall()",
+        "B": "    return db.execute(preview, ()).fetchall()",
+        "shared_prefix_sha256": "1d62ade68d2822181348709c63267f691bf4ed70cddc5639fba3457cfc6127d8",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_join_list_partial_binding_01",
+      "split": "test",
+      "template_group": "v3:test:join_list_partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "3226f90b2210f2c6c818549b0b140e67edddd5581e2a441956bbf617a2229ba1",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_join_list_partial_binding_02",
+      "split": "test",
+      "template_group": "v3:test:join_list_partial_binding",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "d3ce929482124c3f4a678cfdb6cc9d57082992e02d1e587e7b1d7065a9c66f3f",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_cte_two_paths_01",
+      "split": "test",
+      "template_group": "v3:test:cte_two_paths",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "5c20b8a12a60b52fd919d4a812c48178e5c25c3ac7adce6d6f8efed59abe161c",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    },
+    {
+      "pair_id": "test_cte_two_paths_02",
+      "split": "test",
+      "template_group": "v3:test:cte_two_paths",
+      "matched_control": true,
+      "contrast": {
+        "line": 8,
+        "kind": "sql_execution",
+        "A": "    return db.execute(statement, (value, other)).fetchall()",
+        "B": "    return db.execute(preview, (value,)).fetchall()",
+        "shared_prefix_sha256": "f904c4a4a1ba15ab7a95eadfa7ddea0981a51b2d4b93e73f940cfa88b5d9f082",
+        "shared_suffix_sha256": "47c06c561d5c327343685268a46b3391f3998eee890d2be51f0d21cc4a53ae6d"
+      },
+      "status": "passed"
+    }
+  ]
+}

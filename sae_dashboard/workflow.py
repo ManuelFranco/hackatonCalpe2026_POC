@@ -29,8 +29,15 @@ def set_manifests(session: Session, paths: list[str]):
         return [[m.name, len(m.pairs), m.fingerprint[:12]] for m in session.manifests]
 
 
-def capture_score(residual, image_mask, sae, settings):
-    selected = residual[runtime.feature_token_mask(image_mask, settings.token_scope)]
+def capture_score(residual, image_mask, sae, settings, token_mask=None):
+    mask = (
+        runtime.feature_token_mask(image_mask, settings.token_scope)
+        if token_mask is None
+        else token_mask
+    )
+    if mask.ndim != 1 or mask.numel() != residual.shape[0]:
+        raise ValueError("Profile-token selection has the wrong length.")
+    selected = residual[mask]
     if not selected.shape[0]:
         raise ValueError("The token selection contains no tokens.")
     score = None
@@ -61,6 +68,7 @@ def build_profile(session: Session, settings: Settings, progress=None):
             raise ValueError("Load a manifest or add a manual pair in section 1.")
         scores = {layer: {"A": [], "B": [], "norms": []} for layer in runtime.LAYERS}
         pairs = [pair for m in session.manifests for pair in m.pairs]
+        capture_details = []
         for index, pair in enumerate(pairs):
             # Release the shared model between pairs so other sessions can run.
             with runtime.MODEL_LOCK:
@@ -68,11 +76,25 @@ def build_profile(session: Session, settings: Settings, progress=None):
                 for label, condition in (("A", pair.a), ("B", pair.b)):
                     image = condition.load_image()
                     inputs, ids, _ = runtime.prepare_inputs(image, condition.text)
-                    residuals = runtime.capture_prompt_residuals(inputs)
                     mask = runtime.get_image_mask(ids)
+                    selected, detail = runtime.profile_token_selection(
+                        ids, mask, condition.text, image, settings.token_scope
+                    )
+                    capture_details.append(
+                        {
+                            **detail,
+                            "label": f"{index + 1} · {pair.id} · {label}",
+                            "text": condition.text,
+                        }
+                    )
+                    residuals = runtime.capture_prompt_residuals(inputs)
                     for layer in runtime.LAYERS:
                         score, norm = capture_score(
-                            residuals[layer], mask, runtime.saes[layer], settings
+                            residuals[layer],
+                            mask,
+                            runtime.saes[layer],
+                            settings,
+                            selected,
                         )
                         scores[layer][label].append(score)
                         scores[layer]["norms"].append(norm)
@@ -92,6 +114,7 @@ def build_profile(session: Session, settings: Settings, progress=None):
         }
         session.invalidate_profile()
         session.profile, session.capture_key = profile, settings.capture_key
+        session.capture_details = capture_details
         session.profile_id = uuid.uuid4().hex
         record_event(
             session,
@@ -101,6 +124,7 @@ def build_profile(session: Session, settings: Settings, progress=None):
                 "model_id": runtime.MODEL_ID,
                 "runtime": runtime.runtime_metadata(),
                 "manifests": [m.metadata() for m in session.manifests],
+                "capture_details": capture_details,
                 "layers": {
                     str(layer): {
                         "pairs": len(p.a),
@@ -157,6 +181,7 @@ def create_vectors(session: Session, settings: Settings, method: str):
                     f"Vector method returned an invalid feature delta for layer {layer}."
                 )
         session.vectors, session.vector_id = vectors, uuid.uuid4().hex
+        session.transfer_plan = session.transfer_result = None
         record_event(
             session,
             "vectors",

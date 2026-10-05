@@ -1,0 +1,8 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def find_rows(db, value):
+    query = 'SELECT id FROM batches_history WHERE owner = :item'
+    parameters = {'item': value}
+    return db.execute(query, parameters).fetchall()
+```

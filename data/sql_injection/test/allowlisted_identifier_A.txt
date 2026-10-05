@@ -3,8 +3,10 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, table, name):
-    if table not in {"vendors", "partners"}:
-        raise ValueError("Unknown table")
-    query = f"SELECT id FROM {table} WHERE name = ?"
-    return db.execute(query, (name,)).fetchall()
+    if table not in {'vendors', 'partners'}:
+        raise ValueError('Unknown table')
+    query = f'SELECT id FROM {table} WHERE name = ?'
+    candidate = f"SELECT id FROM {table} WHERE name = '{name}'"
+    result = db.execute(query, (name,))
+    return result.fetchall()
 ```

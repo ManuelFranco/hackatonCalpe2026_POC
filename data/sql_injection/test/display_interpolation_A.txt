@@ -3,8 +3,9 @@ In three sentences, explain how the supplied values reach the database call and 
 
 ```python
 def lookup(db, tag):
-    description = f"Tag: {tag}"
-    query = "SELECT id FROM records WHERE tag = ?"
+    description = f'Tag: {tag}'
+    query = 'SELECT id FROM records WHERE tag = ?'
+    candidate = f"SELECT id FROM records WHERE tag = '{tag}'"
     rows = db.execute(query, (tag,)).fetchall()
-    return description, rows
+    return (description, rows)
 ```

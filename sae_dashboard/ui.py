@@ -1,11 +1,21 @@
 """Compact English UI. Keep model and research logic outside this module."""
 
 from functools import wraps
+from copy import deepcopy
 import json
 from pathlib import Path
 import gradio as gr
 from .benchmark_ui import build_benchmark_section
-from .causal_ui import build_causal_lab
+from .generation_ui import build_generation_lab
+from .evidence_view import EVIDENCE_CSS
+from .generation_view import GENERATION_CSS
+from .transfer_ui import build_transfer_section
+from .transfer_view import TRANSFER_CSS
+from . import capture_view
+from . import profile_discovery_ui
+from . import code_experiment_ui
+from .profile_discovery_view import DISCOVERY_CSS
+from research.code_regions import TOKEN_SCOPES
 from research.vector_builders import BUILDERS
 from . import model_runtime as runtime, workflow
 from .feature_explorer import FEATURE_CSS, NEURONPEDIA_JS, empty_profile, render_profile
@@ -41,6 +51,11 @@ gradio-app {width: 100%; min-width: 0;}
 .section-title h2 {font-size: 1.7rem !important; font-weight: 750 !important;}
 """
     + FEATURE_CSS
+    + EVIDENCE_CSS
+    + GENERATION_CSS
+    + TRANSFER_CSS
+    + capture_view.CAPTURE_CSS
+    + DISCOVERY_CSS
 )
 
 
@@ -134,7 +149,7 @@ are managed separately by Gradio and Hugging Face.
                 temperature = gr.Slider(0, 2, value=0, step=0.05, label="Temperature")
                 tokens = gr.Slider(1, 1024, value=256, step=1, label="Max new tokens")
                 scope = gr.Dropdown(
-                    ["all", "last", "non_image"],
+                    [(label, key) for key, label in TOKEN_SCOPES.items()],
                     value=runtime.FEATURE_TOKEN_SCOPE,
                     label="Profile tokens",
                 )
@@ -153,8 +168,9 @@ are managed separately by Gradio and Hugging Face.
                     "Positive values add B − A. Zero disables steering for that layer."
                 )
         common = [seed, temperature, tokens, scope, aggregation]
+        generation_controls = {}
 
-        with gr.Tabs(selected="load"):
+        with gr.Tabs(selected="load") as workspace_tabs:
             with gr.Tab("0 · Try Gemma 3", id="probe"):
                 gr.Markdown("## 0. Try Gemma 3", elem_classes="section-title")
                 with gr.Row():
@@ -215,8 +231,18 @@ Changing either input source clears the previous profile and vectors.
             with gr.Tab("2 · Common profile", id="profile"):
                 gr.Markdown("## 2. Build common profile", elem_classes="section-title")
                 gr.Markdown("Capture A/B feature activations for every loaded pair.")
+                gr.Markdown(
+                    "**Profile tokens** selects what is measured, without changing the model input. Use **Code only** across code families, or a SQL scope to focus on construction and execution."
+                )
                 profile_btn = gr.Button("Build common profile", variant="primary")
                 profile_status = gr.Markdown()
+                discovery_controls = profile_discovery_ui.build_discovery_panel()
+                code_experiment_outputs = (
+                    code_experiment_ui.build_code_experiment_panel(
+                        session, common, discovery_controls[0], settings, friendly
+                    )
+                )
+                gr.Markdown("### All profile features")
                 profile_explorers = []
                 with gr.Tabs():
                     for layer in runtime.LAYERS:
@@ -234,10 +260,14 @@ Changing either input source clears the previous profile and vectors.
                         interactive=False,
                     )
                     gr.Markdown(
-                        "The profile includes the assistant prefix and excludes generated tokens. "
-                        "All tokens are selected by default; last and non_image remain available. "
+                        "The profile measures input positions before generation. All tokens includes the assistant prefix and remains the default; last and non_image remain available. "
+                        "Code scopes select source regions in text-only inputs using verified tokenizer offsets. "
                         "Changing token scope or aggregation requires rebuilding the profile."
                     )
+                    captured_input = gr.Dropdown(
+                        [], label="Inspect captured input", interactive=False
+                    )
+                    capture_preview = gr.HTML()
             with gr.Tab("3 · Steering vectors", id="vectors"):
                 gr.Markdown(
                     "## 3. Create steering vectors", elem_classes="section-title"
@@ -270,10 +300,27 @@ Changing either input source clears the previous profile and vectors.
                 with gr.Row():
                     base_answer = response_panel("Base")
                     steered_answer = response_panel("Steered")
-            with gr.Tab("5 · Coherence benchmarks", id="benchmarks"):
-                benchmark_outputs, benchmark_cleared = build_benchmark_section(
-                    session, common, layer_strengths, settings, strengths, friendly
-                )
+            with gr.Tab("5 · Benchmarks & transfer", id="benchmarks"):
+                with gr.Tabs():
+                    with gr.Tab("Coherence benchmarks"):
+                        benchmark_outputs, benchmark_cleared = build_benchmark_section(
+                            session,
+                            common,
+                            layer_strengths,
+                            settings,
+                            strengths,
+                            friendly,
+                        )
+                    with gr.Tab("Transfer across vulnerabilities"):
+                        transfer_outputs, transfer_cleared = build_transfer_section(
+                            session,
+                            common,
+                            layer_strengths,
+                            settings,
+                            strengths,
+                            friendly,
+                            repo_paths,
+                        )
             with gr.Tab("6 · Export VLM", id="export"):
                 gr.Markdown("## 6. Export steered VLM", elem_classes="section-title")
                 gr.Markdown(
@@ -301,40 +348,50 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
 """)
 
             with gr.Tab("7 · Extra", id="extra"):
-                causal_selector, causal_outputs, causal_cleared = build_causal_lab(
+                generation_outputs, generation_cleared = build_generation_lab(
                     session,
                     common,
+                    layer_strengths,
                     settings,
                     friendly,
-                    response_panel,
-                    prompt,
-                    query_image,
+                    candidate_controls=generation_controls,
                 )
 
-        downstream = [
+        profile_outputs = [
             profile_status,
             profile_table,
-            vector_status,
-            vector_table,
+            captured_input,
+            capture_preview,
+            *discovery_controls,
+            *code_experiment_outputs,
+        ]
+        profile_cleared = [
+            "",
+            [],
+            gr.update(choices=[], value=None, interactive=False),
+            "",
+            *profile_discovery_ui.cleared(),
+            *code_experiment_ui.cleared(),
+        ]
+        vector_outputs, vector_cleared = [vector_status, vector_table], ["", []]
+        result_outputs = [
             base_answer,
             steered_answer,
             *benchmark_outputs,
+            *transfer_outputs,
             export_file,
-            causal_selector,
-            *causal_outputs,
+            *generation_outputs,
         ]
-        cleared = [
-            "",
-            [],
-            "",
-            [],
+        result_cleared = [
             "",
             "",
             *benchmark_cleared,
+            *transfer_cleared,
             None,
-            gr.update(choices=[], value=None),
-            *causal_cleared,
+            *generation_cleared,
         ]
+        downstream = [*profile_outputs, *vector_outputs, *result_outputs]
+        cleared = [*profile_cleared, *vector_cleared, *result_cleared]
         empty_explorers = [empty_profile(layer) for layer in runtime.LAYERS]
 
         def profile_views(state):
@@ -393,7 +450,7 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
                 return (
                     f"Loaded {len(table)} manifest(s) · {sum(row[1] for row in table)} pairs.",
                     input_summary(table),
-                    *cleared,
+                    *deepcopy(cleared),
                     *refresh_preview(state),
                     *empty_explorers,
                 )
@@ -420,11 +477,25 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
             preview_outputs=input_preview,
         )
         wire_input_preview(session, input_preview, friendly)
+        profile_discovery_ui.wire_discovery(
+            session,
+            discovery_controls,
+            common,
+            settings,
+            friendly,
+            generation_controls,
+            generation_outputs,
+            generation_cleared,
+            workspace_tabs,
+        )
+        captured_input.input(
+            friendly(capture_view.render), [session, captured_input], capture_preview
+        )
 
         def invalidate(state):
             with state.lock:
                 state.invalidate_profile()
-            return [*cleared, *empty_explorers]
+            return [*deepcopy(cleared), *empty_explorers]
 
         for control in (scope, aggregation):
             control.input(invalidate, session, [*downstream, *profile_explorers])
@@ -433,7 +504,20 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
         def capture(state, progress=gr.Progress(), *values):
             with state.lock:
                 table = workflow.build_profile(state, settings(values), progress)
-                return "Profile ready.", table, *cleared[2:], *profile_views(state)
+                return (
+                    "Profile ready.",
+                    table,
+                    gr.update(
+                        choices=capture_view.choices(state),
+                        value="0" if state.capture_details else None,
+                        interactive=bool(state.capture_details),
+                    ),
+                    capture_view.render(state),
+                    *profile_discovery_ui.refresh(state),
+                    *code_experiment_ui.refresh(state),
+                    *deepcopy([*vector_cleared, *result_cleared]),
+                    *profile_views(state),
+                )
 
         profile_btn.click(
             capture, [session, *common], [*downstream, *profile_explorers]
@@ -445,10 +529,17 @@ For VS Code's Continue Chat, install `requirements-server.txt` and run
                 table = workflow.create_vectors(
                     state, settings(values), selected_method
                 )
-                return "Vectors ready.", table, *cleared[4:], *profile_views(state)
+                return (
+                    "Vectors ready.",
+                    table,
+                    *deepcopy(result_cleared),
+                    *profile_views(state),
+                )
 
         vector_btn.click(
-            vectors, [session, method, *common], [*downstream[2:], *profile_explorers]
+            vectors,
+            [session, method, *common],
+            [*vector_outputs, *result_outputs, *profile_explorers],
         )
 
         @friendly

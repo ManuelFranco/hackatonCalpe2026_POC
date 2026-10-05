@@ -1,0 +1,10 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def read_rows(db, value, other):
+    statement = 'UPDATE checks_archive SET label = :note WHERE reference = :item'
+    preview = f"UPDATE checks_archive SET label = :note WHERE reference = '{value}'"
+    rows = ({'note': other, 'item': value}, {'note': other + '2', 'item': value})
+    return db.executemany(statement, rows).rowcount
+```

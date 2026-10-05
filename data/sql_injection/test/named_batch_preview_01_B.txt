@@ -1,0 +1,10 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def lookup(db, value, other):
+    statement = 'UPDATE checks SET note = :note WHERE code = :item'
+    preview = "UPDATE checks SET note = :note WHERE code = '{}'".format(value)
+    rows = ({'note': other, 'item': value}, {'note': other + '2', 'item': value})
+    return db.executemany(preview, rows).rowcount
+```

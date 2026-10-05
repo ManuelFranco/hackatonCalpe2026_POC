@@ -10,6 +10,12 @@ from typing import Any, Dict, List, Optional, Tuple
 import torch
 from sae_lens import SAE
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration, set_seed
+from research.code_regions import (
+    TOKEN_SCOPES,
+    REGION_SCOPES,
+    aligned_token_mask,
+    select_regions,
+)
 
 MODEL_ID = os.getenv("GEMMA_MODEL_ID", "google/gemma-3-4b-it")
 MODEL_REVISION = os.getenv("GEMMA_MODEL_REVISION")
@@ -43,8 +49,8 @@ def validate_configuration() -> None:
         raise ValueError("GEMMA_DTYPE must be auto, bfloat16, float16 or float32.")
     if FEATURE_AGGREGATION not in {"mean", "max"}:
         raise ValueError("FEATURE_AGGREGATION must be mean or max.")
-    if FEATURE_TOKEN_SCOPE not in {"all", "non_image", "last"}:
-        raise ValueError("FEATURE_TOKEN_SCOPE must be all, non_image or last.")
+    if FEATURE_TOKEN_SCOPE not in TOKEN_SCOPES:
+        raise ValueError("FEATURE_TOKEN_SCOPE must be a supported profile-token scope.")
     if SAE_CHUNK_TOKENS < 1:
         raise ValueError("SAE_CHUNK_TOKENS must be positive.")
     if not math.isfinite(STEERING_FRACTION_PER_UNIT) or STEERING_FRACTION_PER_UNIT <= 0:
@@ -94,13 +100,16 @@ def model_load_options() -> Dict[str, Any]:
     return options
 
 
-def ensure_models_loaded(with_saes: bool = True) -> None:
+def ensure_models_loaded(with_saes: bool = True, sae_layers=None) -> None:
     """Must be called while holding MODEL_LOCK (hooks share one model)."""
     global model, processor
+    required_layers = LAYERS if sae_layers is None else list(sae_layers)
+    if any(layer not in LAYERS for layer in required_layers):
+        raise ValueError("Select configured SAE layers.")
     if (
         model is not None
         and processor is not None
-        and (not with_saes or len(saes) == len(LAYERS))
+        and (not with_saes or all(layer in saes for layer in required_layers))
     ):
         return
     validate_configuration()
@@ -116,7 +125,7 @@ def ensure_models_loaded(with_saes: bool = True) -> None:
     if not with_saes:
         return
     hidden_size = model.config.text_config.hidden_size
-    for layer_idx in LAYERS:
+    for layer_idx in required_layers:
         if layer_idx in saes:
             continue
         print(f"Loading SAE {SAE_IDS[layer_idx]} from {SAE_RELEASE}...")
@@ -359,11 +368,26 @@ def generate_answer(
     strengths: Optional[Dict[int, float]] = None,
     seed: int = 0,
     first_step_only: bool = False,
+    trace=None,
+    residual_intervention=None,
 ) -> str:
     validate_generation_settings(max_new_tokens, temperature, seed)
     handles = []
-    if steering_directions is not None and strengths is not None:
-        for layer_idx in LAYERS:
+    steering = steering_directions is not None and strengths is not None
+    if steering and residual_intervention is not None:
+        raise ValueError(
+            "Use vector steering or a residual intervention per generation."
+        )
+    if steering or trace is not None or residual_intervention is not None:
+        observed_layers = set(trace.layers) if trace is not None else set()
+        intervention_layers = (
+            set(residual_intervention.layers)
+            if residual_intervention is not None
+            else set()
+        )
+        for layer_idx in sorted(
+            set(LAYERS if steering else ()) | observed_layers | intervention_layers
+        ):
             module = get_layer_module(layer_idx)
 
             def make_hook(idx: int):
@@ -373,25 +397,26 @@ def generate_answer(
                 def hook_fn(module, module_inputs, output):
                     nonlocal calls
                     calls += 1
-                    if first_step_only and calls > 1:
-                        return None
-                    alpha = float(strengths.get(idx, 0.0))
-                    if alpha == 0.0:
-                        return None
                     x = extract_hidden(output)
-                    key = (str(x.device), str(x.dtype))
-                    if key not in cache:
-                        cache[key] = steering_directions[idx].to(
-                            device=x.device,
-                            dtype=x.dtype,
-                        )
-                    delta = alpha * cache[key]
-                    if STEER_LAST_TOKEN_ONLY:
-                        x_out = x.clone()
-                        x_out[:, -1, :] = x_out[:, -1, :] + delta
-                    else:
-                        x_out = x + delta.view(1, 1, -1)
-                    return replace_hidden(output, x_out)
+                    alpha = float(strengths.get(idx, 0.0)) if steering else 0.0
+                    if first_step_only and calls > 1:
+                        alpha = 0.0
+                    x_out = x
+                    if alpha:
+                        key = (str(x.device), str(x.dtype))
+                        if key not in cache:
+                            cache[key] = steering_directions[idx].to(x.device, x.dtype)
+                        delta = alpha * cache[key]
+                        if STEER_LAST_TOKEN_ONLY:
+                            x_out = x.clone()
+                            x_out[:, -1, :] += delta
+                        else:
+                            x_out = x + delta.view(1, 1, -1)
+                    if idx in intervention_layers:
+                        x_out = residual_intervention.apply(idx, x, calls - 1)
+                    if idx in observed_layers:
+                        trace.capture(idx, x, x_out)
+                    return replace_hidden(output, x_out) if x_out is not x else None
 
                 return hook_fn
 
@@ -417,6 +442,8 @@ def generate_answer(
         with torch.inference_mode():
             generated = model.generate(**inputs, **gen_kwargs)
         new_tokens = generated[0, input_len:]
+        if trace is not None:
+            trace.finish(new_tokens, input_len, model.generation_config.eos_token_id)
         visible = processor.decode(
             new_tokens,
             skip_special_tokens=True,
@@ -457,6 +484,33 @@ def encode_sae_chunked(sae: SAE, residuals: torch.Tensor) -> torch.Tensor:
     out = torch.cat(chunks, dim=0)
     assert_finite("sae_activations", out)
     return out
+
+
+def profile_token_selection(input_ids, image_mask, prompt, image, scope):
+    """Select once per input, before inference; legacy scopes need no tokenization."""
+    spans = []
+    if scope in REGION_SCOPES:
+        if image is not None:
+            raise ValueError(
+                "Code-region capture is text-only. Use all / last / non_image for image inputs."
+            )
+        spans = select_regions(prompt, scope)
+        rendered = processor.apply_chat_template(
+            make_messages(None, prompt), tokenize=False, add_generation_prompt=True
+        )
+        mask = torch.tensor(
+            aligned_token_mask(processor.tokenizer, rendered, input_ids, prompt, spans),
+            dtype=torch.bool,
+        )
+    else:
+        mask = feature_token_mask(image_mask, scope)
+    return mask, {
+        "scope": scope,
+        "spans": spans,
+        "selected_tokens": int(mask.sum()),
+        "total_tokens": len(mask),
+        "token_indices": mask.nonzero().flatten().tolist(),
+    }
 
 
 def feature_token_mask(

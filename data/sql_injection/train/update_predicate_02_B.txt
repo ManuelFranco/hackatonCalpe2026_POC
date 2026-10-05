@@ -1,0 +1,9 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def read_rows(db, value, other):
+    query = 'UPDATE dispatches_archive SET label = ? WHERE reference = ?'
+    candidate = "UPDATE dispatches_archive SET label = ? WHERE reference = '" + value + "'"
+    result = db.execute(candidate, (other,))
+    return result.rowcount
+```

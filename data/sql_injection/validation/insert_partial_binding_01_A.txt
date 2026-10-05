@@ -1,0 +1,10 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def lookup(db, value, other):
+    query = 'INSERT INTO attachments (code, status) VALUES (?, ?)'
+    candidate = "INSERT INTO attachments (code, status) VALUES (?, '" + other + "')"
+    result = db.execute(query, (value, other))
+    return result.rowcount
+```

@@ -1,0 +1,10 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+In three sentences, explain how the supplied values reach the database call and affect the executed query. Suggest a change only if needed.
+
+```python
+def read_rows(db, value, other):
+    query = 'INSERT INTO attachments_archive (reference, region) VALUES (?, ?)'
+    candidate = "INSERT INTO attachments_archive (reference, region) VALUES (?, '%s')" % (other,)
+    result = db.execute(candidate, (value,))
+    return result.rowcount
+```

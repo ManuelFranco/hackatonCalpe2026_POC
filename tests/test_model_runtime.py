@@ -9,6 +9,35 @@ from sae_dashboard.portable_model import steering_hooks
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_observation_loads_only_requested_sae_and_reuses_it(self):
+        fake = SimpleNamespace(
+            W_dec=torch.ones(3, 2),
+            cfg=SimpleNamespace(
+                metadata=SimpleNamespace(hook_name="blocks.9.hook_resid_post"),
+                normalize_activations="none",
+            ),
+        )
+        fake.cpu = fake.eval = lambda: fake
+        model = SimpleNamespace(
+            config=SimpleNamespace(text_config=SimpleNamespace(hidden_size=2)),
+            device="cpu",
+        )
+        with (
+            patch.object(runtime, "model", model),
+            patch.object(runtime, "processor", object()),
+            patch.dict(runtime.saes, {}, clear=True),
+            patch.dict(runtime.sae_releases_used, {}, clear=True),
+            patch.object(runtime, "validate_sae_registry"),
+            patch.object(runtime.SAE, "from_pretrained", return_value=fake) as load,
+        ):
+            runtime.ensure_models_loaded(sae_layers=[9])
+            runtime.ensure_models_loaded(sae_layers=[9])
+            runtime.ensure_models_loaded(with_saes=False)
+            self.assertEqual(set(runtime.saes), {9})
+            load.assert_called_once_with(
+                release=runtime.SAE_RELEASE, sae_id=runtime.SAE_IDS[9]
+            )
+
     def test_mps_generation_uses_eager_attention(self):
         for requested in ("mps", "auto"):
             with (

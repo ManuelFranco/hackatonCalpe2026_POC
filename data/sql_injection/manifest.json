@@ -7,10 +7,11 @@
     "A": "Executed query binds request values",
     "B": "Executed query interpolates a request value"
   },
-  "description": "Code-only calibration with shared neutral context. Six minimal pairs and six matched SQL-preview controls; f-strings, concatenation and percent formatting. No reference explanations or answer labels in model inputs.",
+  "description": "20 code-only calibration pairs with exactly one changed line and byte-identical context before and after it. Preserves the 12 original pair IDs plus eight selected mechanisms; no reference answers in model inputs.",
   "pairs": [
     {
       "id": "train_lookup_catalog",
+      "template_group": "legacy:train:minimal",
       "A": {
         "text_file": "train/lookup_catalog_A.txt",
         "image": ""
@@ -22,6 +23,7 @@
     },
     {
       "id": "train_lookup_tickets",
+      "template_group": "legacy:train:minimal",
       "A": {
         "text_file": "train/lookup_tickets_A.txt",
         "image": ""
@@ -33,6 +35,7 @@
     },
     {
       "id": "train_lookup_devices",
+      "template_group": "legacy:train:minimal",
       "A": {
         "text_file": "train/lookup_devices_A.txt",
         "image": ""
@@ -44,6 +47,7 @@
     },
     {
       "id": "train_lookup_products",
+      "template_group": "legacy:train:minimal",
       "A": {
         "text_file": "train/lookup_products_A.txt",
         "image": ""
@@ -55,6 +59,7 @@
     },
     {
       "id": "train_lookup_books",
+      "template_group": "legacy:train:minimal",
       "A": {
         "text_file": "train/lookup_books_A.txt",
         "image": ""
@@ -66,6 +71,7 @@
     },
     {
       "id": "train_lookup_packages",
+      "template_group": "legacy:train:minimal",
       "A": {
         "text_file": "train/lookup_packages_A.txt",
         "image": ""
@@ -77,6 +83,7 @@
     },
     {
       "id": "train_lookup_builds",
+      "template_group": "legacy:train:preview_direct",
       "A": {
         "text_file": "train/lookup_builds_A.txt",
         "image": ""
@@ -88,6 +95,7 @@
     },
     {
       "id": "train_lookup_hosts",
+      "template_group": "legacy:train:preview_direct",
       "A": {
         "text_file": "train/lookup_hosts_A.txt",
         "image": ""
@@ -99,6 +107,7 @@
     },
     {
       "id": "train_lookup_services",
+      "template_group": "legacy:train:preview_direct",
       "A": {
         "text_file": "train/lookup_services_A.txt",
         "image": ""
@@ -110,6 +119,7 @@
     },
     {
       "id": "train_lookup_projects",
+      "template_group": "legacy:train:preview_starred",
       "A": {
         "text_file": "train/lookup_projects_A.txt",
         "image": ""
@@ -121,6 +131,7 @@
     },
     {
       "id": "train_lookup_sessions",
+      "template_group": "legacy:train:preview_starred",
       "A": {
         "text_file": "train/lookup_sessions_A.txt",
         "image": ""
@@ -132,6 +143,7 @@
     },
     {
       "id": "train_lookup_artifacts",
+      "template_group": "legacy:train:preview_starred",
       "A": {
         "text_file": "train/lookup_artifacts_A.txt",
         "image": ""
@@ -140,7 +152,104 @@
         "text_file": "train/lookup_artifacts_B.txt",
         "image": ""
       }
+    },
+    {
+      "id": "train_named_dictionary_04",
+      "template_group": "v3:train:named_dictionary",
+      "A": {
+        "text_file": "train/named_dictionary_04_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/named_dictionary_04_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_like_value_02",
+      "template_group": "v3:train:like_value",
+      "A": {
+        "text_file": "train/like_value_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/like_value_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_partial_binding_03",
+      "template_group": "v3:train:partial_binding",
+      "A": {
+        "text_file": "train/partial_binding_03_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/partial_binding_03_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_mapped_identifier_01",
+      "template_group": "v3:train:mapped_identifier",
+      "A": {
+        "text_file": "train/mapped_identifier_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/mapped_identifier_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_list_membership_04",
+      "template_group": "v3:train:list_membership",
+      "A": {
+        "text_file": "train/list_membership_04_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/list_membership_04_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_insert_value_03",
+      "template_group": "v3:train:insert_value",
+      "A": {
+        "text_file": "train/insert_value_03_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/insert_value_03_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_update_predicate_02",
+      "template_group": "v3:train:update_predicate",
+      "A": {
+        "text_file": "train/update_predicate_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/update_predicate_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "train_delete_predicate_01",
+      "template_group": "v3:train:delete_predicate",
+      "A": {
+        "text_file": "train/delete_predicate_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "train/delete_predicate_01_B.txt",
+        "image": ""
+      }
     }
   ],
-  "dataset_revision": "code-flow-v2"
+  "dataset_revision": "code-flow-v4-single-line-20",
+  "metadata_file": "dataset_metadata.json"
 }

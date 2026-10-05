@@ -1,0 +1,9 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def read_rows(db, value):
+    pattern = '%' + value + '%'
+    statement = 'SELECT id FROM entries_archive WHERE reference LIKE ?'
+    preview = "SELECT id FROM entries_archive WHERE reference LIKE '" + pattern + "'"
+    return db.execute(statement, (pattern,)).fetchall()
+```

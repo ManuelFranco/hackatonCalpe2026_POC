@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "name": "XSS · HTML text · Code flow · train",
+  "asset_root": "xss",
+  "split": "train",
+  "dataset_revision": "code-flow-v1",
+  "labels": {
+    "A": "The HTML response escapes HTTP request values before placing them in HTML text content.",
+    "B": "The HTML response contains at least one HTTP request value placed unescaped in HTML text content."
+  },
+  "pairs": [
+    {
+      "id": "render_name",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return f\"<p>{html.escape(value)}</p>\"\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return f\"<p>{value}</p>\"\n```"
+      }
+    },
+    {
+      "id": "render_title",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return \"<h2>\" + html.escape(value) + \"</h2>\"\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return \"<h2>\" + value + \"</h2>\"\n```"
+      }
+    },
+    {
+      "id": "render_status",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return \"<span>%s</span>\" % html.escape(value)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return \"<span>%s</span>\" % value\n```"
+      }
+    },
+    {
+      "id": "render_preview",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    preview = f\"<p>{value}</p>\"\n    page = f\"<p>{html.escape(value)}</p>\"\n    return {\"text_preview\": preview, \"html_response\": page}\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    preview = f\"<p>{value}</p>\"\n    page = f\"<p>{html.escape(value)}</p>\"\n    page = preview\n    return {\"text_preview\": preview, \"html_response\": page}\n```"
+      }
+    },
+    {
+      "id": "render_body",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    body = html.escape(value)\n    return \"<article>{}</article>\".format(body)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    body = value\n    return \"<article>{}</article>\".format(body)\n```"
+      }
+    },
+    {
+      "id": "render_text_context",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return \"<div>\" + html.escape(value, quote=False) + \"</div>\"\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. Returned strings and html_response fields are served as text/html; text_preview fields are plain text.\n\n```python\nimport html\ndef render(value):\n    return \"<div>\" + value + \"</div>\"\n```"
+      }
+    }
+  ]
+}

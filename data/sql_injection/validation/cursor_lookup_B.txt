@@ -4,7 +4,8 @@ In three sentences, explain how the supplied values reach the database call and 
 ```python
 def lookup(db, handle):
     cursor = db.cursor()
-    query = f"SELECT id FROM members WHERE handle = '{handle}'"
-    cursor.execute(query)
+    query = 'SELECT id FROM members WHERE handle = ?'
+    candidate = f"SELECT id FROM members WHERE handle = '{handle}'"
+    cursor.execute(candidate)
     return cursor.fetchall()
 ```

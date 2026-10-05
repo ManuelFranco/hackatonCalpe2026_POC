@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "name": "Command injection · Code flow · test",
+  "asset_root": "command_injection",
+  "split": "test",
+  "dataset_revision": "code-flow-v1",
+  "labels": {
+    "A": "The shown path preserves HTTP request values as command arguments without interpreting them as shell syntax.",
+    "B": "The shown path embeds at least one HTTP request value into executed shell syntax without appropriate quoting."
+  },
+  "pairs": [
+    {
+      "id": "test_explicit_shell",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(tag):\n    return subprocess.run([\"tag-tool\", \"--tag\", tag], shell=False)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(tag):\n    return subprocess.run([\"/bin/sh\", \"-c\", f\"tag-tool --tag {tag}\"], shell=False)\n```"
+      }
+    },
+    {
+      "id": "test_reassignment",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(zone):\n    arguments = [\"zone-tool\", \"--zone\", zone]\n    preview = f\"zone-tool --zone {zone}\"\n    return preview, subprocess.run(arguments)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(zone):\n    arguments = [\"zone-tool\", \"--zone\", zone]\n    preview = f\"zone-tool --zone {zone}\"\n    arguments = preview\n    return preview, subprocess.run(arguments, shell=True)\n```"
+      }
+    },
+    {
+      "id": "test_process",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(label):\n    process = subprocess.Popen([\"label-tool\", \"--label\", label], stdout=subprocess.PIPE)\n    return process.communicate()\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(label):\n    process = subprocess.Popen(\"label-tool --label \" + label, shell=True, stdout=subprocess.PIPE)\n    return process.communicate()\n```"
+      }
+    },
+    {
+      "id": "test_quote_pipeline",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport shlex, subprocess\ndef lookup(title):\n    part = shlex.quote(title)\n    command = f\"title-tool --title {part}\"\n    return subprocess.run(command, shell=True)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport shlex, subprocess\ndef lookup(title):\n    part = title\n    command = f\"title-tool --title {part}\"\n    return subprocess.run(command, shell=True)\n```"
+      }
+    }
+  ]
+}

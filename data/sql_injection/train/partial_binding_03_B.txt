@@ -1,0 +1,9 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def load_rows(db, value, other):
+    query = 'SELECT id FROM schedules_staging WHERE tag = ? AND category = ?'
+    candidate = "SELECT id FROM schedules_staging WHERE tag = ? AND category = '%s'" % (other,)
+    result = db.execute(candidate, (value,))
+    return result.fetchall()
+```

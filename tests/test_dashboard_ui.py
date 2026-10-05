@@ -89,6 +89,67 @@ class DashboardTests(unittest.TestCase):
             (42, 0.3, 128),
         )
 
+    def test_generation_mode_uses_shared_settings_and_invalidates_its_result(self):
+        from test_generation_audit import toy_result
+
+        measured = toy_result()
+        fn = next(
+            fn for fn in self.demo.fns.values() if fn.name == "inspect_generation"
+        )
+        values, progress_index, _, _ = special_args(
+            fn.fn,
+            [
+                Session(),
+                "prompt",
+                "Base only",
+                17,
+                "0, 2",
+                42,
+                0.3,
+                128,
+                "all",
+                "mean",
+                0,
+                1,
+                0,
+                0,
+            ],
+        )
+        self.assertIsNotNone(progress_index)
+        with patch(
+            "sae_dashboard.generation_lab.run_generation", return_value=measured
+        ) as generate:
+            output = fn.fn(*values)
+        self.assertEqual(len(output), len(fn.outputs))
+        args = generate.call_args.args
+        self.assertEqual(
+            (args[1].seed, args[1].temperature, args[1].max_new_tokens), (42, 0.3, 128)
+        )
+        self.assertEqual(args[6], {9: 0, 17: 1, 22: 0, 29: 0})
+        for control in fn.inputs[1:]:
+            resets = [
+                f
+                for f in self.demo.fns.values()
+                if (control._id, "input") in f.targets and fn.outputs[0] in f.outputs
+            ]
+            self.assertTrue(resets, control.label)
+            self.assertTrue(
+                any(
+                    (control._id, "input") in f.targets and fn._id in f.cancels
+                    for f in self.demo.fns.values()
+                ),
+                control.label,
+            )
+        invalidate = next(f for f in self.demo.fns.values() if f.name == "invalidate")
+        self.assertIn(fn.outputs[0], invalidate.outputs)
+        self.assertIsNone(
+            invalidate.fn(Session())[invalidate.outputs.index(fn.outputs[0])]
+        )
+        change = next(f for f in self.demo.fns.values() if f.name == "change_response")
+        html, slider = change.fn(measured, "Current steering")
+        self.assertIn("Before", html)
+        self.assertEqual(slider["maximum"], 3)
+
     def test_builtin_widgets_have_flat_english_overrides(self):
         from sae_dashboard.ui import english_widgets
 
@@ -203,17 +264,83 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(result[5]["value"], [(image, "Image 1")])
         model.assert_not_called()
 
-    def test_causal_lab_has_zero_dose_and_markdown_responses(self):
+    def test_extra_keeps_generation_and_transfer_is_in_evaluation(self):
         components = self.demo.config["components"]
-        dose = next(
-            c
-            for c in components
-            if c["props"].get("label") == "Single-feature response dose"
+        labels = {c["props"].get("label") for c in components}
+        self.assertNotIn("A/B diagnostic", labels)
+        self.assertNotIn("Features to compare · up to 3", labels)
+        self.assertIn("Generation prompt", labels)
+        self.assertIn("Frozen sources to evaluate", labels)
+        self.assertIn("Inspect transfer case", labels)
+        self.assertIn("Inspect captured input", labels)
+        scope = next(
+            c for c in components if c["props"].get("label") == "Profile tokens"
         )
-        self.assertEqual(dose["props"]["value"], 0)
-        for label in ("Base · causal lab", "Single feature", "Random control"):
-            panel = next(c for c in components if c["props"].get("label") == label)
-            self.assertEqual(panel["type"], "markdown")
+        self.assertEqual(
+            {choice[1] for choice in scope["props"]["choices"]},
+            {"all", "last", "non_image", "code", "sql_query", "sql_call", "sql_flow"},
+        )
+
+    def test_transfer_callbacks_freeze_settings_and_preserve_sources_on_load(self):
+        from test_workflow import ready_session
+
+        state = ready_session()
+        freeze = next(
+            f for f in self.demo.fns.values() if f.name == "freeze_transfer_source"
+        )
+        frozen = freeze.fn(
+            state, "SQL source", [], 42, 0, 128, "all", "mean", 1, 0, 0, 0
+        )
+        self.assertEqual(len(frozen), len(freeze.outputs))
+        identifier = next(iter(state.transfer_sources))
+        self.assertEqual(
+            state.transfer_sources[identifier].strengths, {9: 1, 17: 0, 22: 0, 29: 0}
+        )
+        prepare = next(
+            f for f in self.demo.fns.values() if f.name == "prepare_transfer_sample"
+        )
+        with patch("sae_dashboard.model_runtime.ensure_models_loaded") as model:
+            prepared = prepare.fn(
+                state,
+                [identifier],
+                [str(DATA_ROOT / "sql_injection/manifest.validation.json")],
+                None,
+                2,
+                42,
+            )
+        self.assertEqual(len(prepared), len(prepare.outputs))
+        self.assertEqual(len(state.transfer_plan["targets"][0]["cases"]), 4)
+        self.assertTrue(prepared[-2]["interactive"])
+        model.assert_not_called()
+        load = next(f for f in self.demo.fns.values() if f.name == "load")
+        loaded = load.fn(state, str(DATA_ROOT / "command_injection/manifest.json"))
+        self.assertEqual(len(loaded), len(load.outputs))
+        self.assertIn(identifier, state.transfer_sources)
+        self.assertIsNone(state.transfer_plan)
+        self.assertFalse(state.vectors)
+
+    def test_repeated_invalidation_survives_gradio_update_consumption(self):
+        import asyncio
+        from gradio.state_holder import SessionState
+
+        async def check():
+            browser_state = SessionState(self.demo)
+            fn = next(f for f in self.demo.fns.values() if f.name == "invalidate")
+            result_index = next(
+                i
+                for i, block in enumerate(fn.outputs)
+                if getattr(block, "label", None) == "Inspect transfer case"
+            )
+            for _ in range(2):
+                returned = fn.fn(Session())
+                processed = await self.demo.postprocess_data(
+                    fn, returned, browser_state
+                )
+                self.assertIn("value", processed[result_index])
+                self.assertIsNone(processed[result_index]["value"])
+                self.assertFalse(processed[result_index]["interactive"])
+
+        asyncio.run(check())
 
     def test_optional_manual_editor_uses_shared_input_and_invalidation_outputs(self):
         components = self.demo.config["components"]

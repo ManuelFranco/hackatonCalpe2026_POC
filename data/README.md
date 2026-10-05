@@ -4,11 +4,27 @@
 
 [`sql_injection/`](sql_injection/) contains **CWE-89 Python/SQLite** code-only
 pairs: **A = executed query binds values**, **B = executed query interpolates a value**.
-Use `all + mean` with the 12 training pairs in `sql_injection/manifest.json`.
-Six training pairs include matched SQL previews to control for formatting cues.
-Four validation pairs and six test pairs use a neutral code-flow instruction without
-vulnerability names or reference answers. Use the normal dashboard workflow; the
-[dataset instructions](sql_injection/README.md) provide prompts and expected review content.
+Use `all + mean` with the **20 training pairs** in `sql_injection/manifest.json`.
+The **20 validation pairs** and **20 test pairs** use a neutral code-flow instruction
+without vulnerability names or reference answers. Training includes nine controls
+that match SQL candidates, construction components or parameter dictionaries.
+All 60 pairs across the three splits pass an offline SQLite behavioral audit. Examples are synthetic
+and clustered by template; keep evaluation splits separate from calibration.
+Use the normal dashboard workflow; the [dataset instructions](sql_injection/README.md)
+provide the coverage, evaluation protocol and audit commands.
+
+## Command injection and XSS
+
+[`command_injection/`](command_injection/) and [`xss/`](xss/) each contain
+6 training, 4 validation and 4 test A/B pairs. Command-injection examples compare
+separate subprocess arguments or POSIX shell quoting with values entering shell
+syntax. XSS examples compare escaped and raw values in HTML text content.
+The dashboard reads these snippets as data; it never runs them.
+
+Build a profile with **Code only**, freeze the resulting vectors and compare them
+across reserved families in **5 · Benchmarks & transfer**. See the
+[capture and transfer guide](../docs/code_regions_transfer.md) for the workflow,
+matrix readout and interpretation limits.
 
 ## Physical vehicle damage
 

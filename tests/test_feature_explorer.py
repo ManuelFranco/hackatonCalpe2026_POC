@@ -35,8 +35,15 @@ class FeatureExplorerTests(unittest.TestCase):
         self.assertEqual(filtered.stats["outside"], 1)
 
     def test_html_has_colors_exact_pair_values_and_lazy_neuronpedia(self):
+        # Neuronpedia IDs are dictionary-specific; a five-feature toy dictionary
+        # must not be presented as the 16k release.
+        profile = LayerProfile(
+            torch.nn.functional.pad(self.profile.a, (0, 16384 - 5)),
+            torch.nn.functional.pad(self.profile.b, (0, 16384 - 5)),
+            self.profile.reference_norm,
+        )
         markup = render_profile(
-            9, self.profile, pair_labels=["<script>alert(1)</script>", "second"]
+            9, profile, pair_labels=["<script>alert(1)</script>", "second"]
         )
         self.assertIn("signed-value pos", markup)
         self.assertIn("signed-value neg", markup)
@@ -52,6 +59,7 @@ class FeatureExplorerTests(unittest.TestCase):
         )
         self.assertIn("Not built", markup)
         self.assertNotIn("<iframe", render_profile(9, self.profile, neuronpedia=False))
+        self.assertNotIn("<iframe", render_profile(9, self.profile))
 
     def test_empty_contrast_and_invalid_shapes(self):
         markup = render_profile(9, LayerProfile(torch.ones(2, 3), torch.ones(2, 3), 1))

@@ -1,0 +1,9 @@
+SQLite. db is a database connection; all other arguments are strings from an HTTP request.
+
+```python
+def load_rows(db, value):
+    query = 'INSERT INTO submissions_staging (tag) VALUES (?)'
+    candidate = "INSERT INTO submissions_staging (tag) VALUES ('%s')" % (value,)
+    result = db.execute(query, (value,))
+    return result.rowcount
+```

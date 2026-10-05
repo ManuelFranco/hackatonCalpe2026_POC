@@ -7,9 +7,11 @@
     "A": "Executed query binds request values",
     "B": "Executed query interpolates a request value"
   },
+  "description": "20 reserved code-flow pairs with exactly one changed line and byte-identical surrounding text. Select settings on validation only; evaluate frozen settings on test. Contrast locations and reference mechanisms are evaluator-only metadata.",
   "pairs": [
     {
       "id": "test_allowlisted_identifier",
+      "template_group": "legacy:test:allowlisted_identifier",
       "A": {
         "text_file": "test/allowlisted_identifier_A.txt",
         "image": ""
@@ -21,6 +23,7 @@
     },
     {
       "id": "test_display_interpolation",
+      "template_group": "legacy:test:display_interpolation",
       "A": {
         "text_file": "test/display_interpolation_A.txt",
         "image": ""
@@ -32,6 +35,7 @@
     },
     {
       "id": "test_two_values",
+      "template_group": "legacy:test:two_values",
       "A": {
         "text_file": "test/two_values_A.txt",
         "image": ""
@@ -43,6 +47,7 @@
     },
     {
       "id": "test_named_reuse",
+      "template_group": "legacy:test:named_reuse",
       "A": {
         "text_file": "test/named_reuse_A.txt",
         "image": ""
@@ -54,6 +59,7 @@
     },
     {
       "id": "test_substring_search",
+      "template_group": "legacy:test:substring_search",
       "A": {
         "text_file": "test/substring_search_A.txt",
         "image": ""
@@ -65,6 +71,7 @@
     },
     {
       "id": "test_query_reassignment",
+      "template_group": "legacy:test:query_reassignment",
       "A": {
         "text_file": "test/query_reassignment_A.txt",
         "image": ""
@@ -73,8 +80,176 @@
         "text_file": "test/query_reassignment_B.txt",
         "image": ""
       }
+    },
+    {
+      "id": "test_indexed_packet_01",
+      "template_group": "v3:test:indexed_packet",
+      "A": {
+        "text_file": "test/indexed_packet_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/indexed_packet_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_indexed_packet_02",
+      "template_group": "v3:test:indexed_packet",
+      "A": {
+        "text_file": "test/indexed_packet_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/indexed_packet_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_history_selection_01",
+      "template_group": "v3:test:history_selection",
+      "A": {
+        "text_file": "test/history_selection_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/history_selection_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_history_selection_02",
+      "template_group": "v3:test:history_selection",
+      "A": {
+        "text_file": "test/history_selection_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/history_selection_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_union_partial_binding_01",
+      "template_group": "v3:test:union_partial_binding",
+      "A": {
+        "text_file": "test/union_partial_binding_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/union_partial_binding_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_union_partial_binding_02",
+      "template_group": "v3:test:union_partial_binding",
+      "A": {
+        "text_file": "test/union_partial_binding_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/union_partial_binding_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_named_batch_preview_01",
+      "template_group": "v3:test:named_batch_preview",
+      "A": {
+        "text_file": "test/named_batch_preview_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/named_batch_preview_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_named_batch_preview_02",
+      "template_group": "v3:test:named_batch_preview",
+      "A": {
+        "text_file": "test/named_batch_preview_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/named_batch_preview_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_like_escape_01",
+      "template_group": "v3:test:like_escape",
+      "A": {
+        "text_file": "test/like_escape_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/like_escape_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_like_escape_02",
+      "template_group": "v3:test:like_escape",
+      "A": {
+        "text_file": "test/like_escape_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/like_escape_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_join_list_partial_binding_01",
+      "template_group": "v3:test:join_list_partial_binding",
+      "A": {
+        "text_file": "test/join_list_partial_binding_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/join_list_partial_binding_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_join_list_partial_binding_02",
+      "template_group": "v3:test:join_list_partial_binding",
+      "A": {
+        "text_file": "test/join_list_partial_binding_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/join_list_partial_binding_02_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_cte_two_paths_01",
+      "template_group": "v3:test:cte_two_paths",
+      "A": {
+        "text_file": "test/cte_two_paths_01_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/cte_two_paths_01_B.txt",
+        "image": ""
+      }
+    },
+    {
+      "id": "test_cte_two_paths_02",
+      "template_group": "v3:test:cte_two_paths",
+      "A": {
+        "text_file": "test/cte_two_paths_02_A.txt",
+        "image": ""
+      },
+      "B": {
+        "text_file": "test/cte_two_paths_02_B.txt",
+        "image": ""
+      }
     }
   ],
-  "description": "Reserved code-flow evaluation with a neutral shared task and no reference answers or explicit vulnerability cues in model inputs. Do not use for calibration.",
-  "dataset_revision": "code-flow-v2"
+  "dataset_revision": "code-flow-v4-single-line-20",
+  "metadata_file": "dataset_metadata.json"
 }

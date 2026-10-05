@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "name": "Command injection · Code flow · validation",
+  "asset_root": "command_injection",
+  "split": "validation",
+  "dataset_revision": "code-flow-v1",
+  "labels": {
+    "A": "The shown path preserves HTTP request values as command arguments without interpreting them as shell syntax.",
+    "B": "The shown path embeds at least one HTTP request value into executed shell syntax without appropriate quoting."
+  },
+  "pairs": [
+    {
+      "id": "validation_named",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(group):\n    arguments = [\"record-tool\", \"--group\", group]\n    return subprocess.run(arguments, check=True)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(group):\n    arguments = f\"record-tool --group {group}\"\n    return subprocess.run(arguments, shell=True, check=True)\n```"
+      }
+    },
+    {
+      "id": "validation_normalized",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(host):\n    value = host.strip().lower()\n    return subprocess.run([\"status-tool\", \"--host\", value])\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(host):\n    value = host.strip().lower()\n    return subprocess.run(\"status-tool --host \" + value, shell=True)\n```"
+      }
+    },
+    {
+      "id": "validation_two_values",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport subprocess\ndef lookup(region, category):\n    return subprocess.run([\"report-tool\", \"--region\", region, \"--category\", category])\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport shlex, subprocess\ndef lookup(region, category):\n    command = f\"report-tool --region {shlex.quote(region)} --category {category}\"\n    return subprocess.run(command, shell=True)\n```"
+      }
+    },
+    {
+      "id": "validation_shell_quote",
+      "A": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport shlex, subprocess\ndef lookup(owner):\n    command = \"record-tool --owner %s\" % shlex.quote(owner)\n    return subprocess.check_output(command, shell=True)\n```"
+      },
+      "B": {
+        "text": "Python. All function arguments are strings from an HTTP request. The shown path is the complete path being classified. POSIX shell. Executable names and fixed options shown are trusted.\n\n```python\nimport shlex, subprocess\ndef lookup(owner):\n    command = \"record-tool --owner %s\" % owner\n    return subprocess.check_output(command, shell=True)\n```"
+      }
+    }
+  ]
+}
