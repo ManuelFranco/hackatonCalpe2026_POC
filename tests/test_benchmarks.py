@@ -146,7 +146,10 @@ class BenchmarkTests(unittest.TestCase):
             "test_setup_code": "",
             "test_list": ["assert add(1, 2) == 3", "assert add(-1, 1) == 0"],
         }
-        self.assertIn("Return only executable", adapter.prompt(item))
+        prompt = adapter.prompt(item)
+        self.assertIn("Return only executable", prompt)
+        self.assertIn("function named `add`", prompt)
+        self.assertIn("Use exactly this function name", prompt)
         self.assertTrue(adapter.details(item, "```python\ndef add(a, b):\n    return a + b\n```")["correct"])
         self.assertFalse(adapter.details(item, "def add(a, b):\n    return a - b")["correct"])
 

@@ -47,6 +47,8 @@ class Session:
         self.benchmark_base = []
         self.benchmark_settings = None
         self.benchmark_result = None
+        self.benchmark_steered_model = None
+        self.benchmark_steered_model_path = None
         self.lock = threading.RLock()
 
     def __deepcopy__(self, memo):

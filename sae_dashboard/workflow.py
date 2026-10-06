@@ -4,6 +4,7 @@ from dataclasses import asdict
 import hashlib
 import json
 import math
+from pathlib import Path
 import uuid
 import torch
 from research.vector_builders import BUILDERS, LayerProfile
@@ -349,6 +350,33 @@ def load_benchmark_artifact(session, path, settings):
     return sample, result
 
 
+def load_benchmark_steered_model(session, path):
+    """Load an exported steered model for benchmark steering only."""
+    if not path:
+        raise ValueError("Choose the extracted steered model directory first.")
+    directory = Path(path).expanduser().resolve()
+    if not directory.is_dir():
+        raise ValueError("The steered model path must be an extracted directory.")
+    config_path = directory / "steering_config.json"
+    if not config_path.is_file():
+        raise ValueError("The selected directory has no steering_config.json.")
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    if config.get("model_id", runtime.MODEL_ID) != runtime.MODEL_ID:
+        raise ValueError(
+            f"The steered model is for {config.get('model_id')}, "
+            f"but the benchmark base is {runtime.MODEL_ID}."
+        )
+    from .portable_model import SteeredVLM
+
+    with runtime.MODEL_LOCK:
+        loaded = SteeredVLM(directory)
+    with session.lock:
+        session.benchmark_steered_model = loaded
+        session.benchmark_steered_model_path = str(directory)
+        session.benchmark_result = None
+    return f"Loaded steered model from `{directory}`. The benchmark base remains `{runtime.MODEL_ID}`."
+
+
 def require_sample(session, settings):
     settings.validate()
     sample = session.benchmark_sample
@@ -360,6 +388,14 @@ def require_sample(session, settings):
 
 
 def benchmark_generate(session, settings, strengths, images, prompt, *, base):
+    if not base and session.benchmark_steered_model is not None:
+        response = session.benchmark_steered_model.chat(
+            runtime.make_messages(images, prompt),
+            seed=settings.seed,
+            temperature=settings.temperature,
+            max_new_tokens=settings.max_new_tokens,
+        )
+        return response["text"]
     with runtime.MODEL_LOCK:
         runtime.ensure_models_loaded(with_saes=False)
         inputs, _, length = runtime.prepare_inputs(images, prompt)
@@ -429,7 +465,8 @@ def benchmark_steered(session, settings, strengths, progress=None):
             raise ValueError(
                 "Evaluate the base model with the current seed, temperature and token limit first."
             )
-        require_profile(session, settings, vectors=True)
+        if session.benchmark_steered_model is None:
+            require_profile(session, settings, vectors=True)
         validate_strengths(strengths)
         result = evaluate_steered(
             sample,

@@ -70,7 +70,8 @@ def build_benchmark_section(
     gr.Markdown("## 5. Evaluate coherence", elem_classes="section-title")
     gr.Markdown(
         "Review the exact inputs and expected answers. Only base-correct cases reach the steered model. "
-        "For simple visual questions, choose POPE with the random split (object presence, yes/no)."
+        "For simple visual questions, choose POPE with the random split (object presence, yes/no). "
+        "Optionally load an extracted steered-model export below; the base remains Gemma 3 4B IT."
     )
     with gr.Row():
         name = gr.Dropdown(
@@ -87,6 +88,16 @@ def build_benchmark_section(
         category = gr.Textbox(
             label="Subject (optional)", placeholder="Blank = all subjects"
         )
+    with gr.Row():
+        steered_model_path = gr.Textbox(
+            label="Extracted steered model directory (optional)",
+            placeholder="Path containing steering_config.json",
+        )
+        load_steered_btn = gr.Button("Load steered model")
+    steered_model_status = gr.Markdown(
+        "No external steered model loaded; steering vectors from this session will be used. "
+        "The directory must contain `steering_config.json`."
+    )
     prepare = gr.Button("1 · Prepare sample", variant="primary")
     offline_file = gr.File(
         label="Local base benchmark JSON",
@@ -306,6 +317,14 @@ These sampled zero-shot runs are not leaderboard reproductions.""")
             rows,
             *result_tables(result),
         )
+
+    @friendly
+    def load_steered(state, path):
+        return workflow.load_benchmark_steered_model(state, path)
+
+    load_steered_btn.click(
+        load_steered, [session, steered_model_path], steered_model_status
+    )
 
     prepare.click(
         prepare_sample,

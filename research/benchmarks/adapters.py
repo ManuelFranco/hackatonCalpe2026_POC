@@ -331,6 +331,37 @@ class MBPP(BenchmarkAdapter):
     supports_category = False
     execution_timeout = 5
 
+    @staticmethod
+    def _function_name(item):
+        tests = item.get("test_list")
+        if not isinstance(tests, list) or not tests:
+            raise ValueError("MBPP requires a non-empty test_list.")
+        names = []
+        for test in tests:
+            if not isinstance(test, str) or not test.strip():
+                raise ValueError("MBPP test_list contains an invalid test.")
+            try:
+                tree = ast.parse(test)
+            except SyntaxError as exc:
+                raise ValueError("MBPP test_list contains invalid Python.") from exc
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Call):
+                    continue
+                if isinstance(node.func, ast.Name):
+                    names.append(node.func.id)
+                    break
+                if isinstance(node.func, ast.Attribute):
+                    names.append(node.func.attr)
+                    break
+        if not names:
+            raise ValueError("MBPP tests do not call a solution function.")
+        if len(set(names)) != 1:
+            raise ValueError(
+                "MBPP tests call multiple solution functions: "
+                + ", ".join(sorted(set(names)))
+            )
+        return names[0]
+
     def load(self, split, category):
         if category:
             raise ValueError("MBPP has no subject filter; clear the subject field.")
@@ -354,8 +385,11 @@ class MBPP(BenchmarkAdapter):
         text = item.get("text")
         if not isinstance(text, str) or not text.strip():
             raise ValueError("MBPP requires a non-empty task description.")
+        function_name = self._function_name(item)
         return (
-            "Write a Python solution for the task below. "
+            f"Write a Python solution for the task below. "
+            f"Define the solution as a function named `{function_name}`. "
+            "Use exactly this function name because the tests call it. "
             "Return only executable Python code, without Markdown fences or explanation.\n\n"
             + text.strip()
         )
